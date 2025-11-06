@@ -1,7 +1,7 @@
 ## Team 12
 ### Contributors:
--Brighton Dube
--George Omondi Olwal
--Tinashe Allan Ketenaire
--Thandokuhle Simelane
--Figuelia Ya'Sin
+- Brighton Dube
+- George Omondi Olwal
+- Tinashe Allan Ketenaire
+- Thandokuhle Simelane
+- Figuelia Ya'Sin
