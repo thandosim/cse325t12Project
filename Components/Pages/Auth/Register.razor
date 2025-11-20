@@ -1,0 +1,157 @@
+@page "/register"
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Create account</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-16">
+    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
+        <h1 class="text-3xl font-bold text-hitchBlue">Create your LoadHitch account</h1>
+        <p class="mt-2 text-sm text-slate-500">Choose a role to get the right dashboard experience.</p>
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_success))
+        {
+            <div class="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">@_success</div>
+        }
+
+        <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
+            <div class="mt-6 space-y-4">
+                <label class="block text-sm font-semibold text-slate-700">
+                    Full name
+                    <InputText class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.FullName" />
+                    <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
+                </label>
+                <label class="block text-sm font-semibold text-slate-700">
+                    Email address
+                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" />
+                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
+                </label>
+                <label class="block text-sm font-semibold text-slate-700">
+                    Password
+                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" />
+                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
+                </label>
+                <label class="block text-sm font-semibold text-slate-700">
+                    Confirm password
+                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.ConfirmPassword" />
+                    <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
+                </label>
+                <label class="block text-sm font-semibold text-slate-700">
+                    Role
+                    <InputSelect class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.SelectedRole">
+                        @foreach (var role in _allowedRoles)
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
+                </label>
+            </div>
+
+            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchBlue px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
+                @_buttonText
+            </button>
+        </EditForm>
+
+        <p class="mt-4 text-center text-sm text-slate-500">
+            Already have an account?
+            <a class="text-hitchBlue font-semibold" href="/login">Log in</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    private readonly RegistrationModel _model = new();
+    private EditContext? _editContext;
+    private readonly AccountRole[] _allowedRoles = [AccountRole.Customer, AccountRole.Driver];
+    private bool _isSubmitting;
+    private string _error = string.Empty;
+    private string _success = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+    }
+
+    private string _buttonText => _isSubmitting ? "Creating account..." : "Create account";
+
+    private async Task HandleRegistrationAsync()
+    {
+        _error = string.Empty;
+        _success = string.Empty;
+        if (_model.Password != _model.ConfirmPassword)
+        {
+            _error = "Passwords do not match.";
+            return;
+        }
+
+        _isSubmitting = true;
+        try
+        {
+            var user = new ApplicationUser
+            {
+                UserName = _model.Email,
+                Email = _model.Email,
+                FullName = _model.FullName,
+                EmailConfirmed = true,
+                AccountType = _model.SelectedRole
+            };
+
+            var createResult = await UserManager.CreateAsync(user, _model.Password);
+            if (!createResult.Succeeded)
+            {
+                _error = string.Join(" ", createResult.Errors.Select(e => e.Description));
+                return;
+            }
+
+            await UserManager.AddToRoleAsync(user, _model.SelectedRole.ToString());
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            _success = $"Account created for {_model.FullName}. Redirecting you to the {_model.SelectedRole} dashboard...";
+            StateHasChanged();
+
+            var target = _model.SelectedRole switch
+            {
+                AccountRole.Driver => "/dashboard/driver",
+                AccountRole.Customer => "/dashboard/customer",
+                _ => "/dashboard"
+            };
+
+            await Task.Delay(1200);
+            Navigation.NavigateTo(target, forceLoad: true);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private sealed class RegistrationModel
+    {
+        [Required]
+        [StringLength(80)]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [MinLength(8)]
+        public string Password { get; set; } = string.Empty;
+
+    [Required]
+    [Compare(nameof(Password), ErrorMessage = "Passwords must match.")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required]
+        public AccountRole SelectedRole { get; set; } = AccountRole.Customer;
+    }
+}

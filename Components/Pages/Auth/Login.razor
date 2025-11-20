@@ -1,0 +1,122 @@
+@page "/login"
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+
+<PageTitle>Log in</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-16">
+    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
+        <h1 class="text-3xl font-bold text-hitchBlue">Welcome back</h1>
+        <p class="mt-2 text-sm text-slate-500">Sign in to access your dashboard.</p>
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
+        }
+
+        <EditForm EditContext="_editContext" FormName="login-form" OnValidSubmit="HandleLoginAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
+            <div class="mt-6 space-y-4">
+                <label class="block text-sm font-semibold text-slate-700">
+                    Email address
+                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" />
+                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
+                </label>
+                <label class="block text-sm font-semibold text-slate-700">
+                    Password
+                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" />
+                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
+                </label>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300" @bind-Value="_model.RememberMe" />
+                    Keep me signed in
+                </label>
+            </div>
+
+            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchOrange px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
+                @_buttonText
+            </button>
+        </EditForm>
+
+        <p class="mt-4 text-center text-sm text-slate-500">
+            Need an account?
+            <a class="text-hitchBlue font-semibold" href="/register">Create one</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    private readonly LoginModel _model = new();
+    private EditContext? _editContext;
+    private bool _isSubmitting;
+    private string _error = string.Empty;
+
+    private string _buttonText => _isSubmitting ? "Signing in..." : "Sign in";
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        _isSubmitting = true;
+        _error = string.Empty;
+
+        try
+        {
+            var result = await SignInManager.PasswordSignInAsync(_model.Email, _model.Password, _model.RememberMe, lockoutOnFailure: true);
+            if (!result.Succeeded)
+            {
+                if (result.IsLockedOut)
+                {
+                    _error = "This account is currently blocked.";
+                }
+                else
+                {
+                    _error = "Invalid email or password.";
+                }
+                return;
+            }
+
+            var user = await UserManager.FindByEmailAsync(_model.Email);
+            var dashboard = "/dashboard";
+
+            if (user is not null)
+            {
+                if (await UserManager.IsInRoleAsync(user, "Admin"))
+                {
+                    dashboard = "/admin";
+                }
+                else if (await UserManager.IsInRoleAsync(user, "Driver"))
+                {
+                    dashboard = "/dashboard/driver";
+                }
+                else if (await UserManager.IsInRoleAsync(user, "Customer"))
+                {
+                    dashboard = "/dashboard/customer";
+                }
+            }
+
+            Navigation.NavigateTo(dashboard, forceLoad: true);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+}

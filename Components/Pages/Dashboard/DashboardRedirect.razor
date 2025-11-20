@@ -1,0 +1,52 @@
+@page "/dashboard"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+<PageTitle>Dashboard</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-20">
+    <div class="mx-auto max-w-xl rounded-3xl bg-white px-8 py-12 text-center shadow">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchBlue">Redirecting</p>
+        <h1 class="mt-3 text-3xl font-bold text-hitchBlue">@_statusMessage</h1>
+        <p class="mt-4 text-sm text-slate-500">Hang tight while we take you to the right workspace.</p>
+    </div>
+</section>
+
+@code {
+    private string _statusMessage = "Finding your dashboard...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is null || !user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        var role = user.FindFirstValue(ClaimTypes.Role);
+        var target = role switch
+        {
+            "Customer" => "/dashboard/customer",
+            "Driver" => "/dashboard/driver",
+            "Admin" => "/admin",
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrEmpty(target))
+        {
+            _statusMessage = "No dashboard assigned to this account";
+            return;
+        }
+
+        _statusMessage = role + " dashboard";
+        Navigation.NavigateTo(target, forceLoad: true);
+    }
+}
