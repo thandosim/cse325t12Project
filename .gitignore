@@ -23,6 +23,7 @@ Thumbs.db
 *.pfx
 *.key
 *.snk
+Plan.md
 
 ## Logs
 *.log

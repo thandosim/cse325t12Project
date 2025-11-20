@@ -1,11 +1,21 @@
-﻿<nav class="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-	<NavLink class="text-2xl font-black text-hitchBlue" href="/" Match="NavLinkMatch.All">
-		LoadHitch
-	</NavLink>
-	<div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-600">
-		<NavLink class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/">
-			Home
-		</NavLink>			
+﻿<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+	<div class="flex items-center gap-3">
+		<NavLink href="/" Match="NavLinkMatch.All" class="flex items-center gap-3">
+			<div class="w-10 h-10 rounded-full bg-hitchBlue flex items-center justify-center text-white font-bold">LH</div>
+			<span class="text-lg font-semibold text-slate-900">LoadHitch</span>
+		</NavLink>
+	</div>
+	<div class="flex flex-wrap items-center gap-4 text-slate-600">
+		<a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/#features">Features</a>
+		<a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/#how-it-works">How it works</a>
+	</div>
+	<div class="flex flex-wrap items-center gap-3">
+		<NavLink href="/login" class="rounded-md border border-slate-200 px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">
+			Sign in
+		</NavLink>
+		<NavLink href="/register" class="rounded-md bg-hitchOrange px-5 py-2 font-semibold text-white shadow-sm transition hover:opacity-95">
+			Create account
+		</NavLink>
 	</div>
 </nav>
 
