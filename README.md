@@ -5,3 +5,5 @@
 - Tinashe Allan Ketenaire
 - Thandokuhle Simelane
 - Figuelia Ya'Sin
+- Joseph Anucha
+- Ivan Sembatya
