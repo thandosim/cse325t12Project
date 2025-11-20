@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@inject DatabaseService DatabaseService
+@page "/"
 
 <PageTitle>LoadHitch</PageTitle>
 
@@ -28,5 +29,23 @@
 				<p class="mt-2 text-sm text-slate-600">Share preferred lanes, keep trucks full, and respond to new opportunities on any device.</p>
 			</article>
 		</section>
+
+		<section class="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
+			<h2 class="text-xl font-semibold text-hitchBlue">Database connectivity</h2>
+			<p class="@($"mt-2 text-sm {_statusColor}")">@_statusMessage</p>
+			<p class="mt-1 text-xs text-slate-500">Update <code>.env</code> with the correct password to enable the live Azure PostgreSQL connection.</p>
+		</section>
 	</div>
 </main>
+
+@code {
+	private string _statusMessage = "Checking database connection...";
+	private string _statusColor = "text-slate-500";
+
+	protected override async Task OnInitializedAsync()
+	{
+		var result = await DatabaseService.TestConnectionAsync();
+		_statusMessage = result.Message;
+		_statusColor = result.IsSuccessful ? "text-green-600" : "text-red-600";
+	}
+}

@@ -97,3 +97,8 @@ D:\Downloads\BYU Material\CSE325\cse325t12Project\obj\Debug\net8.0\refint\t12Pro
 D:\Downloads\BYU Material\CSE325\cse325t12Project\obj\Debug\net8.0\t12Project.pdb
 D:\Downloads\BYU Material\CSE325\cse325t12Project\obj\Debug\net8.0\t12Project.genruntimeconfig.cache
 D:\Downloads\BYU Material\CSE325\cse325t12Project\obj\Debug\net8.0\ref\t12Project.dll
+D:\Downloads\BYU Material\CSE325\cse325t12Project\bin\Debug\net8.0\DotNetEnv.dll
+D:\Downloads\BYU Material\CSE325\cse325t12Project\bin\Debug\net8.0\Npgsql.dll
+D:\Downloads\BYU Material\CSE325\cse325t12Project\bin\Debug\net8.0\Sprache.dll
+D:\Downloads\BYU Material\CSE325\cse325t12Project\obj\Debug\net8.0\t12Project.csproj.AssemblyReference.cache
+D:\Downloads\BYU Material\CSE325\cse325t12Project\obj\Debug\net8.0\t12Project.csproj.Up2Date

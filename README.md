@@ -83,6 +83,19 @@ You will need the following software installed on your machine:
     ```
     The application will be running at `https://localhost:7XXX` and `http://localhost:5XXX`.
 
+### Azure PostgreSQL connection
+
+The Blazor Server app now reads its production database credentials from an `.env` file so secrets never live in source control.
+
+1. Copy `.env` from the project root (or create it if missing) and keep it local. Git already ignores the file.
+2. Replace `REPLACE_ME` in the `AZURE_POSTGRES_CONNECTION` entry with the actual password for `lhadmin@loadhitch`:
+
+   ```env
+   AZURE_POSTGRES_CONNECTION="Server=loadhitch.postgres.database.azure.com;Database=postgres;Port=5432;User Id=lhadmin;Password=<your password>;Ssl Mode=Require;"
+   ```
+
+3. Run `dotnet restore` (first time only) and `dotnet run`. The home page will display whether the Azure PostgreSQL database can be reached.
+
 ## Usage
 
 Once the application is running, you can explore its features:

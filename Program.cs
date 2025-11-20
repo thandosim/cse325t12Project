@@ -1,10 +1,18 @@
+using DotNetEnv;
 using t12Project.Components;
+using t12Project.Services;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<DatabaseService>();
 
 var app = builder.Build();
 

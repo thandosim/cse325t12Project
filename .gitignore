@@ -1,0 +1,35 @@
+## Build artifacts
+bin/
+obj/
+
+## User-specific files
+*.user
+*.userprefs
+*.suo
+*.vspscc
+*.vssscc
+*.sln.docstates
+.vs/
+
+## IDE settings
+*.swp
+*.DS_Store
+Thumbs.db
+
+## Secrets and environment files
+.env
+.env.*
+*.psafe3
+*.pfx
+*.key
+*.snk
+
+## Logs
+*.log
+
+## Publish output
+wwwroot/dist/
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
