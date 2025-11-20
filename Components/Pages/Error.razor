@@ -1,0 +1,26 @@
+﻿@page "/error"
+
+<PageTitle>Oops! Something went wrong.</PageTitle>
+
+<section class="flex min-h-[70vh] items-center justify-center bg-slate-950 px-6 py-16 text-white">
+	<div class="max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-10 text-center shadow-2xl backdrop-blur">
+		<p class="text-sm font-semibold uppercase tracking-[0.35em] text-hitchOrange">Error</p>
+		<h1 class="mt-4 text-4xl font-black">We hit a roadblock.</h1>
+		<p class="mt-4 text-base text-white/80">
+			The page you were looking for isn’t available right now. Let’s head back to the dashboard and pick up the route again.
+		</p>
+		<div class="mt-8 flex flex-wrap justify-center gap-4">
+			<NavLink class="rounded-full bg-hitchOrange px-6 py-3 font-semibold text-white shadow-lg shadow-orange-500/30 transition hover:-translate-y-0.5" href="/">
+				Return home
+			</NavLink>
+			<button class="rounded-full border border-white/40 px-6 py-3 font-semibold text-white/90 transition hover:border-white"
+					@onclick="() => Navigation.NavigateTo(Navigation.Uri, true)">
+				Try again
+			</button>
+		</div>
+	</div>
+</section>
+
+@code {
+	[Inject] NavigationManager Navigation { get; set; } = default!;
+}

@@ -1,0 +1,21 @@
+.minimal-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.site-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+main {
+    flex: 1;
+    padding: 1rem;
+}
+
+.site-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #eee;
+}
+/* MainLayout styles removed — start fresh with new styles in wwwroot or scoped CSS files. */
