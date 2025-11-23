@@ -1,27 +1,28 @@
-﻿<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+﻿<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 text-sm text-slate-600 sm:px-6 lg:px-8 sm:flex-row sm:items-center sm:justify-between">
 	<div class="flex items-center gap-3">
-		<NavLink href="/" Match="NavLinkMatch.All" class="flex items-center gap-3">
-			<div class="w-10 h-10 rounded-full bg-hitchBlue flex items-center justify-center text-white font-bold">LH</div>
-			<span class="text-lg font-semibold text-slate-900">LoadHitch</span>
+		<NavLink href="/" Match="NavLinkMatch.All" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+			<div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-md">LH</div>
+			<span class="text-2xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent" style="font-family: 'Pacifico', cursive;">LoadHitch</span>
 		</NavLink>
 	</div>
-	<div class="flex flex-wrap items-center gap-4 text-slate-600">
-		<a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/#features">Features</a>
-		<a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/#how-it-works">How it works</a>
+	<div class="hidden md:flex items-center gap-6 text-slate-700">
+		<a class="px-4 py-2 transition hover:text-teal-600 font-medium" href="/#features">Features</a>
+		<a class="px-4 py-2 transition hover:text-teal-600 font-medium" href="/#how-it-works">How It Works</a>
+		<a class="px-4 py-2 transition hover:text-teal-600 font-medium" href="/#benefits">Benefits</a>
 	</div>
 	<div class="flex flex-wrap items-center gap-3">
 		<AuthorizeView>
 			<Authorized Context="auth">
-				<a href="/dashboard" class="rounded-full border border-slate-200 px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">Dashboard</a>
-				<span class="text-xs uppercase tracking-wide text-slate-400">@auth.User?.Identity?.Name</span>
-				<a href="/logout" class="rounded-md bg-hitchBlue px-4 py-2 font-semibold text-white shadow-sm transition hover:opacity-95">Sign out</a>
+				<a href="/dashboard" class="rounded-full border border-slate-200 px-5 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">Dashboard</a>
+				<span class="hidden sm:inline text-xs uppercase tracking-wide text-slate-400">@auth.User?.Identity?.Name</span>
+				<a href="/logout" class="rounded-full bg-gradient-to-r from-teal-600 to-blue-600 px-5 py-2 font-semibold text-white shadow-md transition hover:shadow-lg hover:scale-105">Sign out</a>
 			</Authorized>
 			<NotAuthorized>
-				<NavLink href="/login" class="rounded-md border border-slate-200 px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">
-					Sign in
+				<NavLink href="/login" class="rounded-full border border-slate-200 px-5 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">
+					Login
 				</NavLink>
-				<NavLink href="/register" class="rounded-md bg-hitchOrange px-5 py-2 font-semibold text-white shadow-sm transition hover:opacity-95">
-					Create account
+				<NavLink href="/register" class="rounded-full bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-2 font-semibold text-white shadow-md transition hover:shadow-lg hover:scale-105 whitespace-nowrap">
+					Get Started
 				</NavLink>
 			</NotAuthorized>
 		</AuthorizeView>
