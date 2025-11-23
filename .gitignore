@@ -1,36 +1,147 @@
 ## Build artifacts
 bin/
 obj/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
 
-## User-specific files
-*.user
-*.userprefs
-*.suo
-*.vspscc
-*.vssscc
-*.sln.docstates
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]ld/
+
+## Visual Studio cache/options
 .vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vspscc
+.vssscc
 
-## IDE settings
-*.swp
-*.DS_Store
-Thumbs.db
+## Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+## ReSharper / Rider / JetBrains
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+*.sln.iml
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceFabricBackup/
+*.rptproj.bak
+
+## Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+
+## .NET Core / ASP.NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/Properties/launchSettings.json
+
+## ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+## StyleCop
+StyleCopReport.xml
+
+## NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
 
 ## Secrets and environment files
 .env
 .env.*
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
 *.psafe3
 *.pfx
 *.key
 *.snk
 Plan.md
+secrets.json
+
+## Database files
+*.mdf
+*.ldf
+*.ndf
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 ## Logs
 *.log
+*.vsidx
+*.tlog
 
 ## Publish output
+[Pp]ublish/
 wwwroot/dist/
+*.Publish.xml
+*.pubxml
+*.pubxml.user
+*.azurePubxml
 
-## Rider / JetBrains
-.idea/
-*.sln.iml
+## Windows image file caches
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## Linux
+*~
+
+## IDE temp files
+*.swp
+*.swo
+*~
+
+## Node modules (if using npm/node)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+## Backup files
+*.bak
+*.tmp
+*.temp
+
+## Azure Functions
+local.settings.json
+__blobstorage__
+__queuestorage__
+__azurite_db*__.json
