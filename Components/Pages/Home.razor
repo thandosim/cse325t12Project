@@ -1,4 +1,4 @@
-﻿@inject DatabaseService DatabaseService
+﻿@inject IServiceProvider ServiceProvider
 @page "/"
 
 <PageTitle>LoadHitch - Connect Drivers with Loads Instantly</PageTitle>
@@ -282,8 +282,23 @@
 	{
 		try
 		{
-			var result = await DatabaseService.TestConnectionAsync();
-			_statusMessage = result.Message;
+			var dbService = ServiceProvider.GetService<DatabaseService>();
+			var mockDbService = ServiceProvider.GetService<MockDatabaseService>();
+			
+			if (dbService != null)
+			{
+				var result = await dbService.TestConnectionAsync();
+				_statusMessage = result.Message;
+			}
+			else if (mockDbService != null)
+			{
+				var result = await mockDbService.TestConnectionAsync();
+				_statusMessage = result.Message;
+			}
+			else
+			{
+				_statusMessage = "No database service available";
+			}
 		}
 		catch (Exception ex)
 		{

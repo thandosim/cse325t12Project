@@ -1,4 +1,4 @@
-/* /Components/Layout/MainLayout.razor.rz.scp.css */
+/* _content/t12Project/Components/Layout/MainLayout.razor.rz.scp.css */
 .minimal-layout[b-2kuujdcgas] {
     display: flex;
     flex-direction: column;
@@ -20,5 +20,5 @@ main[b-2kuujdcgas] {
     border-top: 1px solid #eee;
 }
 /* MainLayout styles removed — start fresh with new styles in wwwroot or scoped CSS files. */
-/* /Components/Layout/NavMenu.razor.rz.scp.css */
+/* _content/t12Project/Components/Layout/NavMenu.razor.rz.scp.css */
 /* NavMenu styles removed — start fresh with new styles in wwwroot or component scoped CSS. */

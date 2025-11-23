@@ -1,6 +1,6 @@
 using DotNetEnv;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using t12Project.Components;
@@ -17,8 +17,8 @@ builder.Configuration.AddEnvironmentVariables();
 var connectionString = builder.Configuration["AZURE_POSTGRES_CONNECTION"]
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Temporarily allow running without database for UI development
-var useDatabaseAuth = !string.IsNullOrWhiteSpace(connectionString);
+// Use mock database for development without PostgreSQL
+var useDatabaseAuth = false; // Set to true when PostgreSQL is configured
 
 if (useDatabaseAuth)
 {
@@ -57,8 +57,15 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddScoped<DatabaseService>();
-builder.Services.AddScoped<AdminUserService>();
+if (useDatabaseAuth)
+{
+    builder.Services.AddScoped<DatabaseService>();
+    builder.Services.AddScoped<AdminUserService>();
+}
+else
+{
+    builder.Services.AddScoped<MockDatabaseService>();
+}
 
 var app = builder.Build();
 
