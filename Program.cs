@@ -17,38 +17,39 @@ builder.Configuration.AddEnvironmentVariables();
 var connectionString = builder.Configuration["AZURE_POSTGRES_CONNECTION"]
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-if (string.IsNullOrWhiteSpace(connectionString))
+// Temporarily allow running without database for UI development
+var useDatabaseAuth = !string.IsNullOrWhiteSpace(connectionString);
+
+if (useDatabaseAuth)
 {
-    throw new InvalidOperationException("A database connection string is required. Set ConnectionStrings:DefaultConnection or AZURE_POSTGRES_CONNECTION in .env.");
-}
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(connectionString));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+    builder.Services
+        .AddIdentity<ApplicationUser, IdentityRole>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequiredLength = 8;
+            options.User.RequireUniqueEmail = true;
+            options.SignIn.RequireConfirmedAccount = false;
+        })
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders();
 
-builder.Services
-    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    builder.Services.AddAuthorization(options =>
     {
-        options.Password.RequireDigit = true;
-        options.Password.RequireNonAlphanumeric = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequiredLength = 8;
-        options.User.RequireUniqueEmail = true;
-        options.SignIn.RequireConfirmedAccount = false;
-    })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("DriverOnly", policy => policy.RequireRole("Driver"));
-    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
-});
+        options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+        options.AddPolicy("DriverOnly", policy => policy.RequireRole("Driver"));
+        options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+    });
+}
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -61,7 +62,18 @@ builder.Services.AddScoped<AdminUserService>();
 
 var app = builder.Build();
 
-await SeedData.InitializeAsync(app.Services);
+// Only seed data if database is configured
+if (useDatabaseAuth)
+{
+    try
+    {
+        await SeedData.InitializeAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database seeding skipped: {ex.Message}");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -78,8 +90,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.UseAuthentication();
-app.UseAuthorization();
+if (useDatabaseAuth)
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
