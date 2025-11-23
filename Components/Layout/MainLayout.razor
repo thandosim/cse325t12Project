@@ -9,7 +9,46 @@
         @Body
     </main>
 
-    <footer class="border-t border-slate-200 bg-white/90 px-6 py-4 text-center text-sm text-slate-500">
-        &copy; @DateTime.Now.Year LoadHitch. All rights reserved.
+    <footer class="bg-gray-900 text-gray-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-teal-400 to-blue-400 bg-clip-text text-transparent" style="font-family: 'Pacifico', cursive;">LoadHitch</h3>
+                    <p class="text-gray-400 leading-relaxed">Connecting drivers with loads, making freight transportation efficient and profitable.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">For Drivers</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/driver/dashboard" class="hover:text-teal-400 transition-colors">Find Loads</a></li>
+                        <li><a href="/driver/availability" class="hover:text-teal-400 transition-colors">Post Availability</a></li>
+                        <li><a href="/#features" class="hover:text-teal-400 transition-colors">Driver Resources</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">For Shippers</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/customer/dashboard" class="hover:text-teal-400 transition-colors">Find Trucks</a></li>
+                        <li><a href="/customer/book" class="hover:text-teal-400 transition-colors">Book Transport</a></li>
+                        <li><a href="/#features" class="hover:text-teal-400 transition-colors">Shipper Guide</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Company</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/#how-it-works" class="hover:text-teal-400 transition-colors">About Us</a></li>
+                        <li><a href="/#benefits" class="hover:text-teal-400 transition-colors">Contact</a></li>
+                        <li><a href="/#" class="hover:text-teal-400 transition-colors">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm mb-4 md:mb-0">&copy; @DateTime.Now.Year LoadHitch. All rights reserved.</p>
+                <div class="flex gap-4">
+                    <a href="/#features" class="text-gray-400 text-sm hover:text-teal-400 transition-colors">Features</a>
+                    <a href="/#how-it-works" class="text-gray-400 text-sm hover:text-teal-400 transition-colors">How It Works</a>
+                    <a href="/#benefits" class="text-gray-400 text-sm hover:text-teal-400 transition-colors">Benefits</a>
+                </div>
+            </div>
+        </div>
     </footer>
 </div>

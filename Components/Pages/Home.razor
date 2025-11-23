@@ -1,112 +1,265 @@
 ﻿@inject DatabaseService DatabaseService
 @page "/"
 
-<PageTitle>LoadHitch</PageTitle>
+<PageTitle>LoadHitch - Connect Drivers with Loads Instantly</PageTitle>
 
-<main class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
-	<!-- Hero -->
-	<section class="max-w-7xl mx-auto px-6 py-12 md:py-20">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-			<div>
-				<p class="text-sm font-semibold uppercase tracking-[0.18em] text-hitchOrange">Logistics platform</p>
-				<h1 class="mt-4 text-4xl md:text-5xl font-extrabold text-hitchBlue leading-tight">Move more. Book faster. Keep trucks full.</h1>
-				<p class="mt-6 text-lg text-slate-600">LoadHitch connects shippers with nearby drivers using a lightweight booking flow — post loads, view available trucks, and confirm bookings without the back-and-forth.</p>
-
-				<div class="mt-8 flex flex-wrap gap-3">
-					<a href="/customer/book" class="inline-flex items-center gap-3 bg-hitchOrange text-white px-5 py-3 rounded-lg shadow hover:opacity-95">Book a truck</a>
-					<a href="/register" class="inline-flex items-center gap-3 border border-slate-200 px-5 py-3 rounded-lg text-slate-800 hover:bg-slate-50">Create account</a>
+<main class="min-h-screen bg-white text-slate-900">
+	<!-- Hero Section -->
+	<section class="relative bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 overflow-hidden">
+		<div class="absolute inset-0 opacity-5">
+			<div class="absolute inset-0 bg-gradient-to-br from-teal-200 to-blue-300"></div>
+		</div>
+		<div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+			<div class="grid lg:grid-cols-2 gap-12 items-center">
+				<div>
+					<p class="text-sm font-semibold uppercase tracking-[0.18em] text-teal-600 mb-4">Logistics platform</p>
+					<h1 class="text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
+						Connect Drivers with Loads Instantly
+					</h1>
+					<p class="text-xl text-gray-600 mb-8 leading-relaxed">
+						LoadHitch revolutionizes freight transportation by connecting truck drivers with shipping opportunities in real-time. Save time, reduce empty miles, and maximize efficiency for both drivers and shippers.
+					</p>
+					<div class="flex flex-wrap gap-4 mb-10">
+						<a href="/register?type=driver" class="inline-flex items-center justify-center bg-gradient-to-r from-teal-600 to-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all whitespace-nowrap">
+							I'm a Driver
+						</a>
+						<a href="/register?type=shipper" class="inline-flex items-center justify-center bg-white text-teal-600 px-8 py-4 rounded-full text-lg font-semibold border-2 border-teal-600 hover:bg-teal-50 transition-all whitespace-nowrap shadow-md">
+							I Need Transport
+						</a>
+					</div>
+					
+					<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-gray-200">
+						<div class="flex items-start gap-3">
+							<div class="rounded-lg bg-teal-100 text-teal-600 w-10 h-10 flex items-center justify-center flex-shrink-0 text-xl">⚡</div>
+							<div>
+								<div class="font-bold text-gray-900">Fast Matching</div>
+								<div class="text-sm text-gray-600">Real-time load matching</div>
+							</div>
+						</div>
+						<div class="flex items-start gap-3">
+							<div class="rounded-lg bg-blue-100 text-blue-600 w-10 h-10 flex items-center justify-center flex-shrink-0 text-xl">📍</div>
+							<div>
+								<div class="font-bold text-gray-900">Live Tracking</div>
+								<div class="text-sm text-gray-600">Location updates</div>
+							</div>
+						</div>
+						<div class="flex items-start gap-3">
+							<div class="rounded-lg bg-purple-100 text-purple-600 w-10 h-10 flex items-center justify-center flex-shrink-0 text-xl">🔒</div>
+							<div>
+								<div class="font-bold text-gray-900">Secure</div>
+								<div class="text-sm text-gray-600">Protected & auditable</div>
+							</div>
+						</div>
+					</div>
 				</div>
 
-				<ul class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-600">
-					<li class="flex items-start gap-3">
-						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">⚡</div>
-						<div>
-							<div class="font-semibold text-slate-800">Fast matching</div>
-							<div class="text-xs">Post loads and get matched quickly to nearby drivers.</div>
-						</div>
-					</li>
-					<li class="flex items-start gap-3">
-						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">📍</div>
-						<div>
-							<div class="font-semibold text-slate-800">Live availability</div>
-							<div class="text-xs">Drivers share availability and location so you can plan with confidence.</div>
-						</div>
-					</li>
-					<li class="flex items-start gap-3">
-						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">🔒</div>
-						<div>
-							<div class="font-semibold text-slate-800">Secure & auditable</div>
-							<div class="text-xs">Role-based access and booking history for compliance.</div>
-						</div>
-					</li>
-				</ul>
-			</div>
-
-			<div class="relative">
-				<img src="https://images.pexels.com/photos/8994766/pexels-photo-8994766.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load"
-					alt="Semi-truck driving down a highway"
-					class="w-full rounded-3xl shadow-2xl object-cover"
-					loading="lazy" />
+				<div class="relative">
+					<div class="relative rounded-3xl overflow-hidden shadow-2xl">
+						<img src="https://images.pexels.com/photos/8994766/pexels-photo-8994766.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load"
+							alt="Professional truck driver"
+							class="w-full h-full object-cover"
+							loading="lazy" />
+					</div>
+				</div>
 			</div>
 		</div>
 	</section>
 
-	<!-- Features -->
-	<section id="features" class="max-w-7xl mx-auto px-6 py-12 bg-white rounded-3xl shadow-sm">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-			<div>
-				<h2 class="text-2xl font-bold text-hitchBlue">Everything you need to keep freight moving</h2>
-				<p class="mt-4 text-slate-600">From quick bookings to driver management and audit logs — LoadHitch makes it simple to manage shipments and cargo across multiple lanes.</p>
-
-				<ul class="mt-6 space-y-4 text-slate-700">
-					<li class="flex gap-3 items-start">
-						<div class="text-hitchOrange text-xl">✓</div>
-						<div>
-							<div class="font-semibold">Loads dashboard</div>
-							<div class="text-sm text-slate-600">Create, edit and track loads with status updates.</div>
-						</div>
-					</li>
-					<li class="flex gap-3 items-start">
-						<div class="text-hitchOrange text-xl">✓</div>
-						<div>
-							<div class="font-semibold">Trucks & availability</div>
-							<div class="text-sm text-slate-600">Drivers control availability and update location when in transit.</div>
-						</div>
-					</li>
-					<li class="flex gap-3 items-start">
-						<div class="text-hitchOrange text-xl">✓</div>
-						<div>
-							<div class="font-semibold">Booking flow</div>
-							<div class="text-sm text-slate-600">A lightweight wizard helps customers find and book the right truck.</div>
-						</div>
-					</li>
-				</ul>
+	<!-- Features Section -->
+	<section id="features" class="py-20 bg-white">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="text-center mb-16">
+				<h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Powerful Features for Everyone</h2>
+				<p class="text-xl text-gray-600 max-w-3xl mx-auto">Everything you need to streamline your freight operations</p>
 			</div>
-
-			<div class="flex items-center justify-center">
-				<img src="/images/feature-illustration.svg" alt="Three feature tiles illustration" class="w-full max-w-md rounded-xl" />
+			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+				<div class="bg-gradient-to-br from-teal-50 to-blue-50 p-8 rounded-2xl hover:shadow-xl transition-all hover:scale-105">
+					<div class="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl mb-6 shadow-lg">
+						<span class="text-3xl">📊</span>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Real-Time Dashboard</h3>
+					<p class="text-gray-600 leading-relaxed">View available loads and trucks instantly. Our intuitive dashboard keeps you updated with the latest opportunities in your area.</p>
+				</div>
+				<div class="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl hover:shadow-xl transition-all hover:scale-105">
+					<div class="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mb-6 shadow-lg">
+						<span class="text-3xl">📍</span>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Location Tracking</h3>
+					<p class="text-gray-600 leading-relaxed">Update your location and find jobs along your planned routes. Reduce empty miles and maximize your earning potential.</p>
+				</div>
+				<div class="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-2xl hover:shadow-xl transition-all hover:scale-105">
+					<div class="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl mb-6 shadow-lg">
+						<span class="text-3xl">📅</span>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Availability Management</h3>
+					<p class="text-gray-600 leading-relaxed">Drivers can post their availability and shippers can book trucks instantly. Simple, fast, and efficient scheduling.</p>
+				</div>
+				<div class="bg-gradient-to-br from-pink-50 to-red-50 p-8 rounded-2xl hover:shadow-xl transition-all hover:scale-105">
+					<div class="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mb-6 shadow-lg">
+						<span class="text-3xl">🛡️</span>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Secure Authentication</h3>
+					<p class="text-gray-600 leading-relaxed">Role-based access control ensures drivers, shippers, and admins have the right permissions. Your data is always protected.</p>
+				</div>
+				<div class="bg-gradient-to-br from-red-50 to-orange-50 p-8 rounded-2xl hover:shadow-xl transition-all hover:scale-105">
+					<div class="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600 rounded-xl mb-6 shadow-lg">
+						<span class="text-3xl">👤</span>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Profile Management</h3>
+					<p class="text-gray-600 leading-relaxed">Create and modify your account with ease. Manage preferences, vehicle details, and contact information all in one place.</p>
+				</div>
+				<div class="bg-gradient-to-br from-orange-50 to-yellow-50 p-8 rounded-2xl hover:shadow-xl transition-all hover:scale-105">
+					<div class="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl mb-6 shadow-lg">
+						<span class="text-3xl">🚛</span>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Truck Booking</h3>
+					<p class="text-gray-600 leading-relaxed">Shippers can browse available trucks and book transportation with just a few clicks. Fast, reliable, and hassle-free.</p>
+				</div>
 			</div>
 		</div>
 	</section>
 
-	<section id="how-it-works" class="max-w-7xl mx-auto px-6 py-16">
-		<h2 class="text-2xl font-bold text-hitchBlue">How LoadHitch works</h2>
-		<div class="mt-10 grid gap-6 md:grid-cols-3">
-			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 1</p>
-				<h3 class="mt-2 text-lg font-semibold text-slate-900">Create your account</h3>
-				<p class="mt-2 text-sm text-slate-600">Customers and drivers sign up, choose their role, and complete the onboarding checklist.</p>
-			</article>
-			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 2</p>
-				<h3 class="mt-2 text-lg font-semibold text-slate-900">Publish loads or availability</h3>
-				<p class="mt-2 text-sm text-slate-600">Customers post loads with pickup/dropoff details, while drivers set availability windows and current location.</p>
-			</article>
-			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 3</p>
-				<h3 class="mt-2 text-lg font-semibold text-slate-900">Book and keep moving</h3>
-				<p class="mt-2 text-sm text-slate-600">Use the booking wizard to match loads and trucks, then track the delivery progress from the dashboard.</p>
-			</article>
+	<!-- How It Works Section -->
+	<section id="how-it-works" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="text-center mb-16">
+				<h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">How LoadHitch Works</h2>
+				<p class="text-xl text-gray-600 max-w-3xl mx-auto">Get started in three simple steps</p>
+			</div>
+			<div class="grid md:grid-cols-3 gap-12">
+				<div class="text-center">
+					<div class="relative mb-8">
+						<div class="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-teal-500 to-teal-600 rounded-full mx-auto shadow-xl">
+							<span class="text-5xl font-bold text-white">1</span>
+						</div>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Create Your Account</h3>
+					<p class="text-gray-600 leading-relaxed">Sign up as a driver or shipper. Complete your profile with relevant details about your truck or shipping needs.</p>
+				</div>
+				<div class="text-center">
+					<div class="relative mb-8">
+						<div class="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mx-auto shadow-xl">
+							<span class="text-5xl font-bold text-white">2</span>
+						</div>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Browse & Connect</h3>
+					<p class="text-gray-600 leading-relaxed">Drivers find loads along their routes. Shippers browse available trucks in their area. Real-time updates keep everyone informed.</p>
+				</div>
+				<div class="text-center">
+					<div class="relative mb-8">
+						<div class="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-600 rounded-full mx-auto shadow-xl">
+							<span class="text-5xl font-bold text-white">3</span>
+						</div>
+					</div>
+					<h3 class="text-2xl font-bold text-gray-900 mb-4">Book & Transport</h3>
+					<p class="text-gray-600 leading-relaxed">Confirm the booking and get moving. Track job status and manage your transportation efficiently from start to finish.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Benefits Section -->
+	<section id="benefits" class="py-20 bg-white">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<!-- For Drivers -->
+			<div class="grid lg:grid-cols-2 gap-16 items-center">
+				<div>
+					<h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">For Truck Drivers</h2>
+					<div class="space-y-6">
+						<div class="flex items-start gap-4">
+							<div class="w-12 h-12 flex items-center justify-center bg-teal-100 rounded-lg flex-shrink-0">
+								<span class="text-2xl text-teal-600">✓</span>
+							</div>
+							<div>
+								<h3 class="text-xl font-bold text-gray-900 mb-2">Reduce Empty Miles</h3>
+								<p class="text-gray-600">Find loads along your planned routes and maximize your earning potential on every trip.</p>
+							</div>
+						</div>
+						<div class="flex items-start gap-4">
+							<div class="w-12 h-12 flex items-center justify-center bg-teal-100 rounded-lg flex-shrink-0">
+								<span class="text-2xl text-teal-600">✓</span>
+							</div>
+							<div>
+								<h3 class="text-xl font-bold text-gray-900 mb-2">Flexible Scheduling</h3>
+								<p class="text-gray-600">Post your availability and choose jobs that fit your schedule and preferences.</p>
+							</div>
+						</div>
+						<div class="flex items-start gap-4">
+							<div class="w-12 h-12 flex items-center justify-center bg-teal-100 rounded-lg flex-shrink-0">
+								<span class="text-2xl text-teal-600">✓</span>
+							</div>
+							<div>
+								<h3 class="text-xl font-bold text-gray-900 mb-2">Instant Opportunities</h3>
+								<p class="text-gray-600">Access real-time job postings and connect with shippers immediately.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div>
+					<img src="https://images.pexels.com/photos/8001047/pexels-photo-8001047.jpeg?auto=compress&cs=tinysrgb&w=800"
+						alt="Truck driver managing loads"
+						class="w-full rounded-2xl shadow-2xl object-cover"
+						loading="lazy" />
+				</div>
+			</div>
+
+			<!-- For Shippers -->
+			<div class="grid lg:grid-cols-2 gap-16 items-center mt-24">
+				<div class="order-2 lg:order-1">
+					<img src="https://images.pexels.com/photos/7363671/pexels-photo-7363671.jpeg?auto=compress&cs=tinysrgb&w=800"
+						alt="Business professional managing shipments"
+						class="w-full rounded-2xl shadow-2xl object-cover"
+						loading="lazy" />
+				</div>
+				<div class="order-1 lg:order-2">
+					<h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">For Shippers</h2>
+					<div class="space-y-6">
+						<div class="flex items-start gap-4">
+							<div class="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
+								<span class="text-2xl text-blue-600">✓</span>
+							</div>
+							<div>
+								<h3 class="text-xl font-bold text-gray-900 mb-2">Save Time</h3>
+								<p class="text-gray-600">Find available trucks instantly instead of making countless phone calls and emails.</p>
+							</div>
+						</div>
+						<div class="flex items-start gap-4">
+							<div class="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
+								<span class="text-2xl text-blue-600">✓</span>
+							</div>
+							<div>
+								<h3 class="text-xl font-bold text-gray-900 mb-2">Reliable Network</h3>
+								<p class="text-gray-600">Access a verified network of professional drivers ready to transport your goods.</p>
+							</div>
+						</div>
+						<div class="flex items-start gap-4">
+							<div class="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-lg flex-shrink-0">
+								<span class="text-2xl text-blue-600">✓</span>
+							</div>
+							<div>
+								<h3 class="text-xl font-bold text-gray-900 mb-2">Easy Booking</h3>
+								<p class="text-gray-600">Book trucks with just a few clicks and track your shipments in real-time.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- CTA Section -->
+	<section class="py-20 bg-gradient-to-r from-teal-600 via-blue-600 to-purple-600">
+		<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+			<h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Get Started?</h2>
+			<p class="text-xl text-teal-50 mb-10 leading-relaxed">Join thousands of drivers and shippers who are already using LoadHitch to streamline their freight operations.</p>
+			<div class="flex flex-wrap justify-center gap-4">
+				<a href="/register?type=driver" class="inline-flex items-center justify-center bg-white text-teal-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 shadow-xl hover:shadow-2xl hover:scale-105 transition-all whitespace-nowrap">
+					Sign Up as Driver
+				</a>
+				<a href="/register?type=shipper" class="inline-flex items-center justify-center bg-teal-800 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-teal-900 shadow-xl hover:shadow-2xl hover:scale-105 transition-all whitespace-nowrap">
+					Sign Up as Shipper
+				</a>
+			</div>
 		</div>
 	</section>
 
