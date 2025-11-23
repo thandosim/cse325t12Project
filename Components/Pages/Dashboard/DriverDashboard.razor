@@ -4,12 +4,245 @@
 @using Microsoft.AspNetCore.Components.Web
 @attribute [Authorize(Roles = "Driver")]
 
-<PageTitle>Driver dashboard</PageTitle>
+<PageTitle>Driver Dashboard - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-16">
-    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
-        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchBlue">Driver area</p>
-        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Driver dashboard</h1>
-        <p class="mt-4 text-slate-500">Placeholder coming in hot. Availability, trucks, and bookings will live here.</p>
+<div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">🚛 Driver Dashboard</h1>
+                    <p class="text-gray-600 mt-1">Manage your trucks, availability, and bookings</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-gradient-to-r from-teal-50 to-blue-50 px-4 py-2 rounded-lg border border-teal-200">
+                        <span class="text-sm font-semibold text-teal-700">Status: Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</section>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">Available Loads</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">24</p>
+                    </div>
+                    <div class="text-4xl">📦</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">Active Bookings</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">3</p>
+                    </div>
+                    <div class="text-4xl">✅</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">My Trucks</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">2</p>
+                    </div>
+                    <div class="text-4xl">🚚</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">This Month</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">$4,250</p>
+                    </div>
+                    <div class="text-4xl">💰</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Available Loads -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-white">📦 Available Loads Nearby</h2>
+                        <button class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            Filter
+                        </button>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <!-- Sample Load 1 -->
+                        <div class="p-6 hover:bg-gray-50 transition-all cursor-pointer">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">URGENT</span>
+                                        <span class="text-gray-500 text-sm">Posted 2 hours ago</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 mb-2">Construction Materials - Portland to Seattle</h3>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 From:</span>
+                                            <span class="font-semibold">Portland, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 To:</span>
+                                            <span class="font-semibold">Seattle, WA</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">⚖️ Weight:</span>
+                                            <span class="font-semibold">18,000 lbs</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📅 Pickup:</span>
+                                            <span class="font-semibold">Nov 25, 2025</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="text-2xl font-bold text-teal-600">$850</p>
+                                    <button class="mt-2 bg-gradient-to-r from-teal-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                                        Book Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Load 2 -->
+                        <div class="p-6 hover:bg-gray-50 transition-all cursor-pointer">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">REGULAR</span>
+                                        <span class="text-gray-500 text-sm">Posted 1 day ago</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 mb-2">Furniture Delivery - Eugene to Bend</h3>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 From:</span>
+                                            <span class="font-semibold">Eugene, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 To:</span>
+                                            <span class="font-semibold">Bend, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">⚖️ Weight:</span>
+                                            <span class="font-semibold">8,500 lbs</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📅 Pickup:</span>
+                                            <span class="font-semibold">Nov 27, 2025</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="text-2xl font-bold text-teal-600">$450</p>
+                                    <button class="mt-2 bg-gradient-to-r from-teal-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                                        Book Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Load 3 -->
+                        <div class="p-6 hover:bg-gray-50 transition-all cursor-pointer">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">SCHEDULED</span>
+                                        <span class="text-gray-500 text-sm">Posted 3 days ago</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 mb-2">Electronics - Salem to Medford</h3>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 From:</span>
+                                            <span class="font-semibold">Salem, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 To:</span>
+                                            <span class="font-semibold">Medford, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">⚖️ Weight:</span>
+                                            <span class="font-semibold">12,000 lbs</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📅 Pickup:</span>
+                                            <span class="font-semibold">Dec 1, 2025</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="text-2xl font-bold text-teal-600">$680</p>
+                                    <button class="mt-2 bg-gradient-to-r from-teal-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                                        Book Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- My Trucks -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">🚚 My Trucks</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-teal-500 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-900">Freightliner Cascadia</span>
+                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">ACTIVE</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Plate: OR-ABC123</p>
+                            <p class="text-sm text-gray-600">Capacity: 45,000 lbs</p>
+                        </div>
+                        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-teal-500 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-900">Kenworth T680</span>
+                                <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-bold">MAINTENANCE</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Plate: OR-XYZ789</p>
+                            <p class="text-sm text-gray-600">Capacity: 42,000 lbs</p>
+                        </div>
+                        <button class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                            + Add New Truck
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">⚡ Quick Actions</h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <button class="w-full bg-teal-50 hover:bg-teal-100 text-teal-700 px-4 py-3 rounded-xl font-semibold transition-all border border-teal-200">
+                            📅 Update Availability
+                        </button>
+                        <button class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-3 rounded-xl font-semibold transition-all border border-blue-200">
+                            📍 Update Location
+                        </button>
+                        <button class="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-3 rounded-xl font-semibold transition-all border border-purple-200">
+                            📊 View Analytics
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

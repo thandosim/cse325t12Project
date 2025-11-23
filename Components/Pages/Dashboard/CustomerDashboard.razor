@@ -4,12 +4,238 @@
 @using Microsoft.AspNetCore.Components.Web
 @attribute [Authorize(Roles = "Customer")]
 
-<PageTitle>Customer dashboard</PageTitle>
+<PageTitle>Shipper Dashboard - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
-        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchOrange">Customer area</p>
-        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Customer dashboard</h1>
-        <p class="mt-4 text-slate-500">This is a placeholder. Your load and booking widgets will arrive soon.</p>
+<div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">🚢 Shipper Dashboard</h1>
+                    <p class="text-gray-600 mt-1">Post loads and manage your shipments</p>
+                </div>
+                <button class="bg-gradient-to-r from-teal-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                    + Post New Load
+                </button>
+            </div>
+        </div>
     </div>
-</section>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">Active Loads</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">5</p>
+                    </div>
+                    <div class="text-4xl">📦</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">In Transit</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">8</p>
+                    </div>
+                    <div class="text-4xl">🚛</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">Completed</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">127</p>
+                    </div>
+                    <div class="text-4xl">✅</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 uppercase">This Month</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">$12,450</p>
+                    </div>
+                    <div class="text-4xl">💰</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- My Loads -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Active Loads -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-white">📦 My Active Loads</h2>
+                        <button class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            View All
+                        </button>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <!-- Sample Load 1 -->
+                        <div class="p-6 hover:bg-gray-50 transition-all">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">PENDING BOOKING</span>
+                                        <span class="text-gray-500 text-sm">Posted today</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 mb-3">Construction Materials</h3>
+                                    <div class="grid grid-cols-2 gap-3 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 From:</span>
+                                            <span class="font-semibold">Portland, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 To:</span>
+                                            <span class="font-semibold">Seattle, WA</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">⚖️ Weight:</span>
+                                            <span class="font-semibold">18,000 lbs</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">💰 Rate:</span>
+                                            <span class="font-semibold text-teal-600">$850</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="flex-1 bg-teal-50 text-teal-700 px-4 py-2 rounded-lg font-semibold hover:bg-teal-100 transition-all">
+                                    View Details
+                                </button>
+                                <button class="flex-1 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-all">
+                                    View Bids (3)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sample Load 2 -->
+                        <div class="p-6 hover:bg-gray-50 transition-all">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">BOOKED</span>
+                                        <span class="text-gray-500 text-sm">Pickup: Nov 27</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-900 mb-3">Furniture Delivery</h3>
+                                    <div class="grid grid-cols-2 gap-3 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 From:</span>
+                                            <span class="font-semibold">Eugene, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">📍 To:</span>
+                                            <span class="font-semibold">Bend, OR</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">⚖️ Weight:</span>
+                                            <span class="font-semibold">8,500 lbs</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-500">🚛 Driver:</span>
+                                            <span class="font-semibold">John Smith</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="flex-1 bg-teal-50 text-teal-700 px-4 py-2 rounded-lg font-semibold hover:bg-teal-100 transition-all">
+                                    Track Shipment
+                                </button>
+                                <button class="flex-1 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-all">
+                                    Contact Driver
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">📊 Recent Activity</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center gap-4 pb-4 border-b border-gray-200">
+                            <div class="bg-green-100 rounded-full p-3 text-2xl">✅</div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">Load delivered successfully</p>
+                                <p class="text-sm text-gray-600">Electronics shipment to Medford • 2 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 pb-4 border-b border-gray-200">
+                            <div class="bg-blue-100 rounded-full p-3 text-2xl">🚛</div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">New booking received</p>
+                                <p class="text-sm text-gray-600">Furniture shipment booked by Mike Johnson • 5 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="bg-teal-100 rounded-full p-3 text-2xl">💬</div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">New bid on your load</p>
+                                <p class="text-sm text-gray-600">Construction materials shipment • 1 day ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Available Drivers -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">🚚 Available Drivers</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-teal-500 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-900">Mike Thompson</span>
+                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">ONLINE</span>
+                            </div>
+                            <p class="text-sm text-gray-600">⭐ 4.9 • 250+ trips</p>
+                            <p class="text-sm text-gray-600">📍 Portland area</p>
+                        </div>
+                        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-teal-500 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-900">Sarah Davis</span>
+                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">ONLINE</span>
+                            </div>
+                            <p class="text-sm text-gray-600">⭐ 4.8 • 180+ trips</p>
+                            <p class="text-sm text-gray-600">📍 Eugene area</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">⚡ Quick Actions</h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <button class="w-full bg-teal-50 hover:bg-teal-100 text-teal-700 px-4 py-3 rounded-xl font-semibold transition-all border border-teal-200">
+                            📦 Post New Load
+                        </button>
+                        <button class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-3 rounded-xl font-semibold transition-all border border-blue-200">
+                            🚛 Find Drivers
+                        </button>
+                        <button class="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-3 rounded-xl font-semibold transition-all border border-purple-200">
+                            📊 View Reports
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
