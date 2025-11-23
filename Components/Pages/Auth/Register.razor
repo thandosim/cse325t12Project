@@ -3,68 +3,119 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
 
-<PageTitle>Create account</PageTitle>
+<PageTitle>Create account - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
-        <h1 class="text-3xl font-bold text-hitchBlue">Create your LoadHitch account</h1>
-        <p class="mt-2 text-sm text-slate-500">Choose a role to get the right dashboard experience.</p>
-
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
-        }
-
-        @if (!string.IsNullOrWhiteSpace(_success))
-        {
-            <div class="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">@_success</div>
-        }
-
-        <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
-            <div class="mt-6 space-y-4">
-                <label class="block text-sm font-semibold text-slate-700">
-                    Full name
-                    <InputText class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.FullName" />
-                    <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Email address
-                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" />
-                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" />
-                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Confirm password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.ConfirmPassword" />
-                    <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Role
-                    <InputSelect class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.SelectedRole">
-                        @foreach (var role in _allowedRoles)
-                        {
-                            <option value="@role">@role</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
-                </label>
+<section class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-16 flex items-center justify-center">
+    <div class="w-full max-w-md mx-4">
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <!-- Header with gradient -->
+            <div class="bg-gradient-to-r from-teal-600 to-blue-600 px-8 py-10 text-white text-center">
+                <h1 class="text-3xl font-bold mb-2">Join LoadHitch 🚚</h1>
+                <p class="text-teal-50">Create your account and start connecting</p>
             </div>
 
-            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchBlue px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
-                @_buttonText
-            </button>
-        </EditForm>
+            <div class="p-8">
+                @if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
+                        <span class="text-lg">⚠️</span>
+                        <span>@_error</span>
+                    </div>
+                }
 
-        <p class="mt-4 text-center text-sm text-slate-500">
-            Already have an account?
-            <a class="text-hitchBlue font-semibold" href="/login">Log in</a>
-        </p>
+                @if (!string.IsNullOrWhiteSpace(_success))
+                {
+                    <div class="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 flex items-start gap-2">
+                        <span class="text-lg">✅</span>
+                        <span>@_success</span>
+                    </div>
+                }
+
+                <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                👤 Full Name
+                            </label>
+                            <InputText class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all" 
+                                      placeholder="John Doe"
+                                      @bind-Value="_model.FullName" />
+                            <ValidationMessage For="@(() => _model.FullName)" class="mt-1.5 text-xs text-red-600 font-medium" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                📧 Email Address
+                            </label>
+                            <InputText type="email" 
+                                      class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all" 
+                                      placeholder="you@example.com"
+                                      @bind-Value="_model.Email" />
+                            <ValidationMessage For="@(() => _model.Email)" class="mt-1.5 text-xs text-red-600 font-medium" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                🔒 Password
+                            </label>
+                            <InputText type="password" 
+                                      class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all" 
+                                      placeholder="Create a strong password"
+                                      @bind-Value="_model.Password" />
+                            <ValidationMessage For="@(() => _model.Password)" class="mt-1.5 text-xs text-red-600 font-medium" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                🔐 Confirm Password
+                            </label>
+                            <InputText type="password" 
+                                      class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all" 
+                                      placeholder="Confirm your password"
+                                      @bind-Value="_model.ConfirmPassword" />
+                            <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1.5 text-xs text-red-600 font-medium" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                🎯 I am a...
+                            </label>
+                            <InputSelect class="w-full rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all bg-white" 
+                                        @bind-Value="_model.SelectedRole">
+                                @foreach (var role in _allowedRoles)
+                                {
+                                    <option value="@role">@(role == AccountRole.Customer ? "🚢 Shipper (I need transport)" : "🚛 Driver (I have a truck)")</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1.5 text-xs text-red-600 font-medium" />
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="mt-8 w-full rounded-xl bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-4 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-60 disabled:cursor-not-allowed" 
+                            disabled="@_isSubmitting">
+                        @_buttonText
+                    </button>
+                </EditForm>
+
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a class="font-bold text-teal-600 hover:text-teal-700 ml-1" href="/login">Sign in →</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to home link -->
+        <div class="mt-6 text-center">
+            <a href="/" class="text-sm text-gray-600 hover:text-gray-900 font-medium">
+                ← Back to home
+            </a>
+        </div>
     </div>
 </section>
 
