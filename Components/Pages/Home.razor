@@ -3,123 +3,143 @@
 
 <PageTitle>LoadHitch</PageTitle>
 
-<main class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
-	<!-- Hero -->
-	<section class="max-w-7xl mx-auto px-6 py-12 md:py-20">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+<main class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white">
+	<section class="relative overflow-hidden">
+		<div class="absolute inset-0 opacity-40" style="background: radial-gradient(circle at top, rgba(249,115,22,0.35), transparent 55%);"></div>
+		<div class="relative max-w-7xl mx-auto px-6 py-16 md:py-24 grid gap-12 lg:grid-cols-[1.15fr_0.85fr] items-center">
 			<div>
-				<p class="text-sm font-semibold uppercase tracking-[0.18em] text-hitchOrange">Logistics platform</p>
-				<h1 class="mt-4 text-4xl md:text-5xl font-extrabold text-hitchBlue leading-tight">Move more. Book faster. Keep trucks full.</h1>
-				<p class="mt-6 text-lg text-slate-600">LoadHitch connects shippers with nearby drivers using a lightweight booking flow — post loads, view available trucks, and confirm bookings without the back-and-forth.</p>
-
-				<div class="mt-8 flex flex-wrap gap-3">
-					<a href="/customer/book" class="inline-flex items-center gap-3 bg-hitchOrange text-white px-5 py-3 rounded-lg shadow hover:opacity-95">Book a truck</a>
-					<a href="/register" class="inline-flex items-center gap-3 border border-slate-200 px-5 py-3 rounded-lg text-slate-800 hover:bg-slate-50">Create account</a>
+				<div class="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1 text-xs uppercase tracking-[0.2em] text-orange-200">LoadHitch Platform</div>
+				<h1 class="mt-6 text-4xl md:text-5xl xl:text-6xl font-black leading-tight text-white">Keep freight moving with live driver visibility.</h1>
+				<p class="mt-6 text-lg text-slate-200 max-w-2xl">Book trusted carriers, orchestrate drivers, and keep every load on schedule inside a single control tower built for modern shippers.</p>
+				<div class="mt-10 flex flex-wrap gap-4">
+					<a href="/register" class="inline-flex items-center gap-3 rounded-2xl bg-white/90 px-6 py-3 text-slate-900 font-semibold shadow-lg shadow-orange-500/30 hover:bg-white">Create free account</a>
+					<a href="/customer/book" class="inline-flex items-center gap-3 rounded-2xl border border-white/30 px-6 py-3 text-white font-semibold hover:bg-white/10">Book a truck</a>
 				</div>
-
-				<ul class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-600">
-					<li class="flex items-start gap-3">
-						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">⚡</div>
-						<div>
-							<div class="font-semibold text-slate-800">Fast matching</div>
-							<div class="text-xs">Post loads and get matched quickly to nearby drivers.</div>
-						</div>
-					</li>
-					<li class="flex items-start gap-3">
-						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">📍</div>
-						<div>
-							<div class="font-semibold text-slate-800">Live availability</div>
-							<div class="text-xs">Drivers share availability and location so you can plan with confidence.</div>
-						</div>
-					</li>
-					<li class="flex items-start gap-3">
-						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">🔒</div>
-						<div>
-							<div class="font-semibold text-slate-800">Secure & auditable</div>
-							<div class="text-xs">Role-based access and booking history for compliance.</div>
-						</div>
-					</li>
-				</ul>
+				<div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+					<div class="rounded-2xl border border-white/10 bg-white/5 p-5">
+						<p class="text-sm uppercase tracking-[0.2em] text-orange-200">Loads posted</p>
+						<p class="mt-3 text-3xl font-bold">12K+</p>
+						<p class="text-sm text-slate-300">per quarter across North America</p>
+					</div>
+					<div class="rounded-2xl border border-white/10 bg-white/5 p-5">
+						<p class="text-sm uppercase tracking-[0.2em] text-orange-200">Driver uptime</p>
+						<p class="mt-3 text-3xl font-bold">97%</p>
+						<p class="text-sm text-slate-300">availability accuracy from live updates</p>
+					</div>
+					<div class="rounded-2xl border border-white/10 bg-white/5 p-5">
+						<p class="text-sm uppercase tracking-[0.2em] text-orange-200">Carrier NPS</p>
+						<p class="mt-3 text-3xl font-bold">+62</p>
+						<p class="text-sm text-slate-300">because booking is fast and transparent</p>
+					</div>
+				</div>
 			</div>
-
 			<div class="relative">
-				<img src="https://images.pexels.com/photos/8994766/pexels-photo-8994766.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load"
-					alt="Semi-truck driving down a highway"
-					class="w-full rounded-3xl shadow-2xl object-cover"
-					loading="lazy" />
+				<div class="absolute -top-6 -left-6 h-24 w-24 rounded-full bg-orange-500/40 blur-3xl"></div>
+				<div class="absolute bottom-0 right-0 h-32 w-32 rounded-full bg-cyan-400/30 blur-3xl"></div>
+				<div class="relative rounded-[32px] bg-white/5 backdrop-blur p-6 shadow-2xl border border-white/10">
+					<div class="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-sm text-slate-200">
+						<p class="text-xs uppercase tracking-[0.3em] text-orange-300">Live booking</p>
+						<h3 class="mt-3 text-2xl font-semibold text-white">Reefer from Dallas → Denver</h3>
+						<ul class="mt-4 space-y-3 text-sm">
+							<li class="flex justify-between"><span>Pickup</span><span class="font-semibold text-white">Nov 28, 08:00</span></li>
+							<li class="flex justify-between"><span>Linehaul</span><span class="font-semibold text-white">$2,400</span></li>
+							<li class="flex justify-between"><span>Driver</span><span class="font-semibold text-white">Sasha N.</span></li>
+						</ul>
+						<button class="mt-6 w-full rounded-2xl bg-orange-500 px-4 py-2 text-white font-semibold">Confirm booking</button>
+					</div>
+					<div class="mt-6 rounded-2xl border border-slate-700 bg-slate-900/60 p-5 text-sm text-slate-300">
+						<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Driver radar</p>
+						<div class="mt-4 space-y-3">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-semibold text-white">Maria Gomez</p>
+									<p class="text-xs text-slate-400">Available • 18 miles away</p>
+								</div>
+								<span class="rounded-full bg-green-500/20 px-3 py-1 text-xs text-green-200">Ready</span>
+							</div>
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-semibold text-white">DeShawn P.</p>
+									<p class="text-xs text-slate-400">In transit • Wichita</p>
+								</div>
+								<span class="rounded-full bg-amber-500/20 px-3 py-1 text-xs text-amber-200">2 stops left</span>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</section>
 
-	<!-- Features -->
-	<section id="features" class="max-w-7xl mx-auto px-6 py-12 bg-white rounded-3xl shadow-sm">
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+	<section class="max-w-6xl mx-auto px-6 py-14">
+		<div class="grid gap-8 lg:grid-cols-3">
+			<article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Step 1</p>
+				<h3 class="mt-3 text-xl font-semibold text-white">Spin up your workspace</h3>
+				<p class="mt-2 text-sm text-slate-200">Create customer, driver, and admin accounts in minutes. Role-based routing guides each persona to the right dashboard.</p>
+			</article>
+			<article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Step 2</p>
+				<h3 class="mt-3 text-xl font-semibold text-white">Publish loads & availability</h3>
+				<p class="mt-2 text-sm text-slate-200">Drivers update their calendars and live location. Customers post loads with pickup deadlines and constraints.</p>
+			</article>
+			<article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Step 3</p>
+				<h3 class="mt-3 text-xl font-semibold text-white">Book and track instantly</h3>
+				<p class="mt-2 text-sm text-slate-200">The booking wizard pairs loads to the best-fit driver. Dashboards show status, documents, and audit history end-to-end.</p>
+			</article>
+		</div>
+	</section>
+
+	<section class="max-w-7xl mx-auto px-6 py-16 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
+		<div>
+			<h2 class="text-3xl font-bold text-white">Bring every freight workflow into a single cockpit.</h2>
+			<p class="mt-4 text-slate-200">LoadHitch unifies booking, driver ops, availability, and compliance so operations teams stop stitching spreadsheets together. Every action is authenticated with JWT/OAuth and logged for audit.</p>
+			<div class="mt-6 space-y-4">
+				<div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+					<h3 class="text-lg font-semibold text-white">Live load board</h3>
+					<p class="text-sm text-slate-200">Filter by lane, commodity, or driver readiness. One-click assign or duplicate from recent jobs.</p>
+				</div>
+				<div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+					<h3 class="text-lg font-semibold text-white">Driver availability</h3>
+					<p class="text-sm text-slate-200">Drivers share weekly calendars, toggle "taking loads" and push geo-updates straight into dispatcher view.</p>
+				</div>
+				<div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+					<h3 class="text-lg font-semibold text-white">Audit trail</h3>
+					<p class="text-sm text-slate-200">Every change is tied to a role and timestamp so compliance teams can export history anytime.</p>
+				</div>
+			</div>
+		</div>
+		<div class="relative rounded-[32px] border border-white/10 bg-white/5 p-8">
+			<img src="/images/feature-illustration.svg" alt="Feature tiles" class="w-full" />
+			<div class="mt-6 rounded-2xl bg-slate-900/60 p-5 text-sm text-slate-200">
+				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Testimonials</p>
+				<p class="mt-3 text-lg text-white">"LoadHitch became our teams dispatch cockpit. Bookings that took 12 calls now take 2 clicks."</p>
+				<p class="mt-3 text-sm text-slate-400">— Ava R., Senior Logistics Manager</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="max-w-6xl mx-auto px-6 py-12">
+		<div class="rounded-3xl border border-white/10 bg-white/5 p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 			<div>
-				<h2 class="text-2xl font-bold text-hitchBlue">Everything you need to keep freight moving</h2>
-				<p class="mt-4 text-slate-600">From quick bookings to driver management and audit logs — LoadHitch makes it simple to manage shipments and cargo across multiple lanes.</p>
-
-				<ul class="mt-6 space-y-4 text-slate-700">
-					<li class="flex gap-3 items-start">
-						<div class="text-hitchOrange text-xl">✓</div>
-						<div>
-							<div class="font-semibold">Loads dashboard</div>
-							<div class="text-sm text-slate-600">Create, edit and track loads with status updates.</div>
-						</div>
-					</li>
-					<li class="flex gap-3 items-start">
-						<div class="text-hitchOrange text-xl">✓</div>
-						<div>
-							<div class="font-semibold">Trucks & availability</div>
-							<div class="text-sm text-slate-600">Drivers control availability and update location when in transit.</div>
-						</div>
-					</li>
-					<li class="flex gap-3 items-start">
-						<div class="text-hitchOrange text-xl">✓</div>
-						<div>
-							<div class="font-semibold">Booking flow</div>
-							<div class="text-sm text-slate-600">A lightweight wizard helps customers find and book the right truck.</div>
-						</div>
-					</li>
-				</ul>
+				<h3 class="text-2xl font-bold text-white">Ready to modernize your logistics stack?</h3>
+				<p class="mt-2 text-slate-200">Start with free driver + customer seats, then invite your whole operations team when youre ready.</p>
 			</div>
-
-			<div class="flex items-center justify-center">
-				<img src="/images/feature-illustration.svg" alt="Three feature tiles illustration" class="w-full max-w-md rounded-xl" />
+			<div class="flex flex-wrap gap-3">
+				<a href="/register" class="rounded-2xl bg-white px-5 py-3 text-slate-900 font-semibold">Create account</a>
+				<a href="/login" class="rounded-2xl border border-white/30 px-5 py-3 text-white font-semibold">Sign in</a>
 			</div>
 		</div>
 	</section>
 
-	<section id="how-it-works" class="max-w-7xl mx-auto px-6 py-16">
-		<h2 class="text-2xl font-bold text-hitchBlue">How LoadHitch works</h2>
-		<div class="mt-10 grid gap-6 md:grid-cols-3">
-			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 1</p>
-				<h3 class="mt-2 text-lg font-semibold text-slate-900">Create your account</h3>
-				<p class="mt-2 text-sm text-slate-600">Customers and drivers sign up, choose their role, and complete the onboarding checklist.</p>
-			</article>
-			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 2</p>
-				<h3 class="mt-2 text-lg font-semibold text-slate-900">Publish loads or availability</h3>
-				<p class="mt-2 text-sm text-slate-600">Customers post loads with pickup/dropoff details, while drivers set availability windows and current location.</p>
-			</article>
-			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 3</p>
-				<h3 class="mt-2 text-lg font-semibold text-slate-900">Book and keep moving</h3>
-				<p class="mt-2 text-sm text-slate-600">Use the booking wizard to match loads and trucks, then track the delivery progress from the dashboard.</p>
-			</article>
+	<section class="max-w-7xl mx-auto px-6 py-8 mt-6">
+		<div class="rounded-2xl border border-dashed border-white/20 bg-white/5 p-6">
+			<h3 class="text-lg font-semibold text-white">Database connectivity</h3>
+			<p class="mt-2 text-sm text-slate-300">@_statusMessage</p>
+			<p class="mt-1 text-xs text-slate-400">Update <code>.env</code> with the correct password to enable the live Azure PostgreSQL connection.</p>
 		</div>
 	</section>
-
-
-	<!-- Quick DB status block (keeps previous functionality) -->
-	<section class="max-w-7xl mx-auto px-6 py-8 mt-8">
-		<div class="rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
-			<h3 class="text-lg font-semibold text-hitchBlue">Database connectivity</h3>
-			<p class="mt-2 text-sm text-slate-500">@_statusMessage</p>
-			<p class="mt-1 text-xs text-slate-500">Update <code>.env</code> with the correct password to enable the live Azure PostgreSQL connection.</p>
-		</div>
-	</section>
-
 </main>
 
 @code {

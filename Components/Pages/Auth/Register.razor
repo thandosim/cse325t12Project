@@ -26,22 +26,22 @@
             <div class="mt-6 space-y-4">
                 <label class="block text-sm font-semibold text-slate-700">
                     Full name
-                    <InputText class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.FullName" />
+                    <InputText class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.FullName" @bind-Value:event="oninput" />
                     <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
                 </label>
                 <label class="block text-sm font-semibold text-slate-700">
                     Email address
-                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" />
+                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" @bind-Value:event="oninput" />
                     <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
                 </label>
                 <label class="block text-sm font-semibold text-slate-700">
                     Password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" />
+                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" @bind-Value:event="oninput" />
                     <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
                 </label>
                 <label class="block text-sm font-semibold text-slate-700">
                     Confirm password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.ConfirmPassword" />
+                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.ConfirmPassword" @bind-Value:event="oninput" />
                     <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
                 </label>
                 <label class="block text-sm font-semibold text-slate-700">
