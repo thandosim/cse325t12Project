@@ -1,3 +1,5 @@
+@inject IConfiguration Configuration
+
 @* MapPreview Component *@
 
 <div class="bg-white rounded-xl sm:rounded-2xl overflow-hidden border-2 border-gray-200 shadow-lg">
@@ -49,12 +51,14 @@
 
 	private string GetMapUrl()
 	{
+		var apiKey = Configuration["GoogleMaps:ApiKey"] ?? "YOUR_API_KEY_HERE";
+		
 		if (!string.IsNullOrWhiteSpace(Origin) && !string.IsNullOrWhiteSpace(Destination))
 		{
 			var encodedOrigin = Uri.EscapeDataString(Origin);
 			var encodedDestination = Uri.EscapeDataString(Destination);
-			return $"https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin={encodedOrigin}&destination={encodedDestination}&mode=driving";
+			return $"https://www.google.com/maps/embed/v1/directions?key={apiKey}&origin={encodedOrigin}&destination={encodedDestination}&mode=driving";
 		}
-		return "https://www.google.com/maps/embed/v1/view?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&center=39.8283,-98.5795&zoom=4";
+		return $"https://www.google.com/maps/embed/v1/view?key={apiKey}&center=39.8283,-98.5795&zoom=4";
 	}
 }

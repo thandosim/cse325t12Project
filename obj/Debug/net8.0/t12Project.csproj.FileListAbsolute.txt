@@ -333,3 +333,4 @@ C:\Users\PC\byu classwork\CSE325\project\bin\Debug\net8.0\publish\publish\t12Pro
 C:\Users\PC\byu classwork\CSE325\project\bin\Debug\net8.0\publish\publish\t12Project.runtimeconfig.json
 C:\Users\PC\byu classwork\CSE325\project\bin\Debug\net8.0\publish\t12Project.deps.json
 C:\Users\PC\byu classwork\CSE325\project\bin\Debug\net8.0\publish\t12Project.runtimeconfig.json
+C:\Users\PC\byu classwork\CSE325\project\bin\Debug\net8.0\appsettings.Development.example.json
