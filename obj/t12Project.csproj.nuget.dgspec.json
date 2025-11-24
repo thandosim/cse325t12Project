@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\PC\\byu classwork\\CSE325\\project\\t12Project.csproj": {}
+    "C:\\Users\\MOET-WB\\Documents\\byu\\cse325\\project\\t12Project.csproj": {}
   },
   "projects": {
-    "C:\\Users\\PC\\byu classwork\\CSE325\\project\\t12Project.csproj": {
+    "C:\\Users\\MOET-WB\\Documents\\byu\\cse325\\project\\t12Project.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\PC\\byu classwork\\CSE325\\project\\t12Project.csproj",
+        "projectUniqueName": "C:\\Users\\MOET-WB\\Documents\\byu\\cse325\\project\\t12Project.csproj",
         "projectName": "t12Project",
-        "projectPath": "C:\\Users\\PC\\byu classwork\\CSE325\\project\\t12Project.csproj",
-        "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\PC\\byu classwork\\CSE325\\project\\obj\\",
+        "projectPath": "C:\\Users\\MOET-WB\\Documents\\byu\\cse325\\project\\t12Project.csproj",
+        "packagesPath": "C:\\Users\\MOET-WB\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\MOET-WB\\Documents\\byu\\cse325\\project\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\MOET-WB\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -37,7 +37,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -95,6 +96,24 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.21, 8.0.21]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[8.0.21, 8.0.21]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.21, 8.0.21]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[8.0.21, 8.0.21]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -103,7 +122,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100-rc.2.25502.107/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
