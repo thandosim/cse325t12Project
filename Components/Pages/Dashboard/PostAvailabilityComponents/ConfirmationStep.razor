@@ -1,0 +1,83 @@
+@* ConfirmationStep Component *@
+
+<div class="text-center py-8 sm:py-12">
+	<div class="w-16 h-16 sm:w-20 sm:h-20 bg-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+		<span class="text-3xl sm:text-4xl text-white">✓</span>
+	</div>
+	<h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">
+		@(UserType == 0 ? "Truck posted successfully!" : "Shipment posted successfully!")
+	</h2>
+	<p class="text-gray-600 text-base sm:text-lg mb-6 sm:mb-8 px-4">
+		@(UserType == 0
+			? "Your truck is now visible to shippers looking for freight on this route"
+			: "Drivers can now see your shipment and submit bids")
+	</p>
+
+	<div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-left border-2 border-gray-200">
+		<h3 class="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">
+			📋 Posting Summary
+		</h3>
+		<div class="space-y-3">
+			<div class="flex items-start gap-3">
+				<span class="text-teal-600 text-xl mt-1">🛣️</span>
+				<div class="flex-1">
+					<p class="text-xs text-gray-500 font-semibold mb-1">Route</p>
+					<p class="font-bold text-gray-900 text-sm sm:text-base">@FormData.Origin</p>
+					<div class="flex items-center gap-2 my-1">
+						<span class="text-gray-400">↓</span>
+					</div>
+					<p class="font-bold text-gray-900 text-sm sm:text-base">@FormData.Destination</p>
+				</div>
+			</div>
+			<div class="border-t border-gray-200 pt-3 grid grid-cols-2 gap-3">
+				<div>
+					<p class="text-xs text-gray-500 font-semibold mb-1">Pickup Date</p>
+					<p class="font-semibold text-gray-900 text-sm">@FormData.PickupDate</p>
+				</div>
+				@if (UserType == 1 && !string.IsNullOrWhiteSpace(FormData.DeliveryDate))
+				{
+					<div>
+						<p class="text-xs text-gray-500 font-semibold mb-1">Delivery Date</p>
+						<p class="font-semibold text-gray-900 text-sm">@FormData.DeliveryDate</p>
+					</div>
+				}
+			</div>
+			<div class="border-t border-gray-200 pt-3">
+				<p class="text-xs text-gray-500 font-semibold mb-1">Type</p>
+				<p class="font-semibold text-gray-900 text-sm">@(UserType == 0 ? FormData.TruckType : FormData.LoadType)</p>
+			</div>
+			<div class="border-t border-gray-200 pt-3">
+				<p class="text-xs text-gray-500 font-semibold mb-1">
+					@(UserType == 0 ? "Capacity" : "Weight")
+				</p>
+				<p class="font-semibold text-gray-900 text-sm">@(UserType == 0 ? FormData.Capacity : FormData.Weight)</p>
+			</div>
+			<div class="border-t border-gray-200 pt-3">
+				<p class="text-xs text-gray-500 font-semibold mb-1">Rate</p>
+				<p class="font-bold text-teal-600 text-xl sm:text-2xl">@FormData.Rate</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="flex flex-col sm:flex-row gap-3">
+		<button
+			@onclick="OnViewDashboard"
+			class="flex-1 py-3 sm:py-4 bg-gray-900 text-white rounded-xl sm:rounded-2xl font-bold hover:bg-gray-800 transition-colors whitespace-nowrap flex items-center justify-center gap-2">
+			<span>📊</span>
+			<span>View Dashboard</span>
+		</button>
+		<button
+			@onclick="OnPostAnother"
+			class="flex-1 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 rounded-xl sm:rounded-2xl font-bold hover:bg-gray-50 transition-colors whitespace-nowrap flex items-center justify-center gap-2">
+			<span>➕</span>
+			<span>Post Another</span>
+		</button>
+	</div>
+</div>
+
+@code {
+	[Parameter] public int UserType { get; set; }
+	[Parameter] public AvailabilityFormData FormData { get; set; } = null!;
+	[Parameter] public EventCallback OnPostAnother { get; set; }
+	[Parameter] public EventCallback OnViewDashboard { get; set; }
+}

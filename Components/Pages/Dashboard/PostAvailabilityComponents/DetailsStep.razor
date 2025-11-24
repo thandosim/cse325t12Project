@@ -1,0 +1,116 @@
+@* DetailsStep Component *@
+
+<div class="space-y-4 sm:space-y-6">
+	<div>
+		<button
+			@onclick="OnBack"
+			class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+			</svg>
+			<span class="font-semibold">Back</span>
+		</button>
+		<h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+			@(UserType == 0 ? "Truck specifications" : "Shipment details")
+		</h2>
+		<p class="text-sm sm:text-base text-gray-600">Provide weight, dimensions, and pricing</p>
+	</div>
+
+	<div class="space-y-3 sm:space-y-4">
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+			<div>
+				<label class="block text-sm font-bold text-gray-900 mb-2">
+					⚖️ @(UserType == 0 ? "Max capacity" : "Total weight")
+				</label>
+				<input
+					type="text"
+					@bind="LocalCapacityWeight"
+					@bind:event="oninput"
+					class="w-full px-4 py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base"
+					placeholder="e.g., 45,000 lbs" />
+			</div>
+
+			@if (UserType == 1)
+			{
+				<div>
+					<label class="block text-sm font-bold text-gray-900 mb-2">
+						📏 Dimensions
+					</label>
+					<input
+						type="text"
+						@bind="FormData.Dimensions"
+						@bind:event="oninput"
+						class="w-full px-4 py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base"
+						placeholder="L x W x H (ft)" />
+				</div>
+			}
+		</div>
+
+		<div>
+			<label class="block text-sm font-bold text-gray-900 mb-2">
+				💵 @(UserType == 0 ? "Rate per mile" : "Total rate")
+			</label>
+			<input
+				type="text"
+				@bind="FormData.Rate"
+				@bind:event="oninput"
+				class="w-full px-4 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base sm:text-lg"
+				placeholder="@(UserType == 0 ? "e.g., $2.50/mile" : "e.g., $1,850")" />
+		</div>
+
+		@if (UserType == 1)
+		{
+			<div>
+				<label class="block text-sm font-bold text-gray-900 mb-2">
+					⚠️ Special requirements
+				</label>
+				<input
+					type="text"
+					@bind="FormData.SpecialRequirements"
+					@bind:event="oninput"
+					class="w-full px-4 py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base"
+					placeholder="e.g., Temperature controlled, Hazmat certified" />
+			</div>
+		}
+
+		<div>
+			<label class="block text-sm font-bold text-gray-900 mb-2">
+				📝 Additional notes (Optional)
+			</label>
+			<textarea
+				@bind="FormData.Notes"
+				@bind:event="oninput"
+				rows="4"
+				class="w-full px-4 py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base resize-none"
+				placeholder="Loading dock requirements, contact info, etc..."></textarea>
+		</div>
+	</div>
+
+	<button
+		@onclick="OnSubmit"
+		disabled="@(!CanProceed)"
+		class="w-full py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg transition-all whitespace-nowrap @(CanProceed ? "bg-teal-600 text-white hover:bg-teal-700" : "bg-gray-200 text-gray-400 cursor-not-allowed")">
+		✈️ @(UserType == 0 ? "Post Truck Availability" : "Post Shipment")
+	</button>
+</div>
+
+@code {
+	[Parameter] public int UserType { get; set; }
+	[Parameter] public AvailabilityFormData FormData { get; set; } = null!;
+	[Parameter] public EventCallback OnBack { get; set; }
+	[Parameter] public EventCallback OnSubmit { get; set; }
+
+	private string LocalCapacityWeight
+	{
+		get => UserType == 0 ? FormData.Capacity : FormData.Weight;
+		set
+		{
+			if (UserType == 0)
+				FormData.Capacity = value;
+			else
+				FormData.Weight = value;
+		}
+	}
+
+	private bool CanProceed => !string.IsNullOrWhiteSpace(LocalCapacityWeight) && !string.IsNullOrWhiteSpace(FormData.Rate);
+}

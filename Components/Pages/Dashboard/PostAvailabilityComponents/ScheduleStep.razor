@@ -1,0 +1,68 @@
+@* ScheduleStep Component *@
+
+<div class="space-y-4 sm:space-y-6">
+	<div>
+		<button
+			@onclick="OnBack"
+			class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+			</svg>
+			<span class="font-semibold">Back</span>
+		</button>
+		<h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+			@(UserType == 0 ? "When are you available?" : "Shipment timeline")
+		</h2>
+		<p class="text-sm sm:text-base text-gray-600">
+			@(UserType == 0
+				? "Select when you can pick up and deliver"
+				: "When does the shipment need to be picked up and delivered?")
+		</p>
+	</div>
+
+	<div class="space-y-3 sm:space-y-4">
+		<div>
+			<label class="block text-sm font-bold text-gray-900 mb-2">
+				📅 @(UserType == 0 ? "Available from" : "Pickup date")
+			</label>
+			<input
+				type="date"
+				value="@PickupDate"
+				@onchange="@((ChangeEventArgs e) => PickupDateChanged.InvokeAsync(e.Value?.ToString() ?? ""))"
+				class="w-full px-4 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base sm:text-lg" />
+		</div>
+
+		@if (UserType == 1)
+		{
+			<div>
+				<label class="block text-sm font-bold text-gray-900 mb-2">
+					✅ Required delivery date
+				</label>
+				<input
+					type="date"
+					value="@DeliveryDate"
+					@onchange="@((ChangeEventArgs e) => DeliveryDateChanged.InvokeAsync(e.Value?.ToString() ?? ""))"
+					class="w-full px-4 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:border-teal-600 focus:bg-white outline-none transition-all text-base sm:text-lg" />
+			</div>
+		}
+	</div>
+
+	<button
+		@onclick="OnNext"
+		disabled="@(!CanProceed)"
+		class="w-full py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg transition-all whitespace-nowrap @(CanProceed ? "bg-gray-900 text-white hover:bg-gray-800" : "bg-gray-200 text-gray-400 cursor-not-allowed")">
+		Continue to Type
+	</button>
+</div>
+
+@code {
+	[Parameter] public int UserType { get; set; }
+	[Parameter] public string PickupDate { get; set; } = "";
+	[Parameter] public EventCallback<string> PickupDateChanged { get; set; }
+	[Parameter] public string DeliveryDate { get; set; } = "";
+	[Parameter] public EventCallback<string> DeliveryDateChanged { get; set; }
+	[Parameter] public EventCallback OnBack { get; set; }
+	[Parameter] public EventCallback OnNext { get; set; }
+
+	private bool CanProceed => !string.IsNullOrWhiteSpace(PickupDate) && (UserType == 0 || !string.IsNullOrWhiteSpace(DeliveryDate));
+}

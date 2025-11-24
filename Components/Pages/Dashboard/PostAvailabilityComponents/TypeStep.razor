@@ -1,0 +1,82 @@
+@* TypeStep Component *@
+
+<div class="space-y-4 sm:space-y-6">
+	<div>
+		<button
+			@onclick="OnBack"
+			class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+			</svg>
+			<span class="font-semibold">Back</span>
+		</button>
+		<h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+			@(UserType == 0 ? "Truck type" : "Load type")
+		</h2>
+		<p class="text-sm sm:text-base text-gray-600">
+			@(UserType == 0
+				? "What type of truck do you have?"
+				: "What type of trailer is needed for this shipment?")
+		</p>
+	</div>
+
+	<div class="grid grid-cols-2 gap-2 sm:gap-3">
+		@foreach (var type in truckTypes)
+		{
+			var isSelected = UserType == 0 ? TruckType == type.Name : LoadType == type.Name;
+			<button
+				@onclick="() => SelectType(type.Name)"
+				class="p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 transition-all whitespace-nowrap @(isSelected ? "border-teal-600 bg-teal-50" : "border-gray-200 hover:border-gray-300")">
+				<div class="text-center">
+					<span class="text-2xl sm:text-3xl mb-2 block">@type.Icon</span>
+					<p class="font-semibold text-xs sm:text-sm">@type.Name</p>
+				</div>
+			</button>
+		}
+	</div>
+
+	<button
+		@onclick="OnNext"
+		disabled="@(!CanProceed)"
+		class="w-full py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg transition-all whitespace-nowrap @(CanProceed ? "bg-gray-900 text-white hover:bg-gray-800" : "bg-gray-200 text-gray-400 cursor-not-allowed")">
+		Continue to Details
+	</button>
+</div>
+
+@code {
+	[Parameter] public int UserType { get; set; }
+	[Parameter] public string TruckType { get; set; } = "";
+	[Parameter] public EventCallback<string> TruckTypeChanged { get; set; }
+	[Parameter] public string LoadType { get; set; } = "";
+	[Parameter] public EventCallback<string> LoadTypeChanged { get; set; }
+	[Parameter] public EventCallback OnBack { get; set; }
+	[Parameter] public EventCallback OnNext { get; set; }
+
+	private List<TruckTypeInfo> truckTypes = new()
+	{
+		new("Dry Van", "🚛"),
+		new("Flatbed", "🚚"),
+		new("Refrigerated", "❄️"),
+		new("Box Truck", "📦"),
+		new("Tanker", "🛢️"),
+		new("Step Deck", "🚛")
+	};
+
+	private bool CanProceed => UserType == 0 ? !string.IsNullOrWhiteSpace(TruckType) : !string.IsNullOrWhiteSpace(LoadType);
+
+	private async Task SelectType(string type)
+	{
+		if (UserType == 0)
+		{
+			TruckType = type;
+			await TruckTypeChanged.InvokeAsync(type);
+		}
+		else
+		{
+			LoadType = type;
+			await LoadTypeChanged.InvokeAsync(type);
+		}
+	}
+
+	private record TruckTypeInfo(string Name, string Icon);
+}

@@ -50,6 +50,34 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcRHJpdmVyRGFzaGJvYXJkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailability.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailabilityComponents/ConfirmationStep.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eUNvbXBvbmVudHNcQ29uZmlybWF0aW9uU3RlcC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailabilityComponents/DetailsStep.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eUNvbXBvbmVudHNcRGV0YWlsc1N0ZXAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailabilityComponents/MapPreview.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eUNvbXBvbmVudHNcTWFwUHJldmlldy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailabilityComponents/RouteStep.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eUNvbXBvbmVudHNcUm91dGVTdGVwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailabilityComponents/ScheduleStep.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eUNvbXBvbmVudHNcU2NoZWR1bGVTdGVwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Dashboard/PostAvailabilityComponents/TypeStep.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmRcUG9zdEF2YWlsYWJpbGl0eUNvbXBvbmVudHNcVHlwZVN0ZXAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/PC/byu classwork/CSE325/project/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
