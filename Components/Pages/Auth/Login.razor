@@ -1,106 +1,152 @@
 @page "/login"
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
+@inject AuthClient AuthClient
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Log in</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
-        <h1 class="text-3xl font-bold text-hitchBlue">Welcome back</h1>
-        <p class="mt-2 text-sm text-slate-500">Sign in to access your dashboard.</p>
+<section class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white py-16">
+    <div class="mx-auto max-w-4xl grid gap-10 lg:grid-cols-[1.05fr_0.95fr] items-center px-6">
+        <div class="hidden lg:block">
+            <p class="text-xs uppercase tracking-[0.4em] text-orange-200">LoadHitch access</p>
+            <h1 class="mt-4 text-4xl font-bold">Sign back into the control tower.</h1>
+            <p class="mt-4 text-slate-300 max-w-lg">Use your email + password or continue with Google OAuth. Every login issues new JWT + refresh tokens for API clients while keeping the Blazor dashboard authenticated.</p>
+            <div class="mt-10 grid gap-4">
+                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                    <p class="text-sm uppercase tracking-[0.3em] text-orange-200">Live stats</p>
+                    <p class="mt-3 text-3xl font-bold">180+</p>
+                    <p class="text-sm text-slate-300">Companies dispatching freight through LoadHitch</p>
+                </div>
+                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                    <p class="text-sm uppercase tracking-[0.3em] text-orange-200">Security</p>
+                    <p class="mt-3 text-3xl font-bold">SOC2-ready</p>
+                    <p class="text-sm text-slate-300">Role-based routing, JWT rotation, audit events</p>
+                </div>
+            </div>
+        </div>
 
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
-        }
-
-        <EditForm EditContext="_editContext" FormName="login-form" OnValidSubmit="HandleLoginAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
-            <div class="mt-6 space-y-4">
-                <label class="block text-sm font-semibold text-slate-700">
-                    Email address
-                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" @bind-Value:event="oninput" />
-                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" @bind-Value:event="oninput" />
-                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                    <InputCheckbox class="h-4 w-4 rounded border-slate-300" @bind-Value="_model.RememberMe" />
-                    Keep me signed in
-                </label>
+        <div class="rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Welcome back</p>
+                    <h2 class="mt-2 text-2xl font-semibold">Sign in to LoadHitch</h2>
+                </div>
+                <span class="rounded-full bg-green-500/15 px-3 py-1 text-xs text-green-200">Secure</span>
             </div>
 
-            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchOrange px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
-                @_buttonText
-            </button>
-        </EditForm>
+            @if (!string.IsNullOrWhiteSpace(_banner))
+            {
+                <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">@_banner</div>
+            }
 
-        <p class="mt-4 text-center text-sm text-slate-500">
-            Need an account?
-            <a class="text-hitchBlue font-semibold" href="/register">Create one</a>
-        </p>
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">@_error</div>
+            }
+
+            <EditForm EditContext="_editContext" FormName="login-form" OnValidSubmit="HandleLoginAsync">
+                <DataAnnotationsValidator />
+                <div class="mt-6 space-y-5">
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Email address
+                        <InputText type="email" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white placeholder:text-slate-500" placeholder="you@company.com" @bind-Value="_model.Email" @bind-Value:event="oninput" />
+                        <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Password
+                        <InputText type="password" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.Password" @bind-Value:event="oninput" />
+                        <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                        <InputCheckbox class="h-4 w-4 rounded border-white/30 bg-transparent" @bind-Value="_model.RememberMe" />
+                        Keep me signed in on this device
+                    </label>
+                </div>
+
+                <button type="submit" class="mt-8 w-full rounded-2xl bg-orange-500 px-6 py-3 text-base font-semibold text-white transition hover:bg-orange-400 disabled:opacity-40" disabled="@_isSubmitting || _googleBusy">
+                    @(_isSubmitting ? "Signing in..." : "Sign in")
+                </button>
+            </EditForm>
+
+            <div class="mt-6 flex items-center gap-4 text-xs uppercase tracking-[0.3em] text-slate-500">
+                <span class="h-px flex-1 bg-white/10" />
+                or continue with
+                <span class="h-px flex-1 bg-white/10" />
+            </div>
+
+            <button class="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-transparent px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-40" @onclick="StartGoogleSignInAsync" disabled="@_isSubmitting || _googleBusy">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
+                </span>
+                Continue with Google
+            </button>
+
+            <p class="mt-6 text-center text-sm text-slate-400">
+                Need an account?
+                <a class="font-semibold text-white hover:text-orange-200" href="/register">Create one</a>
+            </p>
+        </div>
     </div>
 </section>
 
 @code {
-    private readonly LoginModel _model = new();
+    private readonly LoginRequest _model = new();
     private EditContext? _editContext;
     private bool _isSubmitting;
-    private string _error = string.Empty;
-
-    private string _buttonText => _isSubmitting ? "Signing in..." : "Sign in";
+    private bool _googleBusy;
+    private string? _banner;
+    private string? _error;
+    private DotNetObjectReference<Login>? _dotNetRef;
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("loadhitchAuth.registerHandler", _dotNetRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef is not null)
+        {
+            await JS.InvokeVoidAsync("loadhitchAuth.unregisterHandler", _dotNetRef);
+            _dotNetRef.Dispose();
+        }
+    }
+
     private async Task HandleLoginAsync()
     {
         _isSubmitting = true;
-        _error = string.Empty;
+        _banner = null;
+        _error = null;
 
         try
         {
-            var result = await SignInManager.PasswordSignInAsync(_model.Email, _model.Password, _model.RememberMe, lockoutOnFailure: true);
-            if (!result.Succeeded)
+            var result = await AuthClient.LoginAsync(new LoginRequest
             {
-                if (result.IsLockedOut)
-                {
-                    _error = "This account is currently blocked.";
-                }
-                else
-                {
-                    _error = "Invalid email or password.";
-                }
+                Email = _model.Email,
+                Password = _model.Password,
+                RememberMe = _model.RememberMe
+            });
+
+            if (!result.Succeeded || result.Payload is null)
+            {
+                _error = result.Message;
                 return;
             }
 
-            var user = await UserManager.FindByEmailAsync(_model.Email);
-            var dashboard = "/dashboard";
-
-            if (user is not null)
-            {
-                if (await UserManager.IsInRoleAsync(user, "Admin"))
-                {
-                    dashboard = "/admin";
-                }
-                else if (await UserManager.IsInRoleAsync(user, "Driver"))
-                {
-                    dashboard = "/dashboard/driver";
-                }
-                else if (await UserManager.IsInRoleAsync(user, "Customer"))
-                {
-                    dashboard = "/dashboard/customer";
-                }
-            }
-
-            Navigation.NavigateTo(dashboard, forceLoad: true);
+            _banner = $"Welcome back, {result.Payload.FullName}! Redirecting...";
+            StateHasChanged();
+            await Task.Delay(800);
+            Navigation.NavigateTo(result.Payload.DashboardUrl, forceLoad: true);
         }
         finally
         {
@@ -108,15 +154,66 @@
         }
     }
 
-    private sealed class LoginModel
+    private async Task StartGoogleSignInAsync()
     {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        _error = null;
+        _banner = null;
+        _googleBusy = true;
+        var url = Navigation.ToAbsoluteUri("api/auth/google/signin?state=login").ToString();
+        await JS.InvokeVoidAsync("loadhitchAuth.startGoogleSignIn", url);
+    }
 
-        [Required]
-        public string Password { get; set; } = string.Empty;
+    [JSInvokable]
+    public async Task HandleExternalAuthMessage(string json)
+    {
+        ExternalAuthMessage? message = null;
+        try
+        {
+            message = JsonSerializer.Deserialize<ExternalAuthMessage>(json, _jsonOptions);
+        }
+        catch
+        {
+            // ignore malformed payloads
+        }
 
-        public bool RememberMe { get; set; }
+        if (message is null)
+        {
+            _googleBusy = false;
+            return;
+        }
+
+        if (string.Equals(message.Type, "loadhitch:auth", StringComparison.OrdinalIgnoreCase))
+        {
+            var auth = message.Payload.Deserialize<AuthResponse>(_jsonOptions);
+            if (auth is not null)
+            {
+                await AuthClient.StoreAuthAsync(auth);
+                _banner = "Signed in with Google. Redirecting...";
+                _error = null;
+                _googleBusy = false;
+                StateHasChanged();
+                await Task.Delay(800);
+                Navigation.NavigateTo(auth.DashboardUrl, true);
+                return;
+            }
+        }
+
+        if (string.Equals(message.Type, "loadhitch:auth-error", StringComparison.OrdinalIgnoreCase))
+        {
+            var error = message.Payload.TryGetProperty("error", out var value)
+                ? value.GetString()
+                : "Unable to complete Google sign-in.";
+            _error = error;
+        }
+
+        _googleBusy = false;
+        StateHasChanged();
+    }
+
+    private sealed class ExternalAuthMessage
+    {
+        public string? Type { get; set; }
+        public JsonElement Payload { get; set; }
+        public JsonElement? State { get; set; }
     }
 }

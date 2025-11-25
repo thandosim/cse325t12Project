@@ -72,6 +72,8 @@ public class AuthController : ControllerBase
             Request.Headers.UserAgent.ToString(),
             cancellationToken);
 
+        await _signInManager.SignInAsync(user, request.RememberMe);
+
         var response = await BuildAuthResponseAsync(user, authResult, cancellationToken);
         return Ok(response);
     }
@@ -104,6 +106,8 @@ public class AuthController : ControllerBase
             Request.Headers.UserAgent.ToString(),
             cancellationToken);
 
+        await _signInManager.SignInAsync(user, token.IsPersistent);
+
         var response = await BuildAuthResponseAsync(user, authResult, cancellationToken);
         return Ok(response);
     }
@@ -124,6 +128,7 @@ public class AuthController : ControllerBase
         }
 
         await _tokenService.RevokeRefreshTokenAsync(token, "User logout", HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken);
+        await _signInManager.SignOutAsync();
         return Ok();
     }
 
@@ -211,6 +216,8 @@ public class AuthController : ControllerBase
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             Request.Headers.UserAgent.ToString(),
             cancellationToken);
+
+        await _signInManager.SignInAsync(user, isPersistent: true);
 
         var response = await BuildAuthResponseAsync(user, authResult, cancellationToken);
         return SuccessScriptResult(response, Request.Query["state"].ToString());

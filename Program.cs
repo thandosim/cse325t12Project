@@ -19,6 +19,11 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 builder.Configuration.AddEnvironmentVariables();
 
 var connectionString = builder.Configuration["AZURE_POSTGRES_CONNECTION"]
@@ -60,12 +65,7 @@ if (jwtOptions is null || string.IsNullOrWhiteSpace(jwtOptions.SigningKey))
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
 
-var authBuilder = builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
-    })
+builder.Services.AddAuthentication()
     .AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = true;
@@ -90,8 +90,6 @@ var authBuilder = builder.Services.AddAuthentication(options =>
             ?? throw new InvalidOperationException("Authentication:Google:ClientSecret missing");
     });
 
-authBuilder.AddIdentityCookies();
-
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
@@ -112,6 +110,7 @@ builder.Services.AddScoped<ProtectedLocalStorage>();
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
+builder.Services.AddScoped<AuthClient>();
 
 var app = builder.Build();
 

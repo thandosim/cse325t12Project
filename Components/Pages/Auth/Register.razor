@@ -1,70 +1,109 @@
 @page "/register"
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
+@inject AuthClient AuthClient
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>Create account</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
-        <h1 class="text-3xl font-bold text-hitchBlue">Create your LoadHitch account</h1>
-        <p class="mt-2 text-sm text-slate-500">Choose a role to get the right dashboard experience.</p>
+<section class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white py-16">
+    <div class="mx-auto max-w-5xl grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start px-6">
+        <div>
+            <p class="text-xs uppercase tracking-[0.4em] text-orange-200">Get started</p>
+            <h1 class="mt-4 text-4xl font-bold">Create your LoadHitch workspace.</h1>
+            <p class="mt-4 text-slate-300 max-w-2xl">Pick your role, invite your drivers, and start booking in minutes. Every new account ships with secure JWT + refresh tokens so APIs and dashboards stay in sync.</p>
 
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
-        }
+            <div class="mt-10 grid gap-4">
+                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                    <p class="text-sm uppercase tracking-[0.3em] text-orange-200">Drivers</p>
+                    <p class="mt-3 text-3xl font-bold">2.4K</p>
+                    <p class="text-sm text-slate-300">already sharing availability on LoadHitch</p>
+                </div>
+                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
+                    <p class="text-sm uppercase tracking-[0.3em] text-orange-200">Dispatchers</p>
+                    <p class="mt-3 text-3xl font-bold">450+</p>
+                    <p class="text-sm text-slate-300">using the command center every day</p>
+                </div>
+            </div>
+        </div>
 
-        @if (!string.IsNullOrWhiteSpace(_success))
-        {
-            <div class="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">@_success</div>
-        }
-
-        <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
-            <div class="mt-6 space-y-4">
-                <label class="block text-sm font-semibold text-slate-700">
-                    Full name
-                    <InputText class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.FullName" @bind-Value:event="oninput" />
-                    <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Email address
-                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" @bind-Value:event="oninput" />
-                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" @bind-Value:event="oninput" />
-                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Confirm password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.ConfirmPassword" @bind-Value:event="oninput" />
-                    <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Role
-                    <InputSelect class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.SelectedRole">
-                        @foreach (var role in _allowedRoles)
-                        {
-                            <option value="@role">@role</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
-                </label>
+        <div class="rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Let’s build your profile</p>
+                    <h2 class="mt-2 text-2xl font-semibold">Create a LoadHitch account</h2>
+                </div>
+                <span class="rounded-full bg-blue-500/15 px-3 py-1 text-xs text-blue-200">Step 1 of 1</span>
             </div>
 
-            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchBlue px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
-                @_buttonText
-            </button>
-        </EditForm>
+            @if (!string.IsNullOrWhiteSpace(_banner))
+            {
+                <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">@_banner</div>
+            }
 
-        <p class="mt-4 text-center text-sm text-slate-500">
-            Already have an account?
-            <a class="text-hitchBlue font-semibold" href="/login">Log in</a>
-        </p>
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">@_error</div>
+            }
+
+            <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
+                <DataAnnotationsValidator />
+                <div class="mt-6 space-y-5">
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Full name
+                        <InputText class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.FullName" @bind-Value:event="oninput" />
+                        <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Email address
+                        <InputText type="email" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.Email" @bind-Value:event="oninput" />
+                        <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Password
+                        <InputText type="password" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.Password" @bind-Value:event="oninput" />
+                        <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Confirm password
+                        <InputText type="password" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.ConfirmPassword" @bind-Value:event="oninput" />
+                        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                    <label class="block text-sm font-semibold text-slate-200">
+                        Role
+                        <InputSelect class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.SelectedRole">
+                            @foreach (var role in _allowedRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-300" />
+                    </label>
+                </div>
+
+                <button type="submit" class="mt-8 w-full rounded-2xl bg-orange-500 px-6 py-3 text-base font-semibold text-white transition hover:bg-orange-400 disabled:opacity-40" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Creating account..." : "Create account")
+                </button>
+            </EditForm>
+
+            <div class="mt-6 flex items-center gap-4 text-xs uppercase tracking-[0.3em] text-slate-500">
+                <span class="h-px flex-1 bg-white/10" />
+                or continue with
+                <span class="h-px flex-1 bg-white/10" />
+            </div>
+
+            <button class="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-transparent px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-40" @onclick="StartGoogleSignInAsync" disabled="@_isSubmitting || _googleBusy">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
+                </span>
+                Continue with Google
+            </button>
+
+            <p class="mt-6 text-center text-sm text-slate-400">
+                Already have an account?
+                <a class="font-semibold text-white hover:text-orange-200" href="/login">Log in</a>
+            </p>
+        </div>
     </div>
 </section>
 
@@ -73,20 +112,39 @@
     private EditContext? _editContext;
     private readonly AccountRole[] _allowedRoles = [AccountRole.Customer, AccountRole.Driver];
     private bool _isSubmitting;
-    private string _error = string.Empty;
-    private string _success = string.Empty;
+    private bool _googleBusy;
+    private string? _error;
+    private string? _banner;
+    private DotNetObjectReference<Register>? _dotNetRef;
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
 
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
     }
 
-    private string _buttonText => _isSubmitting ? "Creating account..." : "Create account";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("loadhitchAuth.registerHandler", _dotNetRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef is not null)
+        {
+            await JS.InvokeVoidAsync("loadhitchAuth.unregisterHandler", _dotNetRef);
+            _dotNetRef.Dispose();
+        }
+    }
 
     private async Task HandleRegistrationAsync()
     {
-        _error = string.Empty;
-        _success = string.Empty;
+        _error = null;
+        _banner = null;
         if (_model.Password != _model.ConfirmPassword)
         {
             _error = "Passwords do not match.";
@@ -96,41 +154,103 @@
         _isSubmitting = true;
         try
         {
-            var user = new ApplicationUser
+            var request = new RegisterRequest
             {
-                UserName = _model.Email,
-                Email = _model.Email,
                 FullName = _model.FullName,
-                EmailConfirmed = true,
-                AccountType = _model.SelectedRole
+                Email = _model.Email,
+                Password = _model.Password,
+                ConfirmPassword = _model.ConfirmPassword,
+                Role = _model.SelectedRole
             };
 
-            var createResult = await UserManager.CreateAsync(user, _model.Password);
-            if (!createResult.Succeeded)
+            var response = await AuthClient.RegisterAsync(request);
+            if (!response.Succeeded || response.Payload is null)
             {
-                _error = string.Join(" ", createResult.Errors.Select(e => e.Description));
+                _error = response.Message;
                 return;
             }
 
-            await UserManager.AddToRoleAsync(user, _model.SelectedRole.ToString());
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            _success = $"Account created for {_model.FullName}. Redirecting you to the {_model.SelectedRole} dashboard...";
+            _banner = $"Account created for {response.Payload.FullName}. Redirecting...";
             StateHasChanged();
-
-            var target = _model.SelectedRole switch
-            {
-                AccountRole.Driver => "/dashboard/driver",
-                AccountRole.Customer => "/dashboard/customer",
-                _ => "/dashboard"
-            };
-
-            await Task.Delay(1200);
-            Navigation.NavigateTo(target, forceLoad: true);
+            await Task.Delay(1000);
+            Navigation.NavigateTo(response.Payload.DashboardUrl, forceLoad: true);
         }
         finally
         {
             _isSubmitting = false;
         }
+    }
+
+    private async Task StartGoogleSignInAsync()
+    {
+        _error = null;
+        _banner = null;
+        _googleBusy = true;
+        var url = Navigation.ToAbsoluteUri("api/auth/google/signin?state=register").ToString();
+
+        try
+        {
+            await JS.InvokeVoidAsync("loadhitchAuth.startGoogleSignIn", url);
+        }
+        catch (JSException)
+        {
+            _googleBusy = false;
+            _error = "Unable to open Google sign-in window. Please allow popups and try again.";
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleExternalAuthMessage(string json)
+    {
+        ExternalAuthMessage? message = null;
+        try
+        {
+            message = JsonSerializer.Deserialize<ExternalAuthMessage>(json, _jsonOptions);
+        }
+        catch
+        {
+        }
+
+        if (message is null)
+        {
+            _googleBusy = false;
+            return;
+        }
+
+        if (string.Equals(message.Type, "loadhitch:auth", StringComparison.OrdinalIgnoreCase))
+        {
+            var auth = message.Payload.Deserialize<AuthResponse>(_jsonOptions);
+            if (auth is not null)
+            {
+                await AuthClient.StoreAuthAsync(auth);
+                _banner = "Account created with Google. Redirecting...";
+                _error = null;
+                _googleBusy = false;
+                StateHasChanged();
+                await Task.Delay(900);
+                Navigation.NavigateTo(auth.DashboardUrl, true);
+                return;
+            }
+        }
+
+        if (string.Equals(message.Type, "loadhitch:auth-error", StringComparison.OrdinalIgnoreCase))
+        {
+            var error = message.Payload.TryGetProperty("error", out var value)
+                ? value.GetString()
+                : "Unable to finish Google sign-up.";
+            _error = error;
+        }
+
+        _googleBusy = false;
+        StateHasChanged();
+    }
+
+    private sealed class ExternalAuthMessage
+    {
+        public string? Type { get; set; }
+        public JsonElement Payload { get; set; }
+        public JsonElement? State { get; set; }
     }
 
     private sealed class RegistrationModel
@@ -147,9 +267,9 @@
         [MinLength(8)]
         public string Password { get; set; } = string.Empty;
 
-    [Required]
-    [Compare(nameof(Password), ErrorMessage = "Passwords must match.")]
-    public string ConfirmPassword { get; set; } = string.Empty;
+        [Required]
+        [Compare(nameof(Password), ErrorMessage = "Passwords must match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         [Required]
         public AccountRole SelectedRole { get; set; } = AccountRole.Customer;
