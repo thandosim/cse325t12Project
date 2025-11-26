@@ -1,0 +1,26 @@
+@using Microsoft.JSInterop
+@using t12Project.Models
+
+<div id="map" style="height:500px; border-radius: 1rem;"></div>
+
+@code {
+    [Parameter] public double CenterLat { get; set; }
+    [Parameter] public double CenterLng { get; set; }
+    [Parameter] public IEnumerable<MapMarker> Markers { get; set; } = Enumerable.Empty<MapMarker>();
+
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initMap", CenterLat, CenterLng);
+
+            foreach (var marker in Markers)
+            {
+                await JS.InvokeVoidAsync("addMarker", marker.Lat, marker.Lng, marker.Label, marker.Icon);
+            }
+        }
+    }
+}
+

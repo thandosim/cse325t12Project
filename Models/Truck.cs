@@ -6,13 +6,21 @@ public class Truck
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
+
     [Required]
     public string DriverId { get; set; } = default!;
     public ApplicationUser? Driver { get; set; }
+
     [MaxLength(80)]
     public string Name { get; set; } = string.Empty;
+
     [MaxLength(40)]
     public string EquipmentType { get; set; } = string.Empty;
+
     public decimal CapacityLbs { get; set; }
     public bool IsActive { get; set; } = true;
+
+    // Coordinates for mapping
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }

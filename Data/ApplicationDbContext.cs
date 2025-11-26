@@ -53,9 +53,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<LocationUpdate>()
-            .HasOne(l => l.Driver)
+            .HasOne(l => l.ApplicationUser)
             .WithMany()
-            .HasForeignKey(l => l.DriverId)
+            .HasForeignKey(l => l.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ActivityLog>()

@@ -2,11 +2,60 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
-@* @attribute [Authorize(Roles = "Driver")] *@
+@using t12Project.Services
+@attribute [Authorize(Roles = "Driver")]
+@inject MapDataService MapDataService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
-<PageTitle>Driver Dashboard - LoadHitch</PageTitle>
+<DashboardHeader Title="Driver Control Center" Icon="🚚" />
+<MapView CenterLat="@driverLat" CenterLng="@driverLng" Markers="@driverMarkers" />
+<LoadsList Loads="@availableLoads" />
+<BookingsList Bookings="@activeBookings" />
+<TruckList Trucks="@myTrucks" />
 
-<div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
+@code {
+    private IEnumerable<MapMarker> driverMarkers = Enumerable.Empty<MapMarker>();
+    private IEnumerable<Load> availableLoads = Enumerable.Empty<Load>();
+    private IEnumerable<Booking> activeBookings = Enumerable.Empty<Booking>();
+    private IEnumerable<Truck> myTrucks = Enumerable.Empty<Truck>();
+    private double driverLat;
+    private double driverLng;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/Identity/Account/Login");
+            return;
+        }
+
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId is not null)
+        {
+            var latestLocation = await MapDataService.GetLatestLocationAsync(userId);
+            if (latestLocation is not null)
+            {
+                driverLat = (double)latestLocation.Latitude;
+                driverLng = (double)latestLocation.Longitude;
+            }
+
+            activeBookings = await MapDataService.GetActiveBookingsAsync(userId);
+            myTrucks = await MapDataService.GetMyTrucksAsync(userId);
+        }
+
+        driverMarkers = await MapDataService.GetDriverMarkersAsync();
+        driverMarkers = driverMarkers.Concat(await MapDataService.GetLoadMarkersAsync());
+        availableLoads = await MapDataService.GetAvailableLoadsAsync();
+    }
+}
+
+@* <PageTitle>Driver Dashboard - LoadHitch</PageTitle> *@
+
+@* <div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -245,4 +294,4 @@
             </div>
         </div>
     </div>
-</div>
+</div> *@

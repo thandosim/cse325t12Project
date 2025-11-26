@@ -14,63 +14,77 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
 
-var connectionString = builder.Configuration["AZURE_POSTGRES_CONNECTION"]
+// Connection strings
+var postgresConnection = builder.Configuration["AZURE_POSTGRES_CONNECTION"]
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Use mock database for development without PostgreSQL
-var useDatabaseAuth = false; // Set to true when PostgreSQL is configured
+// Flag to toggle database provider
+var usePostgres = builder.Configuration.GetValue<bool>("UsePostgres"); // set in appsettings or env
+var useSqliteDev = builder.Environment.IsDevelopment() && !usePostgres; // default to SQLite in dev
 
-if (useDatabaseAuth)
+// -------------------- Database Setup --------------------
+if (usePostgres)
 {
     AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseNpgsql(connectionString));
+        options.UseNpgsql(postgresConnection));
 
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-    builder.Services
-        .AddIdentity<ApplicationUser, IdentityRole>(options =>
-        {
-            options.Password.RequireDigit = true;
-            options.Password.RequireNonAlphanumeric = true;
-            options.Password.RequireUppercase = true;
-            options.Password.RequireLowercase = true;
-            options.Password.RequiredLength = 8;
-            options.User.RequireUniqueEmail = true;
-            options.SignIn.RequireConfirmedAccount = false;
-        })
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddDefaultTokenProviders();
-
-    builder.Services.AddAuthorization(options =>
-    {
-        options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-        options.AddPolicy("DriverOnly", policy => policy.RequireRole("Driver"));
-        options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
-    });
 }
-
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-builder.Services.AddCascadingAuthenticationState();
-
-if (useDatabaseAuth)
+else if (useSqliteDev)
 {
-    builder.Services.AddScoped<DatabaseService>();
-    builder.Services.AddScoped<AdminUserService>();
+    // SQLite file for dev mode
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlite("Data Source=app_dev.db"));
 }
 else
 {
+    // Fallback mock service if neither DB is configured
     builder.Services.AddScoped<MockDatabaseService>();
 }
 
+// -------------------- Identity + Auth --------------------
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequiredLength = 8;
+        options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedAccount = false;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("DriverOnly", policy => policy.RequireRole("Driver"));
+    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+});
+
+// -------------------- Services --------------------
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<MapDataService>();
+builder.Services.AddScoped<DatabaseService>();
+builder.Services.AddScoped<AdminUserService>();
+
+builder.Services.AddCascadingAuthenticationState();
+
+builder.Services.AddServerSideBlazor()
+    .AddCircuitOptions(options => { options.DetailedErrors = true; });
+
+// -------------------- Build App --------------------
 var app = builder.Build();
 
-// Only seed data if database is configured
-if (useDatabaseAuth)
+// Seed data only if a real DB is configured
+if (usePostgres || useSqliteDev)
 {
     try
     {
@@ -82,27 +96,24 @@ if (useDatabaseAuth)
     }
 }
 
-// Configure the HTTP request pipeline.
+// -------------------- Middleware --------------------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
-else
-{
-}
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-if (useDatabaseAuth)
-{
-    app.UseAuthentication();
-    app.UseAuthorization();
-}
+app.UseAuthentication();
+app.UseAuthorization();
 
+// Map Identity Razor Pages (login/register/logout)
+app.MapRazorPages();
+
+// Map Blazor components
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

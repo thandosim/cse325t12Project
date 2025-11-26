@@ -2,11 +2,58 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
-@* @attribute [Authorize(Roles = "Customer")] *@
+@attribute [Authorize(Roles = "Customer")]
+@inject MapDataService MapDataService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
-<PageTitle>Shipper Dashboard - LoadHitch</PageTitle>
+<DashboardHeader Title="Customer Control Center" Icon="👤" />
+<MapView CenterLat="@customerLat" CenterLng="@customerLng" Markers="@customerMarkers" />
+<LoadsList Loads="@myPostedLoads" />
+<TruckList Trucks="@nearbyTrucks" />
 
-<div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
+@code {
+    private IEnumerable<MapMarker> customerMarkers = Enumerable.Empty<MapMarker>();
+    private IEnumerable<Load> myPostedLoads = Enumerable.Empty<Load>();
+    private IEnumerable<Truck> nearbyTrucks = Enumerable.Empty<Truck>();
+    private double customerLat;
+    private double customerLng;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/Identity/Account/Login");
+            return;
+        }
+
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId is not null)
+        {
+            var latestLocation = await MapDataService.GetLatestLocationAsync(userId);
+            if (latestLocation is not null)
+            {
+                customerLat = (double)latestLocation.Latitude;
+                customerLng = (double)latestLocation.Longitude;
+            }
+
+            myPostedLoads = await MapDataService.GetLoadsByCustomerAsync(userId);
+        }
+
+        customerMarkers = await MapDataService.GetCustomerMarkersAsync();
+        customerMarkers = customerMarkers.Concat(await MapDataService.GetDriverMarkersAsync());
+
+        nearbyTrucks = await MapDataService.GetNearbyTrucksAsync(customerLat, customerLng);
+    }
+}
+
+
+@* <PageTitle>Shipper Dashboard - LoadHitch</PageTitle> *@
+
+@* <div class="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -238,4 +285,4 @@
             </div>
         </div>
     </div>
-</div>
+</div> *@
