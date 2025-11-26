@@ -1,0 +1,68 @@
+@page "/account/edit"
+@using t12Project.Models
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<h1 class="text-2xl font-bold mb-4">Modify Account</h1>
+
+<div class="max-w-lg">
+    <EditForm Model="account" OnValidSubmit="Save">
+        <div class="mb-3">
+            <label class="block font-semibold">First name</label>
+            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.FirstName" />
+        </div>
+        <div class="mb-3">
+            <label class="block font-semibold">Last name</label>
+            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.LastName" />
+        </div>
+        <div class="mb-3">
+            <label class="block font-semibold">Email</label>
+            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.Email" />
+        </div>
+        <div class="mb-3">
+            <label class="block font-semibold">Phone</label>
+            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.Phone" />
+        </div>
+        <div class="flex gap-2">
+            <button class="bg-hitchBlue text-white px-4 py-2 rounded" type="submit">Save</button>
+            <button class="px-4 py-2 rounded border" type="button" @onclick="Load">Load</button>
+        </div>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="mt-4 text-green-700">@message</div>
+    }
+</div>
+
+@code {
+    private AccountModel account = new();
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string>("localHelper.get", "account");
+            if (!string.IsNullOrEmpty(json))
+            {
+                account = System.Text.Json.JsonSerializer.Deserialize<AccountModel>(json) ?? new AccountModel();
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    private async Task Save()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(account);
+        await JS.InvokeVoidAsync("localHelper.set", "account", json);
+        message = "Account updated locally.";
+    }
+}
