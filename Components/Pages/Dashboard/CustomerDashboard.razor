@@ -2,14 +2,30 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
+@using t12Project.Components.Shared
 @* @attribute [Authorize(Roles = "Customer")] *@
 
 <PageTitle>Customer dashboard</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
-        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchOrange">Customer area</p>
-        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Customer dashboard</h1>
-        <p class="mt-4 text-slate-500">This is a placeholder. Your load and booking widgets will arrive soon.</p>
-    </div>
-</section>
+<DashboardLayout>
+    <DashboardHeader 
+        Label="Customer area" 
+        LabelColor="text-hitchOrange"
+        Title="Customer dashboard"
+        Subtitle="Browse available trucks below." />
+
+    <DashboardTable Headers="truckHeaders" Items="truckItems" />
+    <MapView />
+</DashboardLayout>
+
+@code {
+    private List<string> truckHeaders = new() { "Truck ID", "Capacity", "Location", "Status" };
+    private List<List<string>> truckItems = new()
+    {
+        new() { "T001", "10 tons", "Mbabane", "Available" },
+        new() { "T002", "8 tons", "Manzini", "On Route" }
+    };
+
+    private (double lat, double lng) customerLocation = ( -26.305, 31.136 ); // placeholder coords
+}
+

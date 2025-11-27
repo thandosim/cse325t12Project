@@ -1,0 +1,12 @@
+@namespace t12Project.Components.Shared
+
+<p class="text-sm font-semibold uppercase tracking-[0.2em] @LabelColor">@Label</p>
+<h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">@Title</h1>
+<p class="mt-4 text-slate-500">@Subtitle</p>
+
+@code {
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string LabelColor { get; set; } = "text-hitchBlue";
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+}
