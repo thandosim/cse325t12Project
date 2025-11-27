@@ -70,29 +70,41 @@ public sealed class AuthClient
 
     public async Task<AuthClientResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("=== AuthClient.LoginAsync START ===");
+        _logger.LogInformation("Attempting login for: {Email}", request.Email);
+        
         try
         {
             var client = CreateClient();
+            _logger.LogInformation("Base URI: {BaseUri}", client.BaseAddress);
+            _logger.LogInformation("Sending POST to api/auth/login...");
+            
             var response = await client.PostAsJsonAsync("api/auth/login", request, cancellationToken);
+            _logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
+            
             if (!response.IsSuccessStatusCode)
             {
                 var message = await ReadErrorMessageAsync(response, cancellationToken);
+                _logger.LogWarning("Login failed with status {StatusCode}: {Message}", response.StatusCode, message);
                 return AuthClientResult.Failure(message);
             }
 
             var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken);
             if (auth is null)
             {
+                _logger.LogWarning("Failed to parse auth response");
                 return AuthClientResult.Failure("Unable to parse authentication response.");
             }
 
+            _logger.LogInformation("Login successful for {Email}, storing auth...", request.Email);
             await StoreAuthAsync(auth);
+            _logger.LogInformation("=== AuthClient.LoginAsync SUCCESS ===");
             return AuthClientResult.Success(auth);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Login request failed");
-            return AuthClientResult.Failure("Unable to sign in right now. Please try again.");
+            _logger.LogError(ex, "=== AuthClient.LoginAsync EXCEPTION ===");
+            return AuthClientResult.Failure($"Unable to sign in: {ex.Message}");
         }
     }
 

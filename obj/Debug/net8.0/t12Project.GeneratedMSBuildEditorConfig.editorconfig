@@ -26,8 +26,16 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Downloads/BYU Material/CSE325/cse325t12Project/Components/Pages/Account/Profile.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50XFByb2ZpbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Downloads/BYU Material/CSE325/cse325t12Project/Components/Pages/Admin/AdminDashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBZG1pblxBZG1pbkRhc2hib2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Downloads/BYU Material/CSE325/cse325t12Project/Components/Pages/Auth/CompleteSignIn.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBdXRoXENvbXBsZXRlU2lnbkluLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Downloads/BYU Material/CSE325/cse325t12Project/Components/Pages/Auth/Login.razor]

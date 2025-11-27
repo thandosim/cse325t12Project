@@ -1,42 +1,39 @@
 ﻿@page "/"
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
 
 <PageTitle>LoadHitch - Connect Drivers with Loads Instantly</PageTitle>
 
 <main class="min-h-screen bg-white">
 	<!-- Hero Section -->
-	<section class="relative min-h-[600px] overflow-hidden">
-		<!-- Background image with warehouse/trucks faded -->
-		<div class="absolute inset-0">
-			<img src="/images/hero-bg.jpg" alt="" class="w-full h-full object-cover opacity-20" onerror="this.style.display='none';" />
-		</div>
-		<div class="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/80"></div>
-		
-		<div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-20 md:py-28">
-			<div class="grid gap-12 lg:grid-cols-2 items-center">
+	<section class="py-12 lg:py-16">
+		<div class="max-w-7xl mx-auto px-6 lg:px-12">
+			<div class="flex flex-col lg:flex-row lg:items-center lg:gap-8">
 				<!-- Left Content -->
-				<div class="max-w-lg">
-					<h1 class="text-[2.75rem] md:text-5xl font-bold leading-[1.15] text-slate-800 tracking-tight">
-						Connect Drivers with<br />Loads Instantly
+				<div class="lg:w-[45%] lg:pr-4">
+					<h1 class="text-4xl md:text-[2.75rem] font-bold leading-[1.2] text-slate-900">
+						Connect Drivers with Loads Instantly
 					</h1>
-					<p class="mt-6 text-base text-slate-600 leading-relaxed">
+					<p class="mt-5 text-slate-600 leading-relaxed">
 						LoadHitch revolutionizes freight transportation by connecting truck drivers with shipping opportunities in real-time. Save time, reduce empty miles, and maximize efficiency for both drivers and shippers.
 					</p>
 					
 					<!-- CTA Buttons -->
-					<div class="mt-10 flex flex-wrap items-center gap-4">
-						<a href="/register?role=driver" class="inline-flex items-center justify-center rounded-full bg-teal-500 px-7 py-3.5 text-white font-medium hover:bg-teal-600 transition-colors">
+					<div class="mt-8 flex flex-wrap items-center gap-3">
+						<a href="/register?role=driver" class="inline-flex items-center justify-center rounded-full bg-teal-500 px-6 py-3 text-white font-medium hover:bg-teal-600 transition-colors">
 							I'm a Driver
 						</a>
-						<a href="/register?role=customer" class="inline-flex items-center justify-center rounded-full border-2 border-teal-500 px-7 py-3.5 text-teal-500 font-medium hover:bg-teal-50 transition-colors">
+						<a href="/register?role=customer" class="inline-flex items-center justify-center rounded-full border-2 border-teal-500 px-6 py-3 text-teal-600 font-medium hover:bg-teal-50 transition-colors">
 							I Need Transport
 						</a>
 					</div>
 				</div>
 				
-				<!-- Right Image - Driver with truck -->
-				<div class="relative hidden lg:flex justify-end">
-					<div class="relative">
-						<img src="/images/hero-driver.jpg" alt="Professional truck driver" class="w-[420px] h-[480px] object-cover object-top rounded-lg" onerror="this.parentElement.innerHTML='<div class=\'w-[420px] h-[480px] bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center\'><div class=\'text-center\'><svg class=\'w-20 h-20 text-teal-400 mx-auto\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\'/></svg><p class=\'mt-4 text-slate-500 font-medium\'>Driver Image</p></div></div>';" />
+				<!-- Right Image - Truck -->
+				<div class="lg:w-[55%] mt-10 lg:mt-0">
+					<div class="rounded-2xl overflow-hidden">
+						<img src="/images/gabriel-santos-GBVDilE8yvI-unsplash.jpg" alt="Truck on the road" class="w-full h-auto object-cover" />
 					</div>
 				</div>
 			</div>
@@ -181,3 +178,16 @@
 	</section>
 </main>
 
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated == true)
+		{
+			// Redirect authenticated users to their dashboard
+			Navigation.NavigateTo("/dashboard", forceLoad: true);
+		}
+	}
+}

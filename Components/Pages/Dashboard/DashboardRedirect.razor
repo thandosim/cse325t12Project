@@ -3,17 +3,28 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize]
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@attribute [Authorize]
+@inject ILogger<DashboardRedirect> Logger
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>Dashboard - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-20">
-    <div class="mx-auto max-w-xl rounded-3xl bg-white px-8 py-12 text-center shadow">
-        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchBlue">Redirecting</p>
-        <h1 class="mt-3 text-3xl font-bold text-hitchBlue">@_statusMessage</h1>
-        <p class="mt-4 text-sm text-slate-500">Hang tight while we take you to the right workspace.</p>
+<section class="min-h-screen bg-slate-50 flex items-center justify-center py-16">
+    <div class="mx-auto max-w-md px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
+        </div>
+        
+        <!-- Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+            <div class="flex justify-center mb-6">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500"></div>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900">@_statusMessage</h1>
+            <p class="mt-3 text-slate-600">Hang tight while we take you to the right workspace.</p>
+        </div>
     </div>
 </section>
 
@@ -22,16 +33,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // [Authorize] attribute ensures user is authenticated
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        if (user.Identity is null || !user.Identity.IsAuthenticated)
-        {
-            Navigation.NavigateTo("/login", forceLoad: true);
-            return;
-        }
-
         var role = user.FindFirstValue(ClaimTypes.Role);
+        Logger.LogInformation("DashboardRedirect: User role is {Role}", role ?? "none");
+        
         var target = role switch
         {
             "Customer" => "/dashboard/customer",
@@ -46,7 +54,7 @@
             return;
         }
 
-        _statusMessage = role + " dashboard";
+        _statusMessage = $"Redirecting to {role} dashboard...";
         Navigation.NavigateTo(target, forceLoad: true);
     }
 }

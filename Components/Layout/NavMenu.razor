@@ -1,4 +1,6 @@
-﻿<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 lg:px-12 py-5 text-sm sm:flex-row sm:items-center sm:justify-between bg-white">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 lg:px-12 py-5 text-sm sm:flex-row sm:items-center sm:justify-between bg-white">
 	<!-- Logo -->
 	<div class="flex items-center">
 		<NavLink href="/" Match="NavLinkMatch.All">
@@ -12,11 +14,11 @@
 		<a class="hover:text-teal-500 transition-colors" href="/#how-it-works">How It Works</a>
 		<a class="hover:text-teal-500 transition-colors" href="/#benefits">Benefits</a>
 		<AuthorizeView>
-			<Authorized Context="auth">
-				<a href="/dashboard" class="hover:text-teal-500 transition-colors">Dashboard</a>
+			<Authorized>
+				<a href="/dashboard" class="hover:text-teal-500 transition-colors font-medium text-teal-600">Dashboard</a>
 			</Authorized>
 			<NotAuthorized>
-				<a href="/login" class="hover:text-teal-500 transition-colors">Login</a>
+				<a href="/login" class="hover:text-teal-500 transition-colors">Sign In</a>
 			</NotAuthorized>
 		</AuthorizeView>
 	</div>
@@ -24,8 +26,8 @@
 	<!-- CTA Button -->
 	<div class="flex items-center">
 		<AuthorizeView>
-			<Authorized Context="auth">
-				<a href="/logout" class="rounded-full bg-teal-500 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-600">
+			<Authorized>
+				<a href="/api/auth/signout" class="rounded-full bg-teal-500 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-600">
 					Sign Out
 				</a>
 			</Authorized>

@@ -4,12 +4,64 @@
 @using Microsoft.AspNetCore.Components.Web
 @attribute [Authorize(Roles = "Customer")]
 
-<PageTitle>Customer dashboard</PageTitle>
+<PageTitle>Customer Dashboard - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
-        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchOrange">Customer area</p>
-        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Customer dashboard</h1>
-        <p class="mt-4 text-slate-500">This is a placeholder. Your load and booking widgets will arrive soon.</p>
+<section class="min-h-screen bg-slate-50 py-12">
+    <div class="max-w-6xl mx-auto px-6">
+        <!-- Header -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Customer Portal</p>
+                    <h1 class="mt-2 text-3xl font-bold text-slate-900">Welcome to your Dashboard</h1>
+                    <p class="mt-2 text-slate-600">Manage your shipments, track loads, and connect with drivers.</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="/account/profile" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                        My Profile
+                    </a>
+                    <a href="/api/auth/signout" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                        Sign out
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="grid gap-6 md:grid-cols-3 mb-8">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-slate-900">Post a Load</h3>
+                <p class="mt-1 text-sm text-slate-500">Create a new shipment request for drivers to bid on.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-slate-900">My Shipments</h3>
+                <p class="mt-1 text-sm text-slate-500">View and manage your active and past shipments.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-slate-900">Track Delivery</h3>
+                <p class="mt-1 text-sm text-slate-500">Real-time tracking for your in-transit shipments.</p>
+            </div>
+        </div>
+        
+        <!-- Placeholder Content -->
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+            <p class="text-slate-400">Your shipments and activity will appear here.</p>
+        </div>
     </div>
 </section>

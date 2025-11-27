@@ -96,25 +96,35 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<AuthResponse>> LoginAsync([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("=== AuthController.LoginAsync START ===");
+        _logger.LogInformation("Login attempt for: {Email}", request.Email);
+        
         if (!ModelState.IsValid)
         {
+            _logger.LogWarning("ModelState invalid");
             return ValidationProblem(ModelState);
         }
 
+        _logger.LogInformation("Looking up user in database...");
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
+            _logger.LogWarning("User not found: {Email}", request.Email);
             return Unauthorized(new { message = "Invalid email or password." });
         }
+        _logger.LogInformation("User found: {UserId}", user.Id);
 
         if (user.IsBlocked)
         {
+            _logger.LogWarning("User is blocked: {Email}", request.Email);
             return Unauthorized(new { message = "This account is blocked. Contact support." });
         }
 
+        _logger.LogInformation("Checking password...");
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
         if (!result.Succeeded)
         {
+            _logger.LogWarning("Password check failed for: {Email}", request.Email);
             if (result.IsLockedOut)
             {
                 return Unauthorized(new { message = "This account is locked. Try again later." });
@@ -122,6 +132,7 @@ public class AuthController : ControllerBase
 
             return Unauthorized(new { message = "Invalid email or password." });
         }
+        _logger.LogInformation("Password valid, issuing tokens...");
 
         var authResult = await _tokenService.IssueTokensAsync(
             user,
@@ -130,9 +141,35 @@ public class AuthController : ControllerBase
             Request.Headers.UserAgent.ToString(),
             cancellationToken);
 
+        _logger.LogInformation("Signing in user...");
         await _signInManager.SignInAsync(user, request.RememberMe);
 
         var response = await BuildAuthResponseAsync(user, authResult, cancellationToken);
+        _logger.LogInformation("=== AuthController.LoginAsync SUCCESS ===");
+        return Ok(response);
+    }
+    
+    // TEST ENDPOINT - bypasses database for testing UI
+    [HttpPost("test-login")]
+    [AllowAnonymous]
+    public ActionResult<AuthResponse> TestLogin([FromBody] LoginRequest request)
+    {
+        _logger.LogInformation("=== TEST LOGIN (no database) ===");
+        _logger.LogInformation("Email: {Email}", request.Email);
+        
+        // Return mock response for testing
+        var response = new AuthResponse(
+            AccessToken: "test-access-token-" + Guid.NewGuid().ToString("N"),
+            RefreshToken: "test-refresh-token-" + Guid.NewGuid().ToString("N"),
+            AccessTokenExpiresAt: DateTime.UtcNow.AddHours(1),
+            RefreshTokenExpiresAt: DateTime.UtcNow.AddDays(7),
+            FullName: "Test User",
+            Email: request.Email,
+            Roles: new[] { "Customer" },
+            DashboardUrl: "/dashboard/customer"
+        );
+        
+        _logger.LogInformation("Returning mock response for: {Email}", request.Email);
         return Ok(response);
     }
 
@@ -188,6 +225,28 @@ public class AuthController : ControllerBase
         await _tokenService.RevokeRefreshTokenAsync(token, "User logout", HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken);
         await _signInManager.SignOutAsync();
         return Ok();
+    }
+
+    /// <summary>
+    /// Simple GET logout endpoint that clears session and redirects to login page.
+    /// Used by the Sign Out link in the navigation.
+    /// </summary>
+    [HttpGet("signout")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SignOutAsync()
+    {
+        _logger.LogInformation("SignOut: Clearing session for user");
+        
+        // Sign out from ASP.NET Identity (clears cookies)
+        await _signInManager.SignOutAsync();
+        
+        // Clear the authentication cookie explicitly
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        
+        _logger.LogInformation("SignOut: Session cleared, redirecting to login");
+        
+        // Redirect to login page
+        return Redirect("/login");
     }
 
     [HttpGet("me")]

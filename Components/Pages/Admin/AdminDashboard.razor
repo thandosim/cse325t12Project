@@ -1,4 +1,5 @@
 @page "/admin"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize(Roles = "Admin")]
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
@@ -7,132 +8,152 @@
 @using System.Linq
 @inject AdminUserService AdminUserService
 
-<PageTitle>Admin dashboard</PageTitle>
+<PageTitle>Admin Dashboard - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 py-12 text-white">
-    <div class="mx-auto max-w-6xl space-y-10 px-4">
-        <header class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+<section class="min-h-screen bg-slate-50 py-12">
+    <div class="max-w-6xl mx-auto px-6 space-y-8">
+        <!-- Header -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Admin control center</p>
-                    <h1 class="mt-2 text-3xl font-bold">Keep every LoadHitch account clean.</h1>
-                    <p class="mt-2 text-sm text-slate-200 max-w-3xl">Approve new teams, rotate roles, and block malicious actors from a single cockpit with live status chips and role-aware tooling.</p>
+                    <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Admin Control Center</p>
+                    <h1 class="mt-2 text-3xl font-bold text-slate-900">User Management</h1>
+                    <p class="mt-2 text-slate-600">Manage accounts, rotate roles, and block malicious actors.</p>
                 </div>
-                <button class="rounded-2xl border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10" @onclick="LoadUsersAsync" disabled="@_isLoading">
-                    @(_isLoading ? "Refreshing..." : "Refresh list")
-                </button>
+                <div class="flex gap-3">
+                    <button class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors" @onclick="LoadUsersAsync" disabled="@_isLoading">
+                        @(_isLoading ? "Refreshing..." : "Refresh")
+                    </button>
+                    <a href="/account/profile" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                        My Profile
+                    </a>
+                    <a href="/api/auth/signout" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                        Sign out
+                    </a>
+                </div>
             </div>
-        </header>
+        </div>
 
-        <section class="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur shadow-xl">
-                <div class="flex items-center justify-between">
+        <!-- Create User & Stats Grid -->
+        <div class="grid gap-8 lg:grid-cols-2">
+            <!-- Create User Form -->
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Provision access</p>
-                        <h2 class="mt-2 text-2xl font-semibold">Create a new user</h2>
+                        <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Create Account</p>
+                        <h2 class="mt-1 text-xl font-bold text-slate-900">Add New User</h2>
                     </div>
-                    <span class="rounded-full bg-blue-500/15 px-3 py-1 text-xs text-blue-200">Instant</span>
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(_createMessage))
                 {
-                    <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">@_createMessage</div>
+                    <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">@_createMessage</div>
                 }
 
-                <EditForm FormName="admin-create-user" Model="_newUser" OnValidSubmit="CreateUserAsync">
+                <EditForm EditContext="_createEditContext" OnValidSubmit="CreateUserAsync">
                     <DataAnnotationsValidator />
-                    <div class="mt-6 grid gap-4 md:grid-cols-2">
-                        <label class="text-sm font-semibold text-slate-200">
-                            Full name
-                            <InputText class="mt-2 w-full rounded-2xl border border-white/20 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_newUser.FullName" />
-                        </label>
-                        <label class="text-sm font-semibold text-slate-200">
-                            Email
-                            <InputText type="email" class="mt-2 w-full rounded-2xl border border-white/20 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_newUser.Email" />
-                        </label>
-                        <label class="text-sm font-semibold text-slate-200">
-                            Password
-                            <InputText type="password" class="mt-2 w-full rounded-2xl border border-white/20 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_newUser.Password" />
-                        </label>
-                        <label class="text-sm font-semibold text-slate-200">
-                            Role
-                            <InputSelect class="mt-2 w-full rounded-2xl border border-white/20 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_newUser.Role">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">Full name</label>
+                            <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_newUser.FullName" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                            <InputText type="email" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_newUser.Email" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                            <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_newUser.Password" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
+                            <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_newUser.Role">
                                 @foreach (var role in _roles)
                                 {
                                     <option value="@role">@role</option>
                                 }
                             </InputSelect>
-                        </label>
+                        </div>
                     </div>
-                    <button type="submit" class="mt-6 w-full rounded-2xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-400 disabled:opacity-40" disabled="@_isCreating">
-                        @(_isCreating ? "Creating..." : "Create user")
+                    <button type="submit" class="mt-6 w-full rounded-full bg-teal-500 px-6 py-3 text-sm font-medium text-white hover:bg-teal-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors" disabled="@_isCreating">
+                        @(_isCreating ? "Creating..." : "Create User")
                     </button>
                 </EditForm>
             </div>
 
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur shadow-xl">
-                <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Org telemetry</p>
+            <!-- Stats -->
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Statistics</p>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm text-slate-300">Active accounts</p>
-                        <p class="mt-2 text-3xl font-semibold">@(_users?.Count ?? 0)</p>
-                        <p class="text-xs text-slate-400">Across Admin/Driver/Customer roles</p>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-sm text-slate-600">Total Accounts</p>
+                        <p class="mt-2 text-3xl font-bold text-slate-900">@(_users?.Count ?? 0)</p>
+                        <p class="text-xs text-slate-500">Admin/Driver/Customer</p>
                     </div>
-                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm text-slate-300">Blocked users</p>
-                        <p class="mt-2 text-3xl font-semibold">@(_users?.Count(u => u.IsBlocked) ?? 0)</p>
-                        <p class="text-xs text-slate-400">Lockouts enforced via Identity</p>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-sm text-slate-600">Blocked Users</p>
+                        <p class="mt-2 text-3xl font-bold text-red-600">@(_users?.Count(u => u.IsBlocked) ?? 0)</p>
+                        <p class="text-xs text-slate-500">Currently locked out</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-sm text-slate-600">Drivers</p>
+                        <p class="mt-2 text-3xl font-bold text-slate-900">@(_users?.Count(u => u.Role == "Driver") ?? 0)</p>
+                        <p class="text-xs text-slate-500">Active drivers</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-sm text-slate-600">Customers</p>
+                        <p class="mt-2 text-3xl font-bold text-slate-900">@(_users?.Count(u => u.Role == "Customer") ?? 0)</p>
+                        <p class="text-xs text-slate-500">Shippers</p>
                     </div>
                 </div>
-                <p class="mt-6 text-sm text-slate-300">Use the table on the right to adjust roles, block risky accounts, or remove stale users.</p>
             </div>
-        </section>
+        </div>
 
-        <section class="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur shadow-xl">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <!-- Users Table -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
                 <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Directory</p>
-                    <h2 class="text-2xl font-semibold">LoadHitch accounts</h2>
+                    <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Directory</p>
+                    <h2 class="mt-1 text-xl font-bold text-slate-900">All Users</h2>
                 </div>
-                <button class="rounded-2xl border border-white/20 px-4 py-2 text-xs text-white hover:bg-white/10" @onclick="LoadUsersAsync" disabled="@_isLoading">
-                    @(_isLoading ? "Refreshing..." : "Refresh list")
-                </button>
             </div>
 
             @if (_tableMessage is not null)
             {
-                <div class="mt-4 rounded-2xl border border-slate-200/30 bg-white/10 px-4 py-3 text-sm text-slate-100">@_tableMessage</div>
+                <div class="mb-4 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700">@_tableMessage</div>
             }
 
             @if (_isLoading)
             {
-                <p class="mt-6 text-sm text-slate-300">Loading users...</p>
+                <div class="flex justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+                </div>
             }
             else if (_users?.Count == 0)
             {
-                <p class="mt-6 text-sm text-slate-300">No users yet. Create one above.</p>
+                <p class="text-center py-8 text-slate-500">No users yet. Create one above.</p>
             }
             else if (_users is not null)
             {
-                <div class="mt-6 overflow-x-auto">
-                    <table class="min-w-full text-left text-sm text-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
                         <thead>
-                            <tr class="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                <th class="px-4 py-2">Name</th>
-                                <th class="px-4 py-2">Email</th>
-                                <th class="px-4 py-2">Role</th>
-                                <th class="px-4 py-2">Status</th>
-                                <th class="px-4 py-2 text-right">Actions</th>
+                            <tr class="border-b border-slate-200">
+                                <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500">Name</th>
+                                <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500">Email</th>
+                                <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500">Role</th>
+                                <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
+                                <th class="px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-slate-100">
                             @foreach (var user in _users)
                             {
-                                <tr class="border-t border-white/10">
-                                    <td class="px-4 py-4 font-semibold">@user.Name</td>
-                                    <td class="px-4 py-4 text-slate-300">@user.Email</td>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-4 py-4 font-medium text-slate-900">@user.Name</td>
+                                    <td class="px-4 py-4 text-slate-600">@user.Email</td>
                                     <td class="px-4 py-4">
-                                        <select class="rounded-xl border border-white/20 bg-slate-900/40 px-3 py-1 text-sm" value="@user.Role" @onchange="eventArgs => ChangeRoleAsync(user, eventArgs.Value?.ToString())">
+                                        <select class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" value="@user.Role" @onchange="eventArgs => ChangeRoleAsync(user, eventArgs.Value?.ToString())">
                                             @foreach (var role in _roles)
                                             {
                                                 <option value="@role">@role</option>
@@ -142,23 +163,31 @@
                                     <td class="px-4 py-4">
                                         @if (user.IsBlocked)
                                         {
-                                            <span class="rounded-full bg-red-500/20 px-3 py-1 text-xs font-semibold text-red-200">Blocked</span>
+                                            <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">Blocked</span>
                                         }
                                         else
                                         {
-                                            <span class="rounded-full bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-200">Active</span>
+                                            <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Active</span>
                                         }
                                     </td>
-                                    <td class="px-4 py-4 text-right text-xs font-semibold space-x-2">
-                                        @if (user.IsBlocked)
+                                    <td class="px-4 py-4 text-right space-x-2">
+                                        <button class="rounded-full border border-teal-300 px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-50 transition-colors" @onclick="() => OpenEditModal(user)">Edit</button>
+                                        @if (user.Role != "Admin")
                                         {
-                                            <button class="rounded-full border border-green-400/50 px-3 py-1 text-green-200 hover:bg-green-500/10" @onclick="() => ToggleBlockAsync(user, false)">Unblock</button>
+                                            @if (user.IsBlocked)
+                                            {
+                                                <button class="rounded-full border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-50 transition-colors" @onclick="() => ToggleBlockAsync(user, false)">Unblock</button>
+                                            }
+                                            else
+                                            {
+                                                <button class="rounded-full border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors" @onclick="() => ToggleBlockAsync(user, true)">Block</button>
+                                            }
+                                            <button class="rounded-full border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 transition-colors" @onclick="() => DeleteUserAsync(user)">Delete</button>
                                         }
                                         else
                                         {
-                                            <button class="rounded-full border border-red-400/50 px-3 py-1 text-red-200 hover:bg-red-500/10" @onclick="() => ToggleBlockAsync(user, true)">Block</button>
+                                            <span class="text-xs text-slate-400 italic">Protected</span>
                                         }
-                                        <button class="rounded-full border border-white/20 px-3 py-1 text-slate-200 hover:bg-white/10" @onclick="() => DeleteUserAsync(user)">Delete</button>
                                     </td>
                                 </tr>
                             }
@@ -166,12 +195,72 @@
                     </table>
                 </div>
             }
-        </section>
+        </div>
     </div>
 </section>
 
+<!-- Edit User Modal -->
+@if (_showEditModal && _editingUser is not null)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @onclick="CloseEditModal">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6" @onclick:stopPropagation>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-slate-900">Edit User</h2>
+                <button class="text-slate-400 hover:text-slate-600" @onclick="CloseEditModal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_editMessage))
+            {
+                <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">@_editMessage</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(_editError))
+            {
+                <div class="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">@_editError</div>
+            }
+
+            <EditForm EditContext="_editUserContext" OnValidSubmit="SaveUserAsync">
+                <DataAnnotationsValidator />
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_editingUser.FullName" />
+                        <ValidationMessage For="@(() => _editingUser.FullName)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                        <InputText type="email" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_editingUser.Email" />
+                        <ValidationMessage For="@(() => _editingUser.Email)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
+                        <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_editingUser.Role">
+                            @foreach (var role in _roles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button type="submit" class="flex-1 rounded-full bg-teal-500 px-6 py-3 text-sm font-medium text-white hover:bg-teal-600 disabled:bg-slate-300 transition-colors" disabled="@_isSaving">
+                        @(_isSaving ? "Saving..." : "Save Changes")
+                    </button>
+                    <button type="button" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors" @onclick="CloseEditModal">
+                        Cancel
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
 @code {
     private readonly AdminCreateUserModel _newUser = new();
+    private EditContext? _createEditContext;
     private readonly AccountRole[] _roles = Enum.GetValues<AccountRole>();
     private List<AdminUserSummary>? _users;
     private bool _isLoading;
@@ -179,8 +268,18 @@
     private string? _createMessage;
     private string? _tableMessage;
 
+    // Edit modal state
+    private bool _showEditModal;
+    private EditUserModel? _editingUser;
+    private EditContext? _editUserContext;
+    private string? _editingUserId;
+    private bool _isSaving;
+    private string? _editMessage;
+    private string? _editError;
+
     protected override async Task OnInitializedAsync()
     {
+        _createEditContext = new EditContext(_newUser);
         await LoadUsersAsync();
     }
 
@@ -235,6 +334,9 @@
 
     private async Task ToggleBlockAsync(AdminUserSummary user, bool shouldBlock)
     {
+        _tableMessage = shouldBlock ? "Blocking user..." : "Unblocking user...";
+        StateHasChanged();
+        
         var result = shouldBlock
             ? await AdminUserService.BlockUserAsync(user.Id)
             : await AdminUserService.UnblockUserAsync(user.Id);
@@ -244,6 +346,7 @@
         {
             await LoadUsersAsync();
         }
+        StateHasChanged();
     }
 
     private async Task DeleteUserAsync(AdminUserSummary user)
@@ -253,6 +356,81 @@
         if (result.Succeeded)
         {
             await LoadUsersAsync();
+        }
+        StateHasChanged();
+    }
+
+    private void OpenEditModal(AdminUserSummary user)
+    {
+        _editingUserId = user.Id;
+        _editingUser = new EditUserModel
+        {
+            FullName = user.Name,
+            Email = user.Email,
+            Role = Enum.TryParse<AccountRole>(user.Role, out var role) ? role : AccountRole.Customer
+        };
+        _editUserContext = new EditContext(_editingUser);
+        _editMessage = null;
+        _editError = null;
+        _showEditModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseEditModal()
+    {
+        _showEditModal = false;
+        _editingUser = null;
+        _editingUserId = null;
+        _editMessage = null;
+        _editError = null;
+        StateHasChanged();
+    }
+
+    private async Task SaveUserAsync()
+    {
+        if (_editingUser is null || string.IsNullOrEmpty(_editingUserId)) return;
+
+        _isSaving = true;
+        _editMessage = null;
+        _editError = null;
+        StateHasChanged();
+
+        try
+        {
+            // Update user details
+            var updateResult = await AdminUserService.UpdateUserAsync(_editingUserId, _editingUser.FullName, _editingUser.Email);
+            if (!updateResult.Succeeded)
+            {
+                _editError = updateResult.Message;
+                _isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Update role if changed
+            var currentUser = _users?.FirstOrDefault(u => u.Id == _editingUserId);
+            if (currentUser is not null && currentUser.Role != _editingUser.Role.ToString())
+            {
+                var roleResult = await AdminUserService.UpdateRoleAsync(_editingUserId, _editingUser.Role);
+                if (!roleResult.Succeeded)
+                {
+                    _editError = roleResult.Message;
+                    _isSaving = false;
+                    StateHasChanged();
+                    return;
+                }
+            }
+
+            _editMessage = "User updated successfully!";
+            await LoadUsersAsync();
+            
+            // Close modal after a brief delay
+            await Task.Delay(1000);
+            CloseEditModal();
+        }
+        finally
+        {
+            _isSaving = false;
         }
     }
 
@@ -280,5 +458,19 @@
             Password = string.Empty;
             Role = AccountRole.Customer;
         }
+    }
+
+    private sealed class EditUserModel
+    {
+        [Required]
+        [StringLength(80)]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public AccountRole Role { get; set; } = AccountRole.Customer;
     }
 }

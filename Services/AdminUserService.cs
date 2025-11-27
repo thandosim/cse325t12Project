@@ -10,9 +10,15 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
 
     public async Task<IReadOnlyList<AdminUserSummary>> GetUsersAsync()
     {
+        var now = DateTimeOffset.UtcNow;
         return await _userManager.Users
             .OrderBy(u => u.Email)
-            .Select(u => new AdminUserSummary(u.Id, u.FullName, u.Email ?? string.Empty, u.AccountType.ToString(), u.IsBlocked))
+            .Select(u => new AdminUserSummary(
+                u.Id, 
+                u.FullName, 
+                u.Email ?? string.Empty, 
+                u.AccountType.ToString(), 
+                u.LockoutEnd.HasValue && u.LockoutEnd > now))
             .ToListAsync();
     }
 
@@ -68,9 +74,21 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
             return OperationResult.Failure("User not found.");
         }
 
-        await _userManager.SetLockoutEnabledAsync(user, true);
-        await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
-        return OperationResult.Success("User blocked");
+        // Prevent blocking admin users
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+        if (isAdmin)
+        {
+            return OperationResult.Failure("Admin users cannot be blocked.");
+        }
+
+        // Enable lockout and set to far future
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+        var result = await _userManager.UpdateAsync(user);
+        
+        return result.Succeeded 
+            ? OperationResult.Success("User blocked successfully") 
+            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
     }
 
     public async Task<OperationResult> UnblockUserAsync(string userId)
@@ -81,8 +99,43 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
             return OperationResult.Failure("User not found.");
         }
 
-        await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
-        return OperationResult.Success("User unblocked");
+        // Clear lockout
+        user.LockoutEnd = null;
+        var result = await _userManager.UpdateAsync(user);
+        
+        return result.Succeeded 
+            ? OperationResult.Success("User unblocked successfully") 
+            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+    }
+
+    public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
+    {
+        return await _userManager.FindByIdAsync(userId);
+    }
+
+    public async Task<OperationResult> UpdateUserAsync(string userId, string fullName, string email)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return OperationResult.Failure("User not found.");
+        }
+
+        user.FullName = fullName;
+        
+        // If email changed, update it
+        if (!string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+        {
+            user.Email = email;
+            user.UserName = email;
+            user.NormalizedEmail = email.ToUpperInvariant();
+            user.NormalizedUserName = email.ToUpperInvariant();
+        }
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded 
+            ? OperationResult.Success("User updated successfully") 
+            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
     }
 
     public async Task<OperationResult> DeleteUserAsync(string userId)

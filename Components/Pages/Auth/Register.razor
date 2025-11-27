@@ -1,109 +1,92 @@
 @page "/register"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@implements IAsyncDisposable
 @inject AuthClient AuthClient
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ILogger<Register> Logger
-@implements IAsyncDisposable
 
-<PageTitle>Create account</PageTitle>
+<PageTitle>Create account - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white py-16">
-    <div class="mx-auto max-w-5xl grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-start px-6">
-        <div>
-            <p class="text-xs uppercase tracking-[0.4em] text-orange-200">Get started</p>
-            <h1 class="mt-4 text-4xl font-bold">Create your LoadHitch workspace.</h1>
-            <p class="mt-4 text-slate-300 max-w-2xl">Pick your role, invite your drivers, and start booking in minutes. Every new account ships with secure JWT + refresh tokens so APIs and dashboards stay in sync.</p>
-
-            <div class="mt-10 grid gap-4">
-                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p class="text-sm uppercase tracking-[0.3em] text-orange-200">Drivers</p>
-                    <p class="mt-3 text-3xl font-bold">2.4K</p>
-                    <p class="text-sm text-slate-300">already sharing availability on LoadHitch</p>
-                </div>
-                <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p class="text-sm uppercase tracking-[0.3em] text-orange-200">Dispatchers</p>
-                    <p class="mt-3 text-3xl font-bold">450+</p>
-                    <p class="text-sm text-slate-300">using the command center every day</p>
-                </div>
-            </div>
+<section class="min-h-screen bg-slate-50 py-16">
+    <div class="mx-auto max-w-md px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
         </div>
-
-        <div class="rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-orange-200">Let’s build your profile</p>
-                    <h2 class="mt-2 text-2xl font-semibold">Create a LoadHitch account</h2>
-                </div>
-                <span class="rounded-full bg-blue-500/15 px-3 py-1 text-xs text-blue-200">Step 1 of 1</span>
+        
+        <!-- Register Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">Create your account</h1>
+                <p class="mt-2 text-slate-600">Start connecting with loads instantly</p>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(_banner))
             {
-                <div class="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">@_banner</div>
+                <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">@_banner</div>
             }
 
             @if (!string.IsNullOrWhiteSpace(_error))
             {
-                <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">@_error</div>
+                <div class="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">@_error</div>
             }
 
             <EditForm EditContext="_editContext" OnValidSubmit="HandleRegistrationAsync">
                 <DataAnnotationsValidator />
-                <div class="mt-6 space-y-5">
-                    <label class="block text-sm font-semibold text-slate-200">
-                        Full name
-                        <InputText class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.FullName" @bind-Value:event="oninput" />
-                        <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-300" />
-                    </label>
-                    <label class="block text-sm font-semibold text-slate-200">
-                        Email address
-                        <InputText type="email" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.Email" @bind-Value:event="oninput" />
-                        <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-300" />
-                    </label>
-                    <label class="block text-sm font-semibold text-slate-200">
-                        Password
-                        <InputText type="password" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.Password" @bind-Value:event="oninput" />
-                        <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-300" />
-                    </label>
-                    <label class="block text-sm font-semibold text-slate-200">
-                        Confirm password
-                        <InputText type="password" class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.ConfirmPassword" @bind-Value:event="oninput" />
-                        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-300" />
-                    </label>
-                    <label class="block text-sm font-semibold text-slate-200">
-                        Role
-                        <InputSelect class="mt-2 w-full rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 text-white" @bind-Value="_model.SelectedRole">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Full name</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="John Doe" @bind-Value="_model.FullName" />
+                        <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+                        <InputText type="email" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="you@company.com" @bind-Value="_model.Email" />
+                        <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                        <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="Create a password" @bind-Value="_model.Password" />
+                        <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm password</label>
+                        <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="Confirm your password" @bind-Value="_model.ConfirmPassword" />
+                        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">I am a</label>
+                        <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white" @bind-Value="_model.SelectedRole">
                             @foreach (var role in _allowedRoles)
                             {
                                 <option value="@role">@role</option>
                             }
                         </InputSelect>
-                        <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-300" />
-                    </label>
+                        <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
+                    </div>
                 </div>
 
-                <button type="submit" class="mt-8 w-full rounded-2xl bg-orange-500 px-6 py-3 text-base font-semibold text-white transition hover:bg-orange-400 disabled:opacity-40" disabled="@_isSubmitting">
+                <button type="submit" class="mt-6 w-full rounded-full bg-teal-500 px-6 py-3 text-base font-medium text-white transition hover:bg-teal-600 disabled:bg-slate-300 disabled:cursor-not-allowed" disabled="@_isSubmitting">
                     @(_isSubmitting ? "Creating account..." : "Create account")
                 </button>
             </EditForm>
 
-            <div class="mt-6 flex items-center gap-4 text-xs uppercase tracking-[0.3em] text-slate-500">
-                <span class="h-px flex-1 bg-white/10" />
-                or continue with
-                <span class="h-px flex-1 bg-white/10" />
+            <div class="mt-6 flex items-center gap-4 text-xs uppercase tracking-wider text-slate-400">
+                <span class="h-px flex-1 bg-slate-200" />
+                or
+                <span class="h-px flex-1 bg-slate-200" />
             </div>
 
-            <button class="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-white/20 bg-transparent px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-40" @onclick="StartGoogleSignInAsync" disabled="@_isSubmitting || _googleBusy">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
-                </span>
+            <button class="mt-4 flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:bg-slate-100 disabled:cursor-not-allowed" @onclick="StartGoogleSignInAsync" disabled="@_isSubmitting">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
                 Continue with Google
             </button>
 
-            <p class="mt-6 text-center text-sm text-slate-400">
+            <p class="mt-6 text-center text-sm text-slate-600">
                 Already have an account?
-                <a class="font-semibold text-white hover:text-orange-200" href="/login">Log in</a>
+                <a class="font-medium text-teal-600 hover:text-teal-500" href="/login">Sign in</a>
             </p>
         </div>
     </div>
@@ -114,32 +97,42 @@
     private EditContext? _editContext;
     private readonly AccountRole[] _allowedRoles = [AccountRole.Customer, AccountRole.Driver];
     private bool _isSubmitting;
-    private bool _googleBusy;
     private string? _error;
     private string? _banner;
-    private DotNetObjectReference<Register>? _dotNetRef;
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+    private DotNetObjectReference<Register>? _jsRef;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        Logger.LogInformation("Register page initialized");
         _editContext = new EditContext(_model);
+        
+        // Redirect if already logged in
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/dashboard", forceLoad: true);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("loadhitchAuth.registerHandler", _dotNetRef);
+            _jsRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("loadhitchAuth.registerHandler", _jsRef);
         }
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_dotNetRef is not null)
+        if (_jsRef is not null)
         {
-            await JS.InvokeVoidAsync("loadhitchAuth.unregisterHandler", _dotNetRef);
-            _dotNetRef.Dispose();
+            try
+            {
+                await JS.InvokeVoidAsync("loadhitchAuth.unregisterHandler", _jsRef);
+            }
+            catch { }
+            _jsRef.Dispose();
         }
     }
 
@@ -182,10 +175,13 @@
             }
 
             _banner = $"Account created for {response.Payload.FullName}. Redirecting...";
-            Logger.LogInformation("Registration successful for {Email}, redirecting to {Dashboard}", _model.Email, response.Payload.DashboardUrl);
+            Logger.LogInformation("Registration successful for {Email}, completing sign-in", _model.Email);
             StateHasChanged();
-            await Task.Delay(1000);
-            Navigation.NavigateTo(response.Payload.DashboardUrl, forceLoad: true);
+            await Task.Delay(500);
+            
+            // Redirect to complete sign-in endpoint which sets the cookie properly
+            var returnUrl = Uri.EscapeDataString(response.Payload.DashboardUrl);
+            Navigation.NavigateTo($"/auth/complete-signin?email={Uri.EscapeDataString(response.Payload.Email)}&returnUrl={returnUrl}", forceLoad: true);
         }
         catch (Exception ex)
         {
@@ -201,19 +197,26 @@
 
     private async Task StartGoogleSignInAsync()
     {
+        Logger.LogInformation("Starting Google Sign-In");
         _error = null;
         _banner = null;
-        _googleBusy = true;
-        var url = Navigation.ToAbsoluteUri("api/auth/google/signin?state=register").ToString();
+        _isSubmitting = true;
+        StateHasChanged();
 
         try
         {
-            await JS.InvokeVoidAsync("loadhitchAuth.startGoogleSignIn", url);
+            var state = Guid.NewGuid().ToString("N");
+            var googleUrl = $"{Navigation.BaseUri}api/auth/google/signin?state={state}";
+            await JS.InvokeVoidAsync("loadhitchAuth.startGoogleSignIn", googleUrl);
         }
-        catch (JSException)
+        catch (Exception ex)
         {
-            _googleBusy = false;
-            _error = "Unable to open Google sign-in window. Please allow popups and try again.";
+            Logger.LogError(ex, "Failed to start Google sign-in");
+            _error = "Failed to start Google sign-in. Please try again.";
+        }
+        finally
+        {
+            _isSubmitting = false;
             StateHasChanged();
         }
     }
@@ -221,54 +224,35 @@
     [JSInvokable]
     public async Task HandleExternalAuthMessage(string json)
     {
-        ExternalAuthMessage? message = null;
+        Logger.LogInformation("Received external auth message: {Json}", json);
+        
         try
         {
-            message = JsonSerializer.Deserialize<ExternalAuthMessage>(json, _jsonOptions);
-        }
-        catch
-        {
-        }
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
 
-        if (message is null)
-        {
-            _googleBusy = false;
-            return;
-        }
-
-        if (string.Equals(message.Type, "loadhitch:auth", StringComparison.OrdinalIgnoreCase))
-        {
-            var auth = message.Payload.Deserialize<AuthResponse>(_jsonOptions);
-            if (auth is not null)
+            if (root.TryGetProperty("error", out var errorProp))
             {
-                await AuthClient.StoreAuthAsync(auth);
-                _banner = "Account created with Google. Redirecting...";
-                _error = null;
-                _googleBusy = false;
+                _error = errorProp.GetString() ?? "Google sign-in failed.";
                 StateHasChanged();
-                await Task.Delay(900);
-                Navigation.NavigateTo(auth.DashboardUrl, true);
                 return;
             }
-        }
 
-        if (string.Equals(message.Type, "loadhitch:auth-error", StringComparison.OrdinalIgnoreCase))
+            if (root.TryGetProperty("dashboardUrl", out var dashboardProp))
+            {
+                var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
+                _banner = "Signed in with Google! Redirecting...";
+                StateHasChanged();
+                await Task.Delay(500);
+                Navigation.NavigateTo(dashboardUrl, forceLoad: true);
+            }
+        }
+        catch (Exception ex)
         {
-            var error = message.Payload.TryGetProperty("error", out var value)
-                ? value.GetString()
-                : "Unable to finish Google sign-up.";
-            _error = error;
+            Logger.LogError(ex, "Failed to parse auth message");
+            _error = "Failed to complete Google sign-in.";
+            StateHasChanged();
         }
-
-        _googleBusy = false;
-        StateHasChanged();
-    }
-
-    private sealed class ExternalAuthMessage
-    {
-        public string? Type { get; set; }
-        public JsonElement Payload { get; set; }
-        public JsonElement? State { get; set; }
     }
 
     private sealed class RegistrationModel
