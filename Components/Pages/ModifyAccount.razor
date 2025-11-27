@@ -1,39 +1,46 @@
 @page "/account/edit"
-@using t12Project.Models
 @using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.JSInterop
-@inject IJSRuntime JS
+@inject System.Net.Http.HttpClient Http
 
-<h1 class="text-2xl font-bold mb-4">Modify Account</h1>
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="px-8 py-6">
+                <h1 class="text-3xl font-bold mb-2">Modify Account</h1>
+                <p class="text-sm text-gray-500 mb-6">Update your personal details. Changes are saved locally for now.</p>
 
-<div class="max-w-lg">
-    <EditForm Model="account" OnValidSubmit="Save">
-        <div class="mb-3">
-            <label class="block font-semibold">First name</label>
-            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.FirstName" />
-        </div>
-        <div class="mb-3">
-            <label class="block font-semibold">Last name</label>
-            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.LastName" />
-        </div>
-        <div class="mb-3">
-            <label class="block font-semibold">Email</label>
-            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.Email" />
-        </div>
-        <div class="mb-3">
-            <label class="block font-semibold">Phone</label>
-            <InputText class="w-full rounded border px-2 py-1" @bind-Value="account.Phone" />
-        </div>
-        <div class="flex gap-2">
-            <button class="bg-hitchBlue text-white px-4 py-2 rounded" type="submit">Save</button>
-            <button class="px-4 py-2 rounded border" type="button" @onclick="Load">Load</button>
-        </div>
-    </EditForm>
+                <EditForm Model="account" OnValidSubmit="Save">
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">First name</label>
+                            <InputText class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.FirstName" />
+                        </div>
 
-    @if (!string.IsNullOrEmpty(message))
-    {
-        <div class="mt-4 text-green-700">@message</div>
-    }
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
+                            <InputText class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.LastName" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <InputText type="email" class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.Email" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <InputText class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.Phone" />
+                        </div>
+
+                        <div class="flex items-center gap-3 mt-2">
+                            <button class="bg-hitchBlue text-white px-4 py-2 rounded-md shadow" type="submit">Save</button>
+                            <button class="border border-gray-300 px-4 py-2 rounded-md" type="button" @onclick="Load">Load</button>
+                            <span class="text-sm text-green-600">@message</span>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
 </div>
 
 @code {
@@ -49,22 +56,42 @@
     {
         try
         {
-            var json = await JS.InvokeAsync<string>("localHelper.get", "account");
-            if (!string.IsNullOrEmpty(json))
+            var res = await Http.GetAsync("/api/account");
+            if (res.IsSuccessStatusCode)
             {
-                account = System.Text.Json.JsonSerializer.Deserialize<AccountModel>(json) ?? new AccountModel();
+                var json = await res.Content.ReadAsStringAsync();
+                if (!string.IsNullOrEmpty(json))
+                {
+                    account = System.Text.Json.JsonSerializer.Deserialize<AccountModel>(json) ?? new AccountModel();
+                }
             }
         }
         catch
         {
-            // ignore
+            // ignore for now
         }
     }
 
     private async Task Save()
     {
-        var json = System.Text.Json.JsonSerializer.Serialize(account);
-        await JS.InvokeVoidAsync("localHelper.set", "account", json);
-        message = "Account updated locally.";
+        var dto = new { FirstName = account.FirstName, LastName = account.LastName, Email = account.Email, Phone = account.Phone };
+        var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(dto), System.Text.Encoding.UTF8, "application/json");
+        var res = await Http.PutAsync("/api/account", content);
+        if (res.IsSuccessStatusCode)
+        {
+            message = "Account saved (mock).";
+        }
+        else
+        {
+            message = "Save failed.";
+        }
+    }
+
+    private class AccountModel
+    {
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
     }
 }

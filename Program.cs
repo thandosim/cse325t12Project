@@ -12,7 +12,12 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddScoped<DatabaseService>();
+
+// Register mock account service for development
+builder.Services.AddSingleton<IAccountService, MockAccountService>();
 
 var app = builder.Build();
 
@@ -28,6 +33,19 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+// Minimal API endpoints for account (dev/mock persistence)
+app.MapGet("/api/account", async (IAccountService svc) =>
+{
+    var acc = await svc.GetAsync();
+    return acc is null ? Results.NoContent() : Results.Json(acc);
+});
+
+app.MapPut("/api/account", async (IAccountService svc, AccountDto dto) =>
+{
+    await svc.SaveAsync(dto);
+    return Results.Ok();
+});
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
