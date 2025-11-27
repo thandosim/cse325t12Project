@@ -58,7 +58,26 @@ builder.Services.AddScoped<DatabaseService>();
 
 var app = builder.Build();
 
-await SeedData.InitializeAsync(app.Services);
+// Run database seed/migrations. In Development, don't crash the app if the DB isn't available;
+// instead log a warning so developers without Postgres can still run the app locally.
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+try
+{
+    await SeedData.InitializeAsync(app.Services);
+}
+catch (Exception ex)
+{
+    if (app.Environment.IsDevelopment())
+    {
+        logger.LogWarning(ex, "Database seed/migration failed — continuing in Development mode without DB initialization.");
+    }
+    else
+    {
+        // In non-development environments, fail fast so issues are addressed.
+        logger.LogCritical(ex, "Database seed/migration failed during startup.");
+        throw;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
