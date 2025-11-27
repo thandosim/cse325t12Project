@@ -14,18 +14,31 @@
         Title="Driver dashboard"
         Subtitle="Browse available loads below." />
 
+    <!-- Table shows string-based load data -->
     <DashboardTable Headers="loadHeaders" Items="loadItems" />
-    <MapView Loads="loadItems" UserLocation="driverLocation" />
+
+    <!-- MapView now uses tuple-based pins -->
+    <MapView Loads="loadPins" UserLocation="driverLocation" />
 </DashboardLayout>
 
 @code {
+    // Table headers
     private List<string> loadHeaders = new() { "Load ID", "Origin", "Destination", "Status" };
+
+    // Table rows (string-based for DashboardTable)
     private List<List<string>> loadItems = new()
     {
         new() { "L001", "Mbabane", "Manzini", "Pending" },
         new() { "L002", "Sidwashini", "Nhlangano", "Delivered" }
     };
 
+    // Map pins (tuple-based for MapView)
+    private List<(double lat, double lng, string label)> loadPins = new()
+    {
+        (-26.305, 31.136, "Load L001 - Pending"),
+        (-26.310, 31.140, "Load L002 - Delivered")
+    };
+
+    // Driver location (center of map)
     private (double lat, double lng) driverLocation = (-26.320, 31.150); // placeholder coords
 }
-

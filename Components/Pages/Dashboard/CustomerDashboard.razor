@@ -14,18 +14,31 @@
         Title="Customer dashboard"
         Subtitle="Browse available trucks below." />
 
+    <!-- Table shows string-based truck data -->
     <DashboardTable Headers="truckHeaders" Items="truckItems" />
-    <MapView Trucks="truckItems" UserLocation="customerLocation" />
+
+    <!-- MapView now uses tuple-based pins -->
+    <MapView Trucks="truckPins" UserLocation="customerLocation" />
 </DashboardLayout>
 
 @code {
+    // Table headers
     private List<string> truckHeaders = new() { "Truck ID", "Capacity", "Location", "Status" };
+
+    // Table rows (string-based for DashboardTable)
     private List<List<string>> truckItems = new()
     {
         new() { "T001", "10 tons", "Mbabane", "Available" },
         new() { "T002", "8 tons", "Manzini", "On Route" }
     };
 
+    // Map pins (tuple-based for MapView)
+    private List<(double lat, double lng, string label)> truckPins = new()
+    {
+        (-26.320, 31.150, "Truck T001 - Available"),
+        (-26.330, 31.160, "Truck T002 - On Route")
+    };
+
+    // Customer location (center of map)
     private (double lat, double lng) customerLocation = (-26.305, 31.136); // placeholder coords
 }
-
