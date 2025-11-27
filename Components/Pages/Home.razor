@@ -3,49 +3,138 @@
 
 <PageTitle>LoadHitch</PageTitle>
 
+<main class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
+	<!-- Hero -->
+	<section class="max-w-7xl mx-auto px-6 py-12 md:py-20">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+			<div>
+				<p class="text-sm font-semibold uppercase tracking-[0.18em] text-hitchOrange">Logistics platform</p>
+				<h1 class="mt-4 text-4xl md:text-5xl font-extrabold text-hitchBlue leading-tight">Move more. Book faster. Keep trucks full.</h1>
+				<p class="mt-6 text-lg text-slate-600">LoadHitch connects shippers with nearby drivers using a lightweight booking flow — post loads, view available trucks, and confirm bookings without the back-and-forth.</p>
 
-<main class="min-h-screen bg-slate-50 text-slate-900">
-	<div class="mx-auto max-w-5xl px-6 py-10">
-		<section class="rounded-3xl bg-white p-8 shadow-md">
-			<p class="text-xs font-semibold uppercase tracking-[0.2em] text-hitchOrange">Logistics platform</p>
-			<h1 class="mt-4 text-4xl font-black text-hitchBlue">Load &amp; truck matching</h1>
-			<p class="mt-4 text-lg text-slate-600">
-				LoadHitch helps shippers post loads, drivers share availability, and both sides stay coordinated through a lightweight booking flow.
-			</p>
-			<div class="mt-6 flex flex-wrap gap-3">
-				<span class="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700">Loads dashboard</span>
-				<span class="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700">Trucks dashboard</span>
-				<span class="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700">Role-based access</span>
+				<div class="mt-8 flex flex-wrap gap-3">
+					<a href="/customer/book" class="inline-flex items-center gap-3 bg-hitchOrange text-white px-5 py-3 rounded-lg shadow hover:opacity-95">Book a truck</a>
+					<a href="/register" class="inline-flex items-center gap-3 border border-slate-200 px-5 py-3 rounded-lg text-slate-800 hover:bg-slate-50">Create account</a>
+				</div>
+
+				<ul class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-600">
+					<li class="flex items-start gap-3">
+						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">⚡</div>
+						<div>
+							<div class="font-semibold text-slate-800">Fast matching</div>
+							<div class="text-xs">Post loads and get matched quickly to nearby drivers.</div>
+						</div>
+					</li>
+					<li class="flex items-start gap-3">
+						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">📍</div>
+						<div>
+							<div class="font-semibold text-slate-800">Live availability</div>
+							<div class="text-xs">Drivers share availability and location so you can plan with confidence.</div>
+						</div>
+					</li>
+					<li class="flex items-start gap-3">
+						<div class="rounded-md bg-hitchBlue/10 text-hitchBlue w-8 h-8 flex items-center justify-center">🔒</div>
+						<div>
+							<div class="font-semibold text-slate-800">Secure & auditable</div>
+							<div class="text-xs">Role-based access and booking history for compliance.</div>
+						</div>
+					</li>
+				</ul>
 			</div>
-		</section>
 
-		<section class="mt-10 grid gap-6 md:grid-cols-2">
+			<div class="relative">
+				<img src="https://images.pexels.com/photos/8994766/pexels-photo-8994766.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load"
+					alt="Semi-truck driving down a highway"
+					class="w-full rounded-3xl shadow-2xl object-cover"
+					loading="lazy" />
+			</div>
+		</div>
+	</section>
+
+	<!-- Features -->
+	<section id="features" class="max-w-7xl mx-auto px-6 py-12 bg-white rounded-3xl shadow-sm">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+			<div>
+				<h2 class="text-2xl font-bold text-hitchBlue">Everything you need to keep freight moving</h2>
+				<p class="mt-4 text-slate-600">From quick bookings to driver management and audit logs — LoadHitch makes it simple to manage shipments and cargo across multiple lanes.</p>
+
+				<ul class="mt-6 space-y-4 text-slate-700">
+					<li class="flex gap-3 items-start">
+						<div class="text-hitchOrange text-xl">✓</div>
+						<div>
+							<div class="font-semibold">Loads dashboard</div>
+							<div class="text-sm text-slate-600">Create, edit and track loads with status updates.</div>
+						</div>
+					</li>
+					<li class="flex gap-3 items-start">
+						<div class="text-hitchOrange text-xl">✓</div>
+						<div>
+							<div class="font-semibold">Trucks & availability</div>
+							<div class="text-sm text-slate-600">Drivers control availability and update location when in transit.</div>
+						</div>
+					</li>
+					<li class="flex gap-3 items-start">
+						<div class="text-hitchOrange text-xl">✓</div>
+						<div>
+							<div class="font-semibold">Booking flow</div>
+							<div class="text-sm text-slate-600">A lightweight wizard helps customers find and book the right truck.</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+
+			<div class="flex items-center justify-center">
+				<img src="/images/feature-illustration.svg" alt="Three feature tiles illustration" class="w-full max-w-md rounded-xl" />
+			</div>
+		</div>
+	</section>
+
+	<section id="how-it-works" class="max-w-7xl mx-auto px-6 py-16">
+		<h2 class="text-2xl font-bold text-hitchBlue">How LoadHitch works</h2>
+		<div class="mt-10 grid gap-6 md:grid-cols-3">
 			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<h2 class="text-xl font-semibold text-hitchBlue">Shippers</h2>
-				<p class="mt-2 text-sm text-slate-600">Post loads in seconds, watch drivers claim jobs, and confirm bookings without endless emails.</p>
+				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 1</p>
+				<h3 class="mt-2 text-lg font-semibold text-slate-900">Create your account</h3>
+				<p class="mt-2 text-sm text-slate-600">Customers and drivers sign up, choose their role, and complete the onboarding checklist.</p>
 			</article>
 			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<h2 class="text-xl font-semibold text-hitchBlue">Drivers</h2>
-				<p class="mt-2 text-sm text-slate-600">Share preferred lanes, keep trucks full, and respond to new opportunities on any device.</p>
+				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 2</p>
+				<h3 class="mt-2 text-lg font-semibold text-slate-900">Publish loads or availability</h3>
+				<p class="mt-2 text-sm text-slate-600">Customers post loads with pickup/dropoff details, while drivers set availability windows and current location.</p>
 			</article>
-		</section>
+			<article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+				<p class="text-xs font-semibold uppercase text-hitchOrange tracking-[0.2em]">Step 3</p>
+				<h3 class="mt-2 text-lg font-semibold text-slate-900">Book and keep moving</h3>
+				<p class="mt-2 text-sm text-slate-600">Use the booking wizard to match loads and trucks, then track the delivery progress from the dashboard.</p>
+			</article>
+		</div>
+	</section>
 
-		<section class="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
-			<h2 class="text-xl font-semibold text-hitchBlue">Database connectivity</h2>
-			<p class="@($"mt-2 text-sm {_statusColor}")">@_statusMessage</p>
+
+	<!-- Quick DB status block (keeps previous functionality) -->
+	<section class="max-w-7xl mx-auto px-6 py-8 mt-8">
+		<div class="rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
+			<h3 class="text-lg font-semibold text-hitchBlue">Database connectivity</h3>
+			<p class="mt-2 text-sm text-slate-500">@_statusMessage</p>
 			<p class="mt-1 text-xs text-slate-500">Update <code>.env</code> with the correct password to enable the live Azure PostgreSQL connection.</p>
-		</section>
-	</div>
+		</div>
+	</section>
+
 </main>
 
 @code {
 	private string _statusMessage = "Checking database connection...";
-	private string _statusColor = "text-slate-500";
 
 	protected override async Task OnInitializedAsync()
 	{
-		var result = await DatabaseService.TestConnectionAsync();
-		_statusMessage = result.Message;
-		_statusColor = result.IsSuccessful ? "text-green-600" : "text-red-600";
+		try
+		{
+			var result = await DatabaseService.TestConnectionAsync();
+			_statusMessage = result.Message;
+		}
+		catch (Exception ex)
+		{
+			_statusMessage = "Unable to check connection: " + ex.Message;
+		}
 	}
 }

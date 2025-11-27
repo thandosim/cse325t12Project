@@ -1,0 +1,15 @@
+@page "/dashboard/customer"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize(Roles = "Customer")]
+
+<PageTitle>Customer dashboard</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-16">
+    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchOrange">Customer area</p>
+        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Customer dashboard</h1>
+        <p class="mt-4 text-slate-500">This is a placeholder. Your load and booking widgets will arrive soon.</p>
+    </div>
+</section>

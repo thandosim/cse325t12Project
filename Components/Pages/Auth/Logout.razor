@@ -1,0 +1,16 @@
+@page "/logout"
+@attribute [Authorize]
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Signing out...</PageTitle>
+
+<p class="p-10 text-center text-slate-600">Signing you out...</p>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

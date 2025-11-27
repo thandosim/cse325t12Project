@@ -1,0 +1,15 @@
+@page "/dashboard/driver"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize(Roles = "Driver")]
+
+<PageTitle>Driver dashboard</PageTitle>
+
+<section class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-16">
+    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchBlue">Driver area</p>
+        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Driver dashboard</h1>
+        <p class="mt-4 text-slate-500">Placeholder coming in hot. Availability, trucks, and bookings will live here.</p>
+    </div>
+</section>
