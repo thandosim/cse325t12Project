@@ -34,6 +34,64 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AuthResponse>> RegisterAsync([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("=== AuthController.RegisterAsync START ===");
+        _logger.LogInformation("Request: Email={Email}, FullName={FullName}, Role={Role}", request.Email, request.FullName, request.Role);
+
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("ModelState invalid: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+            return ValidationProblem(ModelState);
+        }
+
+        _logger.LogInformation("Checking if user already exists...");
+        var existing = await _userManager.FindByEmailAsync(request.Email);
+        if (existing is not null)
+        {
+            _logger.LogWarning("User already exists: {Email}", request.Email);
+            return BadRequest(new { message = "An account with this email already exists. Please log in instead." });
+        }
+
+        _logger.LogInformation("Creating new user...");
+        var user = new ApplicationUser
+        {
+            UserName = request.Email,
+            Email = request.Email,
+            EmailConfirmed = true,
+            FullName = request.FullName,
+            AccountType = request.Role
+        };
+
+        var createResult = await _userManager.CreateAsync(user, request.Password);
+        if (!createResult.Succeeded)
+        {
+            var errors = string.Join(" ", createResult.Errors.Select(e => e.Description));
+            _logger.LogWarning("User creation failed: {Errors}", errors);
+            return BadRequest(new { message = errors });
+        }
+
+        _logger.LogInformation("User created, adding role: {Role}", request.Role);
+        await _userManager.AddToRoleAsync(user, request.Role.ToString());
+
+        _logger.LogInformation("Issuing tokens...");
+        var authResult = await _tokenService.IssueTokensAsync(
+            user,
+            rememberMe: true,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            Request.Headers.UserAgent.ToString(),
+            cancellationToken);
+
+        _logger.LogInformation("Signing in user...");
+        await _signInManager.SignInAsync(user, isPersistent: true);
+
+        var response = await BuildAuthResponseAsync(user, authResult, cancellationToken);
+        _logger.LogInformation("=== AuthController.RegisterAsync SUCCESS ===");
+        return Ok(response);
+    }
+
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<AuthResponse>> LoginAsync([FromBody] LoginRequest request, CancellationToken cancellationToken)

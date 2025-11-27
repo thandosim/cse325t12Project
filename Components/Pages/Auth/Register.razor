@@ -1,7 +1,9 @@
 @page "/register"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject AuthClient AuthClient
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject ILogger<Register> Logger
 @implements IAsyncDisposable
 
 <PageTitle>Create account</PageTitle>
@@ -46,7 +48,7 @@
                 <div class="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">@_error</div>
             }
 
-            <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
+            <EditForm EditContext="_editContext" OnValidSubmit="HandleRegistrationAsync">
                 <DataAnnotationsValidator />
                 <div class="mt-6 space-y-5">
                     <label class="block text-sm font-semibold text-slate-200">
@@ -145,13 +147,18 @@
     {
         _error = null;
         _banner = null;
+        Logger.LogInformation("Registration form submitted for {Email}", _model.Email);
+
         if (_model.Password != _model.ConfirmPassword)
         {
             _error = "Passwords do not match.";
+            Logger.LogWarning("Password mismatch for {Email}", _model.Email);
             return;
         }
 
         _isSubmitting = true;
+        StateHasChanged();
+
         try
         {
             var request = new RegisterRequest
@@ -163,21 +170,32 @@
                 Role = _model.SelectedRole
             };
 
+            Logger.LogInformation("Calling AuthClient.RegisterAsync for {Email}", _model.Email);
             var response = await AuthClient.RegisterAsync(request);
+            Logger.LogInformation("AuthClient.RegisterAsync returned: Succeeded={Succeeded}, Message={Message}", response.Succeeded, response.Message);
+
             if (!response.Succeeded || response.Payload is null)
             {
-                _error = response.Message;
+                _error = string.IsNullOrWhiteSpace(response.Message) ? "Registration failed. Please try again." : response.Message;
+                Logger.LogWarning("Registration failed for {Email}: {Error}", _model.Email, _error);
                 return;
             }
 
             _banner = $"Account created for {response.Payload.FullName}. Redirecting...";
+            Logger.LogInformation("Registration successful for {Email}, redirecting to {Dashboard}", _model.Email, response.Payload.DashboardUrl);
             StateHasChanged();
             await Task.Delay(1000);
             Navigation.NavigateTo(response.Payload.DashboardUrl, forceLoad: true);
         }
+        catch (Exception ex)
+        {
+            _error = "An unexpected error occurred. Please try again.";
+            Logger.LogError(ex, "Exception during registration for {Email}", _model.Email);
+        }
         finally
         {
             _isSubmitting = false;
+            StateHasChanged();
         }
     }
 

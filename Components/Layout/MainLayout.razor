@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-    <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
+<div class="flex min-h-screen flex-col bg-white text-slate-900">
+    <header class="border-b border-slate-100 bg-white sticky top-0 z-50">
         <NavMenu />
     </header>
 
@@ -9,7 +9,13 @@
         @Body
     </main>
 
-    <footer class="border-t border-slate-200 bg-white/90 px-6 py-4 text-center text-sm text-slate-500">
-        &copy; @DateTime.Now.Year LoadHitch. All rights reserved.
+    <footer class="border-t border-slate-200 bg-slate-50 px-6 py-8 text-center text-sm text-slate-500">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-sm">LH</div>
+                <span class="font-semibold text-slate-700">LoadHitch</span>
+            </div>
+            <p>&copy; @DateTime.Now.Year LoadHitch. All rights reserved.</p>
+        </div>
     </footer>
 </div>

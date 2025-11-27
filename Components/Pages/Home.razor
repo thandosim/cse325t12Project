@@ -1,160 +1,183 @@
-﻿@inject DatabaseService DatabaseService
-@page "/"
+﻿@page "/"
 
-<PageTitle>LoadHitch</PageTitle>
+<PageTitle>LoadHitch - Connect Drivers with Loads Instantly</PageTitle>
 
-<main class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white">
-	<section class="relative overflow-hidden">
-		<div class="absolute inset-0 opacity-40" style="background: radial-gradient(circle at top, rgba(249,115,22,0.35), transparent 55%);"></div>
-		<div class="relative max-w-7xl mx-auto px-6 py-16 md:py-24 grid gap-12 lg:grid-cols-[1.15fr_0.85fr] items-center">
-			<div>
-				<div class="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1 text-xs uppercase tracking-[0.2em] text-orange-200">LoadHitch Platform</div>
-				<h1 class="mt-6 text-4xl md:text-5xl xl:text-6xl font-black leading-tight text-white">Keep freight moving with live driver visibility.</h1>
-				<p class="mt-6 text-lg text-slate-200 max-w-2xl">Book trusted carriers, orchestrate drivers, and keep every load on schedule inside a single control tower built for modern shippers.</p>
-				<div class="mt-10 flex flex-wrap gap-4">
-					<a href="/register" class="inline-flex items-center gap-3 rounded-2xl bg-white/90 px-6 py-3 text-slate-900 font-semibold shadow-lg shadow-orange-500/30 hover:bg-white">Create free account</a>
-					<a href="/customer/book" class="inline-flex items-center gap-3 rounded-2xl border border-white/30 px-6 py-3 text-white font-semibold hover:bg-white/10">Book a truck</a>
+<main class="min-h-screen bg-white">
+	<!-- Hero Section -->
+	<section class="relative min-h-[600px] overflow-hidden">
+		<!-- Background image with warehouse/trucks faded -->
+		<div class="absolute inset-0">
+			<img src="/images/hero-bg.jpg" alt="" class="w-full h-full object-cover opacity-20" onerror="this.style.display='none';" />
+		</div>
+		<div class="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/80"></div>
+		
+		<div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-20 md:py-28">
+			<div class="grid gap-12 lg:grid-cols-2 items-center">
+				<!-- Left Content -->
+				<div class="max-w-lg">
+					<h1 class="text-[2.75rem] md:text-5xl font-bold leading-[1.15] text-slate-800 tracking-tight">
+						Connect Drivers with<br />Loads Instantly
+					</h1>
+					<p class="mt-6 text-base text-slate-600 leading-relaxed">
+						LoadHitch revolutionizes freight transportation by connecting truck drivers with shipping opportunities in real-time. Save time, reduce empty miles, and maximize efficiency for both drivers and shippers.
+					</p>
+					
+					<!-- CTA Buttons -->
+					<div class="mt-10 flex flex-wrap items-center gap-4">
+						<a href="/register?role=driver" class="inline-flex items-center justify-center rounded-full bg-teal-500 px-7 py-3.5 text-white font-medium hover:bg-teal-600 transition-colors">
+							I'm a Driver
+						</a>
+						<a href="/register?role=customer" class="inline-flex items-center justify-center rounded-full border-2 border-teal-500 px-7 py-3.5 text-teal-500 font-medium hover:bg-teal-50 transition-colors">
+							I Need Transport
+						</a>
+					</div>
 				</div>
-				<div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
-					<div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-						<p class="text-sm uppercase tracking-[0.2em] text-orange-200">Loads posted</p>
-						<p class="mt-3 text-3xl font-bold">12K+</p>
-						<p class="text-sm text-slate-300">per quarter across North America</p>
-					</div>
-					<div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-						<p class="text-sm uppercase tracking-[0.2em] text-orange-200">Driver uptime</p>
-						<p class="mt-3 text-3xl font-bold">97%</p>
-						<p class="text-sm text-slate-300">availability accuracy from live updates</p>
-					</div>
-					<div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-						<p class="text-sm uppercase tracking-[0.2em] text-orange-200">Carrier NPS</p>
-						<p class="mt-3 text-3xl font-bold">+62</p>
-						<p class="text-sm text-slate-300">because booking is fast and transparent</p>
-					</div>
-				</div>
-			</div>
-			<div class="relative">
-				<div class="absolute -top-6 -left-6 h-24 w-24 rounded-full bg-orange-500/40 blur-3xl"></div>
-				<div class="absolute bottom-0 right-0 h-32 w-32 rounded-full bg-cyan-400/30 blur-3xl"></div>
-				<div class="relative rounded-[32px] bg-white/5 backdrop-blur p-6 shadow-2xl border border-white/10">
-					<div class="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-sm text-slate-200">
-						<p class="text-xs uppercase tracking-[0.3em] text-orange-300">Live booking</p>
-						<h3 class="mt-3 text-2xl font-semibold text-white">Reefer from Dallas → Denver</h3>
-						<ul class="mt-4 space-y-3 text-sm">
-							<li class="flex justify-between"><span>Pickup</span><span class="font-semibold text-white">Nov 28, 08:00</span></li>
-							<li class="flex justify-between"><span>Linehaul</span><span class="font-semibold text-white">$2,400</span></li>
-							<li class="flex justify-between"><span>Driver</span><span class="font-semibold text-white">Sasha N.</span></li>
-						</ul>
-						<button class="mt-6 w-full rounded-2xl bg-orange-500 px-4 py-2 text-white font-semibold">Confirm booking</button>
-					</div>
-					<div class="mt-6 rounded-2xl border border-slate-700 bg-slate-900/60 p-5 text-sm text-slate-300">
-						<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Driver radar</p>
-						<div class="mt-4 space-y-3">
-							<div class="flex items-center justify-between">
-								<div>
-									<p class="font-semibold text-white">Maria Gomez</p>
-									<p class="text-xs text-slate-400">Available • 18 miles away</p>
-								</div>
-								<span class="rounded-full bg-green-500/20 px-3 py-1 text-xs text-green-200">Ready</span>
-							</div>
-							<div class="flex items-center justify-between">
-								<div>
-									<p class="font-semibold text-white">DeShawn P.</p>
-									<p class="text-xs text-slate-400">In transit • Wichita</p>
-								</div>
-								<span class="rounded-full bg-amber-500/20 px-3 py-1 text-xs text-amber-200">2 stops left</span>
-							</div>
-						</div>
+				
+				<!-- Right Image - Driver with truck -->
+				<div class="relative hidden lg:flex justify-end">
+					<div class="relative">
+						<img src="/images/hero-driver.jpg" alt="Professional truck driver" class="w-[420px] h-[480px] object-cover object-top rounded-lg" onerror="this.parentElement.innerHTML='<div class=\'w-[420px] h-[480px] bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center\'><div class=\'text-center\'><svg class=\'w-20 h-20 text-teal-400 mx-auto\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\'/></svg><p class=\'mt-4 text-slate-500 font-medium\'>Driver Image</p></div></div>';" />
 					</div>
 				</div>
 			</div>
 		</div>
 	</section>
-
-	<section class="max-w-6xl mx-auto px-6 py-14">
-		<div class="grid gap-8 lg:grid-cols-3">
-			<article class="rounded-3xl border border-white/10 bg-white/5 p-6">
-				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Step 1</p>
-				<h3 class="mt-3 text-xl font-semibold text-white">Spin up your workspace</h3>
-				<p class="mt-2 text-sm text-slate-200">Create customer, driver, and admin accounts in minutes. Role-based routing guides each persona to the right dashboard.</p>
-			</article>
-			<article class="rounded-3xl border border-white/10 bg-white/5 p-6">
-				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Step 2</p>
-				<h3 class="mt-3 text-xl font-semibold text-white">Publish loads & availability</h3>
-				<p class="mt-2 text-sm text-slate-200">Drivers update their calendars and live location. Customers post loads with pickup deadlines and constraints.</p>
-			</article>
-			<article class="rounded-3xl border border-white/10 bg-white/5 p-6">
-				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Step 3</p>
-				<h3 class="mt-3 text-xl font-semibold text-white">Book and track instantly</h3>
-				<p class="mt-2 text-sm text-slate-200">The booking wizard pairs loads to the best-fit driver. Dashboards show status, documents, and audit history end-to-end.</p>
-			</article>
-		</div>
-	</section>
-
-	<section class="max-w-7xl mx-auto px-6 py-16 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
-		<div>
-			<h2 class="text-3xl font-bold text-white">Bring every freight workflow into a single cockpit.</h2>
-			<p class="mt-4 text-slate-200">LoadHitch unifies booking, driver ops, availability, and compliance so operations teams stop stitching spreadsheets together. Every action is authenticated with JWT/OAuth and logged for audit.</p>
-			<div class="mt-6 space-y-4">
-				<div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-					<h3 class="text-lg font-semibold text-white">Live load board</h3>
-					<p class="text-sm text-slate-200">Filter by lane, commodity, or driver readiness. One-click assign or duplicate from recent jobs.</p>
-				</div>
-				<div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-					<h3 class="text-lg font-semibold text-white">Driver availability</h3>
-					<p class="text-sm text-slate-200">Drivers share weekly calendars, toggle "taking loads" and push geo-updates straight into dispatcher view.</p>
-				</div>
-				<div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-					<h3 class="text-lg font-semibold text-white">Audit trail</h3>
-					<p class="text-sm text-slate-200">Every change is tied to a role and timestamp so compliance teams can export history anytime.</p>
-				</div>
+	
+	<!-- Features Section -->
+	<section id="features" class="bg-slate-50 py-20">
+		<div class="max-w-7xl mx-auto px-6 lg:px-12">
+			<div class="text-center max-w-3xl mx-auto mb-16">
+				<h2 class="text-3xl md:text-4xl font-bold text-slate-900">Why Choose LoadHitch?</h2>
+				<p class="mt-4 text-lg text-slate-600">Our platform offers powerful features designed to streamline freight transportation.</p>
 			</div>
-		</div>
-		<div class="relative rounded-[32px] border border-white/10 bg-white/5 p-8">
-			<img src="/images/feature-illustration.svg" alt="Feature tiles" class="w-full" />
-			<div class="mt-6 rounded-2xl bg-slate-900/60 p-5 text-sm text-slate-200">
-				<p class="text-xs uppercase tracking-[0.3em] text-orange-200">Testimonials</p>
-				<p class="mt-3 text-lg text-white">"LoadHitch became our teams dispatch cockpit. Bookings that took 12 calls now take 2 clicks."</p>
-				<p class="mt-3 text-sm text-slate-400">— Ava R., Senior Logistics Manager</p>
+			
+			<div class="grid gap-8 md:grid-cols-3">
+				<div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+					<div class="w-14 h-14 rounded-xl bg-teal-100 flex items-center justify-center mb-6">
+						<svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-slate-900">Real-Time Matching</h3>
+					<p class="mt-3 text-slate-600">Instantly connect with available loads or drivers based on location, equipment, and preferences.</p>
+				</div>
+				
+				<div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+					<div class="w-14 h-14 rounded-xl bg-teal-100 flex items-center justify-center mb-6">
+						<svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-slate-900">Verified Network</h3>
+					<p class="mt-3 text-slate-600">All drivers and shippers are verified for safety and reliability. Trust your freight with confidence.</p>
+				</div>
+				
+				<div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+					<div class="w-14 h-14 rounded-xl bg-teal-100 flex items-center justify-center mb-6">
+						<svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-bold text-slate-900">Live Tracking</h3>
+					<p class="mt-3 text-slate-600">Track shipments in real-time with GPS updates. Know exactly where your freight is at all times.</p>
+				</div>
 			</div>
 		</div>
 	</section>
-
-	<section class="max-w-6xl mx-auto px-6 py-12">
-		<div class="rounded-3xl border border-white/10 bg-white/5 p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-			<div>
-				<h3 class="text-2xl font-bold text-white">Ready to modernize your logistics stack?</h3>
-				<p class="mt-2 text-slate-200">Start with free driver + customer seats, then invite your whole operations team when youre ready.</p>
+	
+	<!-- How It Works Section -->
+	<section id="how-it-works" class="py-20">
+		<div class="max-w-7xl mx-auto px-6 lg:px-12">
+			<div class="text-center max-w-3xl mx-auto mb-16">
+				<h2 class="text-3xl md:text-4xl font-bold text-slate-900">How It Works</h2>
+				<p class="mt-4 text-lg text-slate-600">Get started in three simple steps.</p>
 			</div>
-			<div class="flex flex-wrap gap-3">
-				<a href="/register" class="rounded-2xl bg-white px-5 py-3 text-slate-900 font-semibold">Create account</a>
-				<a href="/login" class="rounded-2xl border border-white/30 px-5 py-3 text-white font-semibold">Sign in</a>
+			
+			<div class="grid gap-8 md:grid-cols-3">
+				<div class="text-center">
+					<div class="w-16 h-16 rounded-full bg-teal-500 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">1</div>
+					<h3 class="text-xl font-bold text-slate-900">Create Account</h3>
+					<p class="mt-3 text-slate-600">Sign up as a driver or shipper. Complete your profile with all necessary details.</p>
+				</div>
+				
+				<div class="text-center">
+					<div class="w-16 h-16 rounded-full bg-teal-500 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">2</div>
+					<h3 class="text-xl font-bold text-slate-900">Post or Search</h3>
+					<p class="mt-3 text-slate-600">Drivers can browse loads. Shippers post their shipping needs with details.</p>
+				</div>
+				
+				<div class="text-center">
+					<div class="w-16 h-16 rounded-full bg-teal-500 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">3</div>
+					<h3 class="text-xl font-bold text-slate-900">Connect & Ship</h3>
+					<p class="mt-3 text-slate-600">Match, confirm, and start shipping. Track everything from pickup to delivery.</p>
+				</div>
 			</div>
 		</div>
 	</section>
-
-	<section class="max-w-7xl mx-auto px-6 py-8 mt-6">
-		<div class="rounded-2xl border border-dashed border-white/20 bg-white/5 p-6">
-			<h3 class="text-lg font-semibold text-white">Database connectivity</h3>
-			<p class="mt-2 text-sm text-slate-300">@_statusMessage</p>
-			<p class="mt-1 text-xs text-slate-400">Update <code>.env</code> with the correct password to enable the live Azure PostgreSQL connection.</p>
+	
+	<!-- Benefits Section -->
+	<section id="benefits" class="bg-slate-50 py-20">
+		<div class="max-w-7xl mx-auto px-6 lg:px-12">
+			<div class="text-center max-w-3xl mx-auto mb-16">
+				<h2 class="text-3xl md:text-4xl font-bold text-slate-900">Benefits for Everyone</h2>
+				<p class="mt-4 text-lg text-slate-600">Whether you're a driver or shipper, LoadHitch has you covered.</p>
+			</div>
+			
+			<div class="grid gap-8 md:grid-cols-2">
+				<div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+					<h3 class="text-xl font-bold text-teal-600 mb-4">For Drivers</h3>
+					<ul class="space-y-3 text-slate-600">
+						<li class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+							<span>Find loads that match your route and preferences</span>
+						</li>
+						<li class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+							<span>Reduce empty miles and maximize earnings</span>
+						</li>
+						<li class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+							<span>Get paid quickly with secure transactions</span>
+						</li>
+					</ul>
+				</div>
+				
+				<div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+					<h3 class="text-xl font-bold text-teal-600 mb-4">For Shippers</h3>
+					<ul class="space-y-3 text-slate-600">
+						<li class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+							<span>Access a network of verified, reliable drivers</span>
+						</li>
+						<li class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+							<span>Track shipments in real-time from pickup to delivery</span>
+						</li>
+						<li class="flex items-start gap-3">
+							<svg class="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+							<span>Competitive rates with transparent pricing</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<!-- CTA Section -->
+	<section class="bg-teal-600 py-16">
+		<div class="max-w-4xl mx-auto px-6 text-center">
+			<h2 class="text-3xl md:text-4xl font-bold text-white">Ready to Get Started?</h2>
+			<p class="mt-4 text-lg text-teal-100">Join thousands of drivers and shippers already using LoadHitch.</p>
+			<div class="mt-8 flex flex-wrap justify-center gap-4">
+				<a href="/register" class="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-teal-600 font-semibold shadow-lg hover:bg-teal-50 transition-colors">
+					Create Free Account
+				</a>
+				<a href="/login" class="inline-flex items-center justify-center rounded-full border-2 border-white px-8 py-4 text-white font-semibold hover:bg-teal-700 transition-colors">
+					Sign In
+				</a>
+			</div>
 		</div>
 	</section>
 </main>
 
-@code {
-	private string _statusMessage = "Checking database connection...";
-
-	protected override async Task OnInitializedAsync()
-	{
-		try
-		{
-			var result = await DatabaseService.TestConnectionAsync();
-			_statusMessage = result.Message;
-		}
-		catch (Exception ex)
-		{
-			_statusMessage = "Unable to check connection: " + ex.Message;
-		}
-	}
-}

@@ -31,28 +31,39 @@ public sealed class AuthClient
 
     public async Task<AuthClientResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("=== AuthClient.RegisterAsync START ===");
+        _logger.LogInformation("Registering user: {Email}, FullName: {FullName}, Role: {Role}", request.Email, request.FullName, request.Role);
+        
         try
         {
             var client = CreateClient();
+            _logger.LogInformation("Sending POST to api/auth/register...");
+            
             var response = await client.PostAsJsonAsync("api/auth/register", request, cancellationToken);
+            _logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
+            
             if (!response.IsSuccessStatusCode)
             {
                 var message = await ReadErrorMessageAsync(response, cancellationToken);
+                _logger.LogWarning("Registration failed with status {StatusCode}: {Message}", response.StatusCode, message);
                 return AuthClientResult.Failure(message);
             }
 
             var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken);
             if (auth is null)
             {
+                _logger.LogWarning("Failed to parse auth response");
                 return AuthClientResult.Failure("Unable to parse authentication response.");
             }
 
+            _logger.LogInformation("Registration successful for {Email}, storing auth...", request.Email);
             await StoreAuthAsync(auth);
+            _logger.LogInformation("=== AuthClient.RegisterAsync SUCCESS ===");
             return AuthClientResult.Success(auth);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Registration request failed");
+            _logger.LogError(ex, "=== AuthClient.RegisterAsync EXCEPTION ===");
             return AuthClientResult.Failure("Unable to register right now. Please try again.");
         }
     }

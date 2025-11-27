@@ -1,16 +1,51 @@
 @page "/logout"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize]
+@inject AuthClient AuthClient
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
+@inject ILogger<Logout> Logger
 
 <PageTitle>Signing out...</PageTitle>
 
-<p class="p-10 text-center text-slate-600">Signing you out...</p>
+<section class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 flex items-center justify-center">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-10 text-center backdrop-blur">
+        <p class="text-sm uppercase tracking-widest text-orange-200">LoadHitch</p>
+        <h1 class="mt-3 text-2xl font-bold text-white">@_statusMessage</h1>
+        <p class="mt-3 text-slate-400">Please wait while we securely sign you out.</p>
+    </div>
+</section>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    private string _statusMessage = "Signing you out...";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await SignInManager.SignOutAsync();
-        Navigation.NavigateTo("/", forceLoad: true);
+        if (firstRender)
+        {
+            try
+            {
+                // Revoke refresh token and clear stored auth from localStorage
+                Logger.LogInformation("Logout: Revoking tokens and clearing storage");
+                await AuthClient.LogoutAsync();
+                
+                // Sign out from ASP.NET Identity (clears cookies)
+                Logger.LogInformation("Logout: Signing out from Identity");
+                await SignInManager.SignOutAsync();
+                
+                _statusMessage = "Signed out successfully. Redirecting...";
+                StateHasChanged();
+                
+                await Task.Delay(500);
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error during logout");
+                // Even if there's an error, still try to sign out and redirect
+                try { await SignInManager.SignOutAsync(); } catch { }
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+        }
     }
 }
