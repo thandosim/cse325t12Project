@@ -1,5 +1,20 @@
-<div class="w-full h-96 bg-slate-200 flex items-center justify-center rounded-lg shadow">
-    <p class="text-slate-600 font-semibold">
-        MapView — trucks/loads + user pin will appear here
+@namespace t12Project.Components.Shared
+
+<div class="w-full h-96 bg-slate-200 flex items-center justify-center rounded-lg shadow relative">
+    <p class="absolute top-2 left-2 text-slate-600 font-semibold">
+        MapView — pins for trucks/loads + user location will appear here
     </p>
+
+    <!-- Placeholder content -->
+    <div class="flex flex-col items-center">
+        <span class="text-hitchBlue font-bold">🗺️ Map Placeholder</span>
+        <span class="text-slate-500 text-sm">Data-driven pins coming soon...</span>
+    </div>
 </div>
+
+@code {
+    // Later you’ll bind these to real data from TruckService / LoadService
+    [Parameter] public IEnumerable<object>? Trucks { get; set; }
+    [Parameter] public IEnumerable<object>? Loads { get; set; }
+    [Parameter] public (double lat, double lng)? UserLocation { get; set; }
+}
