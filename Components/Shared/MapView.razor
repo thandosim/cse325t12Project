@@ -1,20 +1,47 @@
 @namespace t12Project.Components.Shared
+@using Microsoft.JSInterop
 
-<div class="w-full h-96 bg-slate-200 flex items-center justify-center rounded-lg shadow relative">
-    <p class="absolute top-2 left-2 text-slate-600 font-semibold">
-        MapView — pins for trucks/loads + user location will appear here
-    </p>
+@inject IJSRuntime JS
 
-    <!-- Placeholder content -->
-    <div class="flex flex-col items-center">
-        <span class="text-hitchBlue font-bold">🗺️ Map Placeholder</span>
-        <span class="text-slate-500 text-sm">Data-driven pins coming soon...</span>
-    </div>
-</div>
+<div id="map" class="w-full h-96 rounded-lg shadow"></div>
 
 @code {
-    // Later you’ll bind these to real data from TruckService / LoadService
-    [Parameter] public IEnumerable<object>? Trucks { get; set; }
-    [Parameter] public IEnumerable<object>? Loads { get; set; }
+    // Parameters for map data
+    [Parameter] public IEnumerable<(double lat, double lng, string label)>? Trucks { get; set; }
+    [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
     [Parameter] public (double lat, double lng)? UserLocation { get; set; }
+
+    private IJSObjectReference? _map;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && UserLocation.HasValue)
+        {
+            // Initialize map centered on user location
+            _map = await JS.InvokeAsync<IJSObjectReference>(
+                "mapInterop.initMap", "map", UserLocation.Value.lat, UserLocation.Value.lng);
+
+            // Add user marker
+            await JS.InvokeVoidAsync("mapInterop.addMarker", _map, 
+                UserLocation.Value.lat, UserLocation.Value.lng, "You are here");
+
+            // Add truck markers
+            if (Trucks != null)
+            {
+                foreach (var t in Trucks)
+                {
+                    await JS.InvokeVoidAsync("mapInterop.addMarker", _map, t.lat, t.lng, t.label);
+                }
+            }
+
+            // Add load markers
+            if (Loads != null)
+            {
+                foreach (var l in Loads)
+                {
+                    await JS.InvokeVoidAsync("mapInterop.addMarker", _map, l.lat, l.lng, l.label);
+                }
+            }
+        }
+    }
 }

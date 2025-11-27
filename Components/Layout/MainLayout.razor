@@ -1,5 +1,14 @@
 ﻿@inherits LayoutComponentBase
 
+<PageTitle>LoadHitch</PageTitle>
+
+<head>
+    <meta charset="utf-8" />
+    <title>LoadHitch</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
+</head>
+
 <div class="flex min-h-screen flex-col bg-slate-50 text-slate-900">
     <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
         <NavMenu />
@@ -13,3 +22,6 @@
         &copy; @DateTime.Now.Year LoadHitch. All rights reserved.
     </footer>
 </div>
+
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="js/mapInterop.js"></script>

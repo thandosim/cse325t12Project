@@ -314,3 +314,5 @@ C:\Users\MOET-WB\Documents\byu\cse325\project\obj\Debug\net8.0\refint\t12Project
 C:\Users\MOET-WB\Documents\byu\cse325\project\obj\Debug\net8.0\t12Project.pdb
 C:\Users\MOET-WB\Documents\byu\cse325\project\obj\Debug\net8.0\t12Project.genruntimeconfig.cache
 C:\Users\MOET-WB\Documents\byu\cse325\project\obj\Debug\net8.0\ref\t12Project.dll
+C:\Users\MOET-WB\Documents\byu\cse325\project\bin\Debug\net8.0\package-lock.json
+C:\Users\MOET-WB\Documents\byu\cse325\project\bin\Debug\net8.0\package.json
