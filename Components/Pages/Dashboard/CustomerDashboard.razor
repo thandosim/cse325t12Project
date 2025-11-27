@@ -15,7 +15,7 @@
         Subtitle="Browse available trucks below." />
 
     <DashboardTable Headers="truckHeaders" Items="truckItems" />
-    <MapView />
+    <MapView Trucks="truckItems" UserLocation="customerLocation" />
 </DashboardLayout>
 
 @code {
@@ -26,6 +26,6 @@
         new() { "T002", "8 tons", "Manzini", "On Route" }
     };
 
-    private (double lat, double lng) customerLocation = ( -26.305, 31.136 ); // placeholder coords
+    private (double lat, double lng) customerLocation = (-26.305, 31.136); // placeholder coords
 }
 

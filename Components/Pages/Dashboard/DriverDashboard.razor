@@ -15,7 +15,7 @@
         Subtitle="Browse available loads below." />
 
     <DashboardTable Headers="loadHeaders" Items="loadItems" />
-    <MapView />
+    <MapView Loads="loadItems" UserLocation="driverLocation" />
 </DashboardLayout>
 
 @code {
@@ -26,5 +26,6 @@
         new() { "L002", "Sidwashini", "Nhlangano", "Delivered" }
     };
 
-    private (double lat, double lng) driverLocation = ( -26.320, 31.150 ); // placeholder coords
+    private (double lat, double lng) driverLocation = (-26.320, 31.150); // placeholder coords
 }
+
