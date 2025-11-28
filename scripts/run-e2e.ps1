@@ -80,6 +80,7 @@ function Wait-ForUrlUp {
     $deadline = (Get-Date).AddSeconds($TotalTimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
         if (Wait-ForTcpPort -HostName $u.Host -Port $u.Port -TimeoutMs 1000) {
+            # TCP succeeded; optionally try an HTTP HEAD but don't block readiness on it
             try {
                 $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -SkipCertificateCheck -Method Head -TimeoutSec 5
                 if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
@@ -87,8 +88,9 @@ function Wait-ForUrlUp {
                 }
             }
             catch {
-                # ignore and retry
+                # ignore HTTP errors for readiness; TCP is enough
             }
+            return $true
         }
         Start-Sleep -Seconds 1
     }
