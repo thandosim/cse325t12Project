@@ -34,13 +34,13 @@ public class BlockedUserMiddleware
                     
                     // Sign out the blocked user
                     await signInManager.SignOutAsync();
-                    
-                    // Clear authentication cookie
-                    await context.SignOutAsync(IdentityConstants.ApplicationScheme);
-                    
-                    // Redirect to account blocked page
-                    context.Response.Redirect("/account-blocked");
-                    return;
+
+                    // Redirect to account blocked page, avoiding redirect loops
+                    if (!context.Request.Path.Equals("/account-blocked", StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Response.Redirect("/account-blocked");
+                        return;
+                    }
                 }
             }
         }

@@ -317,7 +317,7 @@ public class AuthController : ControllerBase
                 Email = email,
                 EmailConfirmed = true,
                 FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email,
-                AccountType = AccountRole.Customer // Will be updated when user selects role
+                AccountType = AccountRole.Customer // No Identity role assigned yet; updated when user picks a role
             };
 
             var createResult = await _userManager.CreateAsync(user);
@@ -408,15 +408,28 @@ public class AuthController : ControllerBase
     {
         var payload = JsonSerializer.Serialize(response, _jsonOptions);
         var stateJson = state is null ? "null" : JsonSerializer.Serialize(state);
-        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth', state: {stateJson}, payload: {payload} }}, '*'); window.close();</script>";
+        var targetOrigin = JsonSerializer.Serialize(GetPostMessageOrigin());
+        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth', state: {stateJson}, payload: {payload} }}, {targetOrigin}); window.close();</script>";
         return Content(script, "text/html");
     }
 
     private ContentResult ErrorScriptResult(string message)
     {
         var payload = JsonSerializer.Serialize(new { error = message }, _jsonOptions);
-        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth-error', payload: {payload} }}, '*'); window.close();</script>";
+        var targetOrigin = JsonSerializer.Serialize(GetPostMessageOrigin());
+        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth-error', payload: {payload} }}, {targetOrigin}); window.close();</script>";
         return Content(script, "text/html");
+    }
+
+    private string GetPostMessageOrigin()
+    {
+        var origin = Request.Headers["Origin"].ToString();
+        if (string.IsNullOrWhiteSpace(origin))
+        {
+            origin = $"{Request.Scheme}://{Request.Host}";
+        }
+
+        return origin;
     }
 
     private ContentResult BlockedScriptResult()

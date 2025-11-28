@@ -133,6 +133,13 @@
             return;
         }
 
+        if (_user.IsBlocked)
+        {
+            Logger.LogWarning("Blocked user attempted to access SelectRole, redirecting to account-blocked");
+            Navigation.NavigateTo("/account-blocked", forceLoad: true);
+            return;
+        }
+
         // Check if user already has a role assigned
         var roles = await UserManager.GetRolesAsync(_user);
         if (roles.Any())
@@ -165,16 +172,6 @@
         {
             Logger.LogInformation("Assigning role {Role} to user {UserId}", role, _user.Id);
 
-            // Update user's account type
-            _user.AccountType = role;
-            var updateResult = await UserManager.UpdateAsync(_user);
-            if (!updateResult.Succeeded)
-            {
-                _error = "Failed to update account. Please try again.";
-                Logger.LogError("Failed to update user: {Errors}", string.Join(", ", updateResult.Errors.Select(e => e.Description)));
-                return;
-            }
-
             // Remove any previously assigned selectable roles before adding the new one
             var currentRoles = await UserManager.GetRolesAsync(_user);
             var selectableRoles = new[] { AccountRole.Driver.ToString(), AccountRole.Customer.ToString() };
@@ -201,6 +198,16 @@
                     Logger.LogError("Failed to add role: {Errors}", string.Join(", ", nonDuplicateErrors.Select(e => e.Description)));
                     return;
                 }
+            }
+
+            // Update user's account type after role assignment succeeds
+            _user.AccountType = role;
+            var updateResult = await UserManager.UpdateAsync(_user);
+            if (!updateResult.Succeeded)
+            {
+                _error = "Failed to update account. Please try again.";
+                Logger.LogError("Failed to update user: {Errors}", string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                return;
             }
 
             // Determine dashboard to send the user to
