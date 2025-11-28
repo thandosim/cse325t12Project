@@ -1,0 +1,13 @@
+@namespace t12Project.Components.Shared
+
+<div id="map" class="w-full h-96 rounded-lg shadow"></div>
+
+@code {
+    // Parameters for map data (kept for future use)
+    [Parameter] public IEnumerable<(double lat, double lng, string label)>? Trucks { get; set; }
+    [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
+    [Parameter] public (double lat, double lng)? UserLocation { get; set; }
+
+    // No JS interop here — just a placeholder container.
+    // You can later replace this with Azure Maps or another mapping SDK.
+}

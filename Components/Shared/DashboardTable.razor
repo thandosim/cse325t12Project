@@ -1,0 +1,29 @@
+<table class="min-w-full border-collapse border border-slate-300 rounded-lg shadow-sm">
+    <thead class="bg-slate-100">
+        <tr>
+            @foreach (var header in Headers)
+            {
+                <th class="px-4 py-2 text-left text-sm font-semibold text-slate-700">@header</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (Items != null)
+        {
+            foreach (var row in Items)
+            {
+                <tr class="border-t border-slate-200">
+                    @foreach (var cell in row)
+                    {
+                        <td class="px-4 py-2 text-sm text-slate-600">@cell</td>
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public List<string> Headers { get; set; } = new();
+    [Parameter] public List<List<string>> Items { get; set; } = new();
+}
