@@ -1,122 +1,287 @@
 @page "/login"
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using System.Net.Http.Json
+@implements IAsyncDisposable
+@inject AuthClient AuthClient
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<Login> Logger
 
-<PageTitle>Log in</PageTitle>
+<PageTitle>Log in - LoadHitch</PageTitle>
 
 <section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
-        <h1 class="text-3xl font-bold text-hitchBlue">Welcome back</h1>
-        <p class="mt-2 text-sm text-slate-500">Sign in to access your dashboard.</p>
-
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
-        }
-
-        <EditForm EditContext="_editContext" FormName="login-form" OnValidSubmit="HandleLoginAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
-            <div class="mt-6 space-y-4">
-                <label class="block text-sm font-semibold text-slate-700">
-                    Email address
-                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" />
-                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" />
-                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                    <InputCheckbox class="h-4 w-4 rounded border-slate-300" @bind-Value="_model.RememberMe" />
-                    Keep me signed in
-                </label>
+    <div class="mx-auto max-w-md px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
+        </div>
+        
+        <!-- Login Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">Welcome back</h1>
+                <p class="mt-2 text-slate-600">Sign in to your account</p>
             </div>
 
-            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchOrange px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
-                @_buttonText
-            </button>
-        </EditForm>
+            @if (!string.IsNullOrWhiteSpace(_banner))
+            {
+                <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">@_banner</div>
+            }
 
-        <p class="mt-4 text-center text-sm text-slate-500">
-            Need an account?
-            <a class="text-hitchBlue font-semibold" href="/register">Create one</a>
-        </p>
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">@_error</div>
+            }
+
+            <EditForm EditContext="_editContext" OnValidSubmit="HandleLoginAsync">
+                <DataAnnotationsValidator />
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+                        <InputText type="email" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="you@company.com" @bind-Value="_model.Email" />
+                        <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                        <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="Enter your password" @bind-Value="_model.Password" />
+                        <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 text-sm text-slate-600">
+                            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500" @bind-Value="_model.RememberMe" />
+                            Remember me
+                        </label>
+                        <a href="#" class="text-sm text-teal-600 hover:text-teal-500">Forgot password?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-6 w-full rounded-full bg-teal-500 px-6 py-3 text-base font-medium text-white transition hover:bg-teal-600 disabled:bg-slate-300 disabled:cursor-not-allowed" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Signing in..." : "Sign in")
+                </button>
+            </EditForm>
+
+            <div class="mt-6 flex items-center gap-4 text-xs uppercase tracking-wider text-slate-400">
+                <span class="h-px flex-1 bg-slate-200" />
+                or
+                <span class="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <button class="mt-4 flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:bg-slate-100 disabled:cursor-not-allowed" @onclick="StartGoogleSignInAsync" disabled="@_isSubmitting">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
+                Continue with Google
+            </button>
+
+            <p class="mt-6 text-center text-sm text-slate-600">
+                Don't have an account?
+                <a class="font-medium text-teal-600 hover:text-teal-500" href="/register">Sign up</a>
+            </p>
+            
+            <!-- Test Login Button (for debugging) -->
+            <div class="mt-4 pt-4 border-t border-slate-200">
+                <button type="button" class="w-full text-center text-xs text-slate-400 hover:text-teal-500" @onclick="TestLoginAsync">
+                    [Debug] Test Login (bypasses database)
+                </button>
+            </div>
+        </div>
     </div>
 </section>
 
 @code {
-    private readonly LoginModel _model = new();
+    private readonly LoginRequest _model = new();
     private EditContext? _editContext;
     private bool _isSubmitting;
-    private string _error = string.Empty;
+    private string? _banner;
+    private string? _error;
+    private DotNetObjectReference<Login>? _jsRef;
 
-    private string _buttonText => _isSubmitting ? "Signing in..." : "Sign in";
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        Logger.LogInformation("Login page initialized");
         _editContext = new EditContext(_model);
+        
+        // Redirect if already logged in
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/dashboard", forceLoad: true);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("loadhitchAuth.registerHandler", _jsRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsRef is not null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("loadhitchAuth.unregisterHandler", _jsRef);
+            }
+            catch { }
+            _jsRef.Dispose();
+        }
     }
 
     private async Task HandleLoginAsync()
     {
+        Logger.LogInformation("=== HandleLoginAsync START ===");
+        Logger.LogInformation("Email: {Email}, Password length: {Length}", _model.Email, _model.Password?.Length ?? 0);
+        
         _isSubmitting = true;
-        _error = string.Empty;
+        _banner = null;
+        _error = null;
+        StateHasChanged();
 
         try
         {
-            var result = await SignInManager.PasswordSignInAsync(_model.Email, _model.Password, _model.RememberMe, lockoutOnFailure: true);
-            if (!result.Succeeded)
+            Logger.LogInformation("Calling AuthClient.LoginAsync...");
+            var result = await AuthClient.LoginAsync(new LoginRequest
             {
-                if (result.IsLockedOut)
-                {
-                    _error = "This account is currently blocked.";
-                }
-                else
-                {
-                    _error = "Invalid email or password.";
-                }
+                Email = _model.Email,
+                Password = _model.Password,
+                RememberMe = _model.RememberMe
+            });
+
+            Logger.LogInformation("LoginAsync returned: Succeeded={Succeeded}, Message={Message}", result.Succeeded, result.Message);
+
+            if (!result.Succeeded || result.Payload is null)
+            {
+                _error = result.Message ?? "Login failed. Please check your credentials.";
+                Logger.LogWarning("Login failed: {Error}", _error);
+                StateHasChanged();
                 return;
             }
 
-            var user = await UserManager.FindByEmailAsync(_model.Email);
-            var dashboard = "/dashboard";
-
-            if (user is not null)
-            {
-                if (await UserManager.IsInRoleAsync(user, "Admin"))
-                {
-                    dashboard = "/admin";
-                }
-                else if (await UserManager.IsInRoleAsync(user, "Driver"))
-                {
-                    dashboard = "/dashboard/driver";
-                }
-                else if (await UserManager.IsInRoleAsync(user, "Customer"))
-                {
-                    dashboard = "/dashboard/customer";
-                }
-            }
-
-            Navigation.NavigateTo(dashboard, forceLoad: true);
+            _banner = $"Welcome back, {result.Payload.FullName}! Redirecting...";
+            Logger.LogInformation("Login successful! Completing sign-in for: {Email}", result.Payload.Email);
+            StateHasChanged();
+            await Task.Delay(500);
+            
+            // Redirect to complete sign-in endpoint which sets the cookie properly
+            var returnUrl = Uri.EscapeDataString(result.Payload.DashboardUrl);
+            Navigation.NavigateTo($"/auth/complete-signin?email={Uri.EscapeDataString(result.Payload.Email)}&returnUrl={returnUrl}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "=== HandleLoginAsync EXCEPTION ===");
+            _error = $"An error occurred: {ex.Message}";
+            StateHasChanged();
         }
         finally
         {
             _isSubmitting = false;
+            StateHasChanged();
+            Logger.LogInformation("=== HandleLoginAsync END ===");
         }
     }
 
-    private sealed class LoginModel
+    private async Task StartGoogleSignInAsync()
     {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        Logger.LogInformation("Starting Google Sign-In");
+        _error = null;
+        _banner = null;
+        _isSubmitting = true;
+        StateHasChanged();
 
-        [Required]
-        public string Password { get; set; } = string.Empty;
+        try
+        {
+            var state = Guid.NewGuid().ToString("N");
+            var googleUrl = $"{Navigation.BaseUri}api/auth/google/signin?state={state}";
+            await JS.InvokeVoidAsync("loadhitchAuth.startGoogleSignIn", googleUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to start Google sign-in");
+            _error = "Failed to start Google sign-in. Please try again.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
 
-        public bool RememberMe { get; set; }
+    [JSInvokable]
+    public async Task HandleExternalAuthMessage(string json)
+    {
+        Logger.LogInformation("Received external auth message: {Json}", json);
+        
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("error", out var errorProp))
+            {
+                _error = errorProp.GetString() ?? "Google sign-in failed.";
+                StateHasChanged();
+                return;
+            }
+
+            if (root.TryGetProperty("dashboardUrl", out var dashboardProp))
+            {
+                var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
+                _banner = "Signed in with Google! Redirecting...";
+                StateHasChanged();
+                await Task.Delay(500);
+                Navigation.NavigateTo(dashboardUrl, forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to parse auth message");
+            _error = "Failed to complete Google sign-in.";
+            StateHasChanged();
+        }
+    }
+    
+    private async Task TestLoginAsync()
+    {
+        Logger.LogInformation("=== TestLoginAsync START (bypasses database) ===");
+        _isSubmitting = true;
+        _banner = null;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            using var client = new HttpClient { BaseAddress = new Uri(Navigation.BaseUri) };
+            var response = await client.PostAsJsonAsync("api/auth/test-login", new LoginRequest
+            {
+                Email = string.IsNullOrEmpty(_model.Email) ? "test@example.com" : _model.Email,
+                Password = "test",
+                RememberMe = true
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                _banner = "Test login successful! UI is working correctly.";
+                Logger.LogInformation("Test login successful!");
+            }
+            else
+            {
+                _error = $"Test login failed with status: {response.StatusCode}";
+                Logger.LogWarning("Test login failed: {Status}", response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Test login error: {ex.Message}";
+            Logger.LogError(ex, "Test login exception");
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+            Logger.LogInformation("=== TestLoginAsync END ===");
+        }
     }
 }

@@ -199,6 +199,9 @@ namespace t12Project.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -383,6 +386,60 @@ namespace t12Project.Migrations
                     b.ToTable("LocationUpdates");
                 });
 
+            modelBuilder.Entity("t12Project.Models.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsPersistent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ReasonRevoked")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReplacedByTokenHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("RevokedByIp")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("t12Project.Models.Truck", b =>
                 {
                     b.Property<Guid>("Id")
@@ -530,6 +587,17 @@ namespace t12Project.Migrations
                     b.Navigation("Driver");
                 });
 
+            modelBuilder.Entity("t12Project.Models.RefreshToken", b =>
+                {
+                    b.HasOne("t12Project.Models.ApplicationUser", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("t12Project.Models.Truck", b =>
                 {
                     b.HasOne("t12Project.Models.ApplicationUser", "Driver")
@@ -539,6 +607,11 @@ namespace t12Project.Migrations
                         .IsRequired();
 
                     b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("t12Project.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("RefreshTokens");
                 });
 
             modelBuilder.Entity("t12Project.Models.Load", b =>

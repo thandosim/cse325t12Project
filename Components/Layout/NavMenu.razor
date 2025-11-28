@@ -1,28 +1,40 @@
-﻿<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-	<div class="flex items-center gap-3">
-		<NavLink href="/" Match="NavLinkMatch.All" class="flex items-center gap-3">
-			<div class="w-10 h-10 rounded-full bg-hitchBlue flex items-center justify-center text-white font-bold">LH</div>
-			<span class="text-lg font-semibold text-slate-900">LoadHitch</span>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 lg:px-12 py-5 text-sm sm:flex-row sm:items-center sm:justify-between bg-white">
+	<!-- Logo -->
+	<div class="flex items-center">
+		<NavLink href="/" Match="NavLinkMatch.All">
+			<span class="text-2xl font-serif italic text-teal-500">LoadHitch</span>
 		</NavLink>
 	</div>
-	<div class="flex flex-wrap items-center gap-4 text-slate-600">
-		<a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/#features">Features</a>
-		<a class="rounded-full px-4 py-2 transition hover:bg-slate-100" href="/#how-it-works">How it works</a>
-	</div>
-	<div class="flex flex-wrap items-center gap-3">
+	
+	<!-- Navigation Links -->
+	<div class="flex flex-wrap items-center gap-8 text-slate-700">
+		<a class="hover:text-teal-500 transition-colors" href="/#features">Features</a>
+		<a class="hover:text-teal-500 transition-colors" href="/#how-it-works">How It Works</a>
+		<a class="hover:text-teal-500 transition-colors" href="/#benefits">Benefits</a>
 		<AuthorizeView>
-			<Authorized Context="auth">
-				<a href="/dashboard" class="rounded-full border border-slate-200 px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">Dashboard</a>
-				<span class="text-xs uppercase tracking-wide text-slate-400">@auth.User?.Identity?.Name</span>
-				<a href="/logout" class="rounded-md bg-hitchBlue px-4 py-2 font-semibold text-white shadow-sm transition hover:opacity-95">Sign out</a>
+			<Authorized>
+				<a href="/dashboard" class="hover:text-teal-500 transition-colors font-medium text-teal-600">Dashboard</a>
 			</Authorized>
 			<NotAuthorized>
-				<NavLink href="/login" class="rounded-md border border-slate-200 px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-50">
-					Sign in
-				</NavLink>
-				<NavLink href="/register" class="rounded-md bg-hitchOrange px-5 py-2 font-semibold text-white shadow-sm transition hover:opacity-95">
-					Create account
-				</NavLink>
+				<a href="/login" class="hover:text-teal-500 transition-colors">Sign In</a>
+			</NotAuthorized>
+		</AuthorizeView>
+	</div>
+	
+	<!-- CTA Button -->
+	<div class="flex items-center">
+		<AuthorizeView>
+			<Authorized>
+				<a href="/api/auth/signout" class="rounded-full bg-teal-500 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-600">
+					Sign Out
+				</a>
+			</Authorized>
+			<NotAuthorized>
+				<a href="/register" class="rounded-full bg-teal-500 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-600">
+					Get Started
+				</a>
 			</NotAuthorized>
 		</AuthorizeView>
 	</div>
