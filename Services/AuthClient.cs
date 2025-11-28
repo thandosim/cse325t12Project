@@ -44,9 +44,9 @@ public sealed class AuthClient
             
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(response, cancellationToken);
+                var (message, isBlocked) = await ReadErrorMessageAsync(response, cancellationToken);
                 _logger.LogWarning("Registration failed with status {StatusCode}: {Message}", response.StatusCode, message);
-                return AuthClientResult.Failure(message);
+                return AuthClientResult.Failure(message, isBlocked);
             }
 
             var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken);
@@ -84,9 +84,9 @@ public sealed class AuthClient
             
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(response, cancellationToken);
-                _logger.LogWarning("Login failed with status {StatusCode}: {Message}", response.StatusCode, message);
-                return AuthClientResult.Failure(message);
+                var (message, isBlocked) = await ReadErrorMessageAsync(response, cancellationToken);
+                _logger.LogWarning("Login failed with status {StatusCode}: {Message}, Blocked: {IsBlocked}", response.StatusCode, message, isBlocked);
+                return AuthClientResult.Failure(message, isBlocked);
             }
 
             var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken);
@@ -123,8 +123,8 @@ public sealed class AuthClient
             var response = await client.PostAsJsonAsync("api/auth/refresh", payload, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                var message = await ReadErrorMessageAsync(response, cancellationToken);
-                return AuthClientResult.Failure(message);
+                var (message, isBlocked) = await ReadErrorMessageAsync(response, cancellationToken);
+                return AuthClientResult.Failure(message, isBlocked);
             }
 
             var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken);
@@ -190,9 +190,10 @@ public sealed class AuthClient
         return client;
     }
 
-    private static async Task<string> ReadErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private static async Task<(string Message, bool IsBlocked)> ReadErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         string? message = null;
+        bool isBlocked = false;
         try
         {
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -207,6 +208,12 @@ public sealed class AuthClient
                 {
                     message = document.RootElement.GetString();
                 }
+
+                // Check if user is blocked
+                if (document.RootElement.TryGetProperty("blocked", out var blockedProp))
+                {
+                    isBlocked = blockedProp.GetBoolean();
+                }
             }
         }
         catch
@@ -215,12 +222,12 @@ public sealed class AuthClient
         }
 
         message ??= $"Request failed with status {(int)response.StatusCode}";
-        return message;
+        return (message, isBlocked);
     }
 }
 
-public sealed record AuthClientResult(bool Succeeded, string Message, AuthResponse? Payload)
+public sealed record AuthClientResult(bool Succeeded, string Message, AuthResponse? Payload, bool IsBlocked = false)
 {
     public static AuthClientResult Success(AuthResponse payload) => new(true, string.Empty, payload);
-    public static AuthClientResult Failure(string message) => new(false, message, null);
+    public static AuthClientResult Failure(string message, bool isBlocked = false) => new(false, message, null, isBlocked);
 }

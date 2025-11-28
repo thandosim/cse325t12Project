@@ -117,7 +117,7 @@ public class AuthController : ControllerBase
         if (user.IsBlocked)
         {
             _logger.LogWarning("User is blocked: {Email}", request.Email);
-            return Unauthorized(new { message = "This account is blocked. Contact support." });
+            return Unauthorized(new { message = "This account is blocked. Contact support.", blocked = true, redirectUrl = "/account-blocked" });
         }
 
         _logger.LogInformation("Checking password...");
@@ -306,15 +306,18 @@ public class AuthController : ControllerBase
         }
 
         var user = await _userManager.FindByEmailAsync(email);
+        var isNewUser = false;
+        
         if (user is null)
         {
+            isNewUser = true;
             user = new ApplicationUser
             {
                 UserName = email,
                 Email = email,
                 EmailConfirmed = true,
                 FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email,
-                AccountType = AccountRole.Customer
+                AccountType = AccountRole.Customer // No Identity role assigned yet; updated when user picks a role
             };
 
             var createResult = await _userManager.CreateAsync(user);
@@ -323,9 +326,18 @@ public class AuthController : ControllerBase
                 var message = string.Join(' ', createResult.Errors.Select(e => e.Description));
                 return ErrorScriptResult(message);
             }
-
-            await _userManager.AddToRoleAsync(user, AccountRole.Customer.ToString());
+            // Don't assign role yet - let user choose on SelectRole page
         }
+
+        // Check if user is blocked - redirect to blocked page
+        if (user.IsBlocked)
+        {
+            return BlockedScriptResult();
+        }
+
+        // Check if existing user has no role (incomplete registration)
+        var existingRoles = await _userManager.GetRolesAsync(user);
+        var needsRoleSelection = isNewUser || !existingRoles.Any();
 
         var authResult = await _tokenService.IssueTokensAsync(
             user,
@@ -335,6 +347,12 @@ public class AuthController : ControllerBase
             cancellationToken);
 
         await _signInManager.SignInAsync(user, isPersistent: true);
+
+        // If user needs to select role, redirect to role selection page
+        if (needsRoleSelection)
+        {
+            return RoleSelectionScriptResult();
+        }
 
         var response = await BuildAuthResponseAsync(user, authResult, cancellationToken);
         return SuccessScriptResult(response, Request.Query["state"].ToString());
@@ -381,18 +399,50 @@ public class AuthController : ControllerBase
         return "/dashboard";
     }
 
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private ContentResult SuccessScriptResult(AuthResponse response, string? state)
     {
-        var payload = JsonSerializer.Serialize(response);
+        var payload = JsonSerializer.Serialize(response, _jsonOptions);
         var stateJson = state is null ? "null" : JsonSerializer.Serialize(state);
-        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth', state: {stateJson}, payload: {payload} }}, '*'); window.close();</script>";
+        var targetOrigin = JsonSerializer.Serialize(GetPostMessageOrigin());
+        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth', state: {stateJson}, payload: {payload} }}, {targetOrigin}); window.close();</script>";
         return Content(script, "text/html");
     }
 
     private ContentResult ErrorScriptResult(string message)
     {
-        var payload = JsonSerializer.Serialize(new { error = message });
-        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth-error', payload: {payload} }}, '*'); window.close();</script>";
+        var payload = JsonSerializer.Serialize(new { error = message }, _jsonOptions);
+        var targetOrigin = JsonSerializer.Serialize(GetPostMessageOrigin());
+        var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth-error', payload: {payload} }}, {targetOrigin}); window.close();</script>";
+        return Content(script, "text/html");
+    }
+
+    private string GetPostMessageOrigin()
+    {
+        var origin = Request.Headers["Origin"].ToString();
+        if (string.IsNullOrWhiteSpace(origin))
+        {
+            origin = $"{Request.Scheme}://{Request.Host}";
+        }
+
+        return origin;
+    }
+
+    private ContentResult BlockedScriptResult()
+    {
+        // Close the popup and redirect the main window to the blocked page
+        var script = "<script>window.opener && (window.opener.location.href = '/account-blocked'); window.close();</script>";
+        return Content(script, "text/html");
+    }
+
+    private ContentResult RoleSelectionScriptResult()
+    {
+        // Close the popup and redirect the main window to the role selection page
+        var script = "<script>window.opener && (window.opener.location.href = '/select-role'); window.close();</script>";
         return Content(script, "text/html");
     }
 }

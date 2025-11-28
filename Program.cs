@@ -11,11 +11,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using t12Project.Components;
 using t12Project.Data;
+using t12Project.Middleware;
 using t12Project.Models;
 using t12Project.Options;
 using t12Project.Services;
 
-Env.Load();
+if (File.Exists(Path.Combine(AppContext.BaseDirectory, ".env")))
+{
+    Env.Load();
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -140,6 +144,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.UseAuthentication();
+app.UseBlockedUserCheck(); // Check if authenticated user is blocked
 app.UseAuthorization();
 
 app.MapControllers();

@@ -57,13 +57,29 @@
                         <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">I am a</label>
-                        <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white" @bind-Value="_model.SelectedRole">
-                            @foreach (var role in _allowedRoles)
-                            {
-                                <option value="@role">@role</option>
-                            }
-                        </InputSelect>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">I am a</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" 
+                                    @onclick="() => _model.SelectedRole = AccountRole.Driver"
+                                    class="rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all @(_model.SelectedRole == AccountRole.Driver ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-slate-600 hover:border-slate-300")">
+                                <div class="flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                    <span>Driver</span>
+                                </div>
+                            </button>
+                            <button type="button" 
+                                    @onclick="() => _model.SelectedRole = AccountRole.Customer"
+                                    class="rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all @(_model.SelectedRole == AccountRole.Customer ? "border-teal-500 bg-teal-50 text-teal-700" : "border-slate-200 text-slate-600 hover:border-slate-300")">
+                                <div class="flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                    <span>Customer</span>
+                                </div>
+                            </button>
+                        </div>
                         <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
                     </div>
                 </div>
@@ -224,28 +240,44 @@
     [JSInvokable]
     public async Task HandleExternalAuthMessage(string json)
     {
-        Logger.LogInformation("Received external auth message: {Json}", json);
-        
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.TryGetProperty("error", out var errorProp))
-            {
-                _error = errorProp.GetString() ?? "Google sign-in failed.";
-                StateHasChanged();
+            // Only process LoadHitch auth messages, ignore browser extension messages
+            if (!root.TryGetProperty("type", out var typeProp))
                 return;
+            
+            var messageType = typeProp.GetString();
+            if (messageType != "loadhitch:auth" && messageType != "loadhitch:auth-error")
+                return;
+
+            Logger.LogInformation("Received auth message: {Type}", messageType);
+
+            // Check for error in payload (auth-error message)
+            if (root.TryGetProperty("payload", out var payload))
+            {
+                if (payload.TryGetProperty("error", out var errorProp))
+                {
+                    _error = errorProp.GetString() ?? "Google sign-in failed.";
+                    StateHasChanged();
+                    return;
+                }
+
+                // Success - get dashboardUrl from payload (camelCase from JSON serializer)
+                if (payload.TryGetProperty("dashboardUrl", out var dashboardProp))
+                {
+                    var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
+                    _banner = "Signed in with Google! Redirecting...";
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    Navigation.NavigateTo(dashboardUrl, forceLoad: true);
+                    return;
+                }
             }
 
-            if (root.TryGetProperty("dashboardUrl", out var dashboardProp))
-            {
-                var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
-                _banner = "Signed in with Google! Redirecting...";
-                StateHasChanged();
-                await Task.Delay(500);
-                Navigation.NavigateTo(dashboardUrl, forceLoad: true);
-            }
+            Logger.LogWarning("No dashboardUrl found in auth message");
         }
         catch (Exception ex)
         {
