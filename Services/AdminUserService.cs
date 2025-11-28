@@ -1,25 +1,53 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using t12Project.Data;
 using t12Project.Models;
 
 namespace t12Project.Services;
 
-public class AdminUserService(UserManager<ApplicationUser> userManager)
+public class AdminUserService(
+    UserManager<ApplicationUser> userManager,
+    ApplicationDbContext dbContext,
+    IHttpContextAccessor httpContextAccessor)
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly ApplicationDbContext _dbContext = dbContext;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
-    public async Task<IReadOnlyList<AdminUserSummary>> GetUsersAsync()
+    public record PagedResult<T>(IReadOnlyList<T> Items, int TotalCount, int Page, int PageSize);
+
+    public async Task<PagedResult<AdminUserSummary>> GetUsersAsync(int page = 1, int pageSize = 25, string? search = null)
     {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
         var now = DateTimeOffset.UtcNow;
-        return await _userManager.Users
+
+        var query = _userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim().ToLowerInvariant();
+            query = query.Where(u =>
+                (u.Email != null && u.Email.ToLower().Contains(search)) ||
+                (u.FullName != null && u.FullName.ToLower().Contains(search)));
+        }
+
+        var total = await query.CountAsync();
+
+        var users = await query
             .OrderBy(u => u.Email)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(u => new AdminUserSummary(
-                u.Id, 
-                u.FullName, 
-                u.Email ?? string.Empty, 
-                u.AccountType.ToString(), 
+                u.Id,
+                u.FullName,
+                u.Email ?? string.Empty,
+                u.AccountType.ToString(),
                 u.LockoutEnd.HasValue && u.LockoutEnd > now))
             .ToListAsync();
+
+        return new PagedResult<AdminUserSummary>(users, total, page, pageSize);
     }
 
     public async Task<OperationResult> CreateUserAsync(AdminCreateUserRequest request)
@@ -41,6 +69,7 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
         }
 
         await _userManager.AddToRoleAsync(user, request.Role.ToString());
+        await LogAsync($"Created user {request.Email} with role {request.Role}");
         return OperationResult.Success("User created");
     }
 
@@ -52,6 +81,17 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
             return OperationResult.Failure("User not found.");
         }
 
+        var actingUserId = GetActingUserId();
+        if (!string.IsNullOrEmpty(actingUserId) && string.Equals(userId, actingUserId, StringComparison.Ordinal))
+        {
+            return OperationResult.Failure("You cannot change your own role.");
+        }
+
+        if (await IsOnlyAdminAsync(user) && role != AccountRole.Admin)
+        {
+            return OperationResult.Failure("You cannot demote the last remaining admin.");
+        }
+
         var roles = await _userManager.GetRolesAsync(user);
         if (roles.Any())
         {
@@ -61,9 +101,13 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
         await _userManager.AddToRoleAsync(user, role.ToString());
         user.AccountType = role;
         var update = await _userManager.UpdateAsync(user);
-        return update.Succeeded
-            ? OperationResult.Success("Role updated")
-            : OperationResult.Failure(string.Join(" ", update.Errors.Select(e => e.Description)));
+        if (!update.Succeeded)
+        {
+            return OperationResult.Failure(string.Join(" ", update.Errors.Select(e => e.Description)));
+        }
+
+        await LogAsync($"Updated role for {user.Email} to {role}");
+        return OperationResult.Success("Role updated");
     }
 
     public async Task<OperationResult> BlockUserAsync(string userId)
@@ -72,6 +116,12 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
         if (user is null)
         {
             return OperationResult.Failure("User not found.");
+        }
+
+        var actingUserId = GetActingUserId();
+        if (!string.IsNullOrEmpty(actingUserId) && string.Equals(userId, actingUserId, StringComparison.Ordinal))
+        {
+            return OperationResult.Failure("You cannot block your own account.");
         }
 
         // Prevent blocking admin users
@@ -85,10 +135,14 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
         user.LockoutEnabled = true;
         user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
         var result = await _userManager.UpdateAsync(user);
-        
-        return result.Succeeded 
-            ? OperationResult.Success("User blocked successfully") 
-            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+
+        if (!result.Succeeded)
+        {
+            return OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
+
+        await LogAsync($"Blocked user {user.Email}");
+        return OperationResult.Success("User blocked successfully");
     }
 
     public async Task<OperationResult> UnblockUserAsync(string userId)
@@ -102,10 +156,14 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
         // Clear lockout
         user.LockoutEnd = null;
         var result = await _userManager.UpdateAsync(user);
-        
-        return result.Succeeded 
-            ? OperationResult.Success("User unblocked successfully") 
-            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+
+        if (!result.Succeeded)
+        {
+            return OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
+
+        await LogAsync($"Unblocked user {user.Email}");
+        return OperationResult.Success("User unblocked successfully");
     }
 
     public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
@@ -133,9 +191,14 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
         }
 
         var result = await _userManager.UpdateAsync(user);
-        return result.Succeeded 
-            ? OperationResult.Success("User updated successfully") 
-            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+
+        if (!result.Succeeded)
+        {
+            return OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
+
+        await LogAsync($"Updated user {user.Email}");
+        return OperationResult.Success("User updated successfully");
     }
 
     public async Task<OperationResult> DeleteUserAsync(string userId)
@@ -146,10 +209,54 @@ public class AdminUserService(UserManager<ApplicationUser> userManager)
             return OperationResult.Failure("User not found.");
         }
 
+        var actingUserId = GetActingUserId();
+        if (!string.IsNullOrEmpty(actingUserId) && string.Equals(userId, actingUserId, StringComparison.Ordinal))
+        {
+            return OperationResult.Failure("You cannot delete your own account.");
+        }
+
+        if (await IsOnlyAdminAsync(user))
+        {
+            return OperationResult.Failure("You cannot delete the last remaining admin.");
+        }
+
         var result = await _userManager.DeleteAsync(user);
-        return result.Succeeded
-            ? OperationResult.Success("User deleted")
-            : OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+        if (!result.Succeeded)
+        {
+            return OperationResult.Failure(string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
+
+        await LogAsync($"Deleted user {user.Email}");
+        return OperationResult.Success("User deleted");
+    }
+
+    private async Task<bool> IsOnlyAdminAsync(ApplicationUser user)
+    {
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+        if (!isAdmin)
+        {
+            return false;
+        }
+
+        var adminCount = await _userManager.GetUsersInRoleAsync("Admin");
+        return adminCount.Count == 1;
+    }
+
+    private string? GetActingUserId()
+    {
+        return _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private async Task LogAsync(string action, string? metadata = null)
+    {
+        var userId = GetActingUserId() ?? string.Empty;
+        _dbContext.ActivityLogs.Add(new ActivityLog
+        {
+            UserId = userId,
+            Action = action,
+            Metadata = metadata
+        });
+        await _dbContext.SaveChangesAsync();
     }
 }
 
