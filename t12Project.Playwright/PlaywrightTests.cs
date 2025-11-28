@@ -19,6 +19,18 @@ public class PlaywrightTests
     private static string AdminPassword =>
         Environment.GetEnvironmentVariable("E2E_ADMIN_PASSWORD") ?? "Admin@123456!";
 
+    private static string DriverEmail =>
+        Environment.GetEnvironmentVariable("E2E_DRIVER_EMAIL") ?? "driver@loadhitch.com";
+
+    private static string DriverPassword =>
+        Environment.GetEnvironmentVariable("E2E_DRIVER_PASSWORD") ?? "Driver@123456!";
+
+    private static string CustomerEmail =>
+        Environment.GetEnvironmentVariable("E2E_CUSTOMER_EMAIL") ?? "customer@loadhitch.com";
+
+    private static string CustomerPassword =>
+        Environment.GetEnvironmentVariable("E2E_CUSTOMER_PASSWORD") ?? "Customer@123456!";
+
     private static bool E2EEnabled =>
         !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("E2E_BASEURL"));
 
@@ -42,18 +54,19 @@ public class PlaywrightTests
     [Test]
     public async Task Admin_Login_ShouldReachDashboard()
     {
-        await RunWithPageAsync("admin-login", async page =>
-        {
-            await TryNavigateWithFallbackAsync(page, $"{BaseUrl}/login");
+        await RunWithPageAsync("admin-login", page => LoginAndAssertAsync(page, AdminEmail, AdminPassword, "**/admin", "Admin Control Center"));
+    }
 
-            await page.GetByPlaceholder("you@company.com").FillAsync(AdminEmail);
-            await page.GetByPlaceholder("Enter your password").FillAsync(AdminPassword);
-            await page.GetByRole(AriaRole.Button, new() { Name = "Sign in" }).ClickAsync();
+    [Test]
+    public async Task Driver_Login_ShouldReachDashboard()
+    {
+        await RunWithPageAsync("driver-login", page => LoginAndAssertAsync(page, DriverEmail, DriverPassword, "**/dashboard/driver", "Driver Portal"));
+    }
 
-            await page.WaitForURLAsync("**/admin", new() { Timeout = 15000 });
-            var heading = page.GetByText("Admin Control Center");
-            await Expect(heading).ToBeVisibleAsync(new() { Timeout = 5000 });
-        });
+    [Test]
+    public async Task Customer_Login_ShouldReachDashboard()
+    {
+        await RunWithPageAsync("customer-login", page => LoginAndAssertAsync(page, CustomerEmail, CustomerPassword, "**/dashboard/customer", "Customer Dashboard"));
     }
 
     private static ILocatorAssertions Expect(ILocator locator) => Microsoft.Playwright.Assertions.Expect(locator);
@@ -150,5 +163,18 @@ public class PlaywrightTests
         }
 
         throw new Exception($"Navigation failed for URLs: {string.Join(",", triedUrls)}", lastEx);
+    }
+
+    private static async Task LoginAndAssertAsync(IPage page, string email, string password, string expectedUrlPattern, string expectedHeading)
+    {
+        await TryNavigateWithFallbackAsync(page, $"{BaseUrl}/login");
+
+        await page.GetByPlaceholder("you@company.com").FillAsync(email);
+        await page.GetByPlaceholder("Enter your password").FillAsync(password);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Sign in" }).ClickAsync();
+
+        await page.WaitForURLAsync(expectedUrlPattern, new() { Timeout = 20000 });
+        var heading = page.GetByText(expectedHeading, new PageGetByTextOptions { Exact = false });
+        await Expect(heading).ToBeVisibleAsync(new() { Timeout = 5000 });
     }
 }
