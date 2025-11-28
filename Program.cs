@@ -16,7 +16,10 @@ using t12Project.Models;
 using t12Project.Options;
 using t12Project.Services;
 
-Env.Load();
+if (File.Exists(Path.Combine(AppContext.BaseDirectory, ".env")))
+{
+    Env.Load();
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
