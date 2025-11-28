@@ -1,47 +1,13 @@
 @namespace t12Project.Components.Shared
-@using Microsoft.JSInterop
-
-@inject IJSRuntime JS
 
 <div id="map" class="w-full h-96 rounded-lg shadow"></div>
 
 @code {
-    // Parameters for map data
+    // Parameters for map data (kept for future use)
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Trucks { get; set; }
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
     [Parameter] public (double lat, double lng)? UserLocation { get; set; }
 
-    private IJSObjectReference? _map;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && UserLocation.HasValue)
-        {
-            // Initialize map centered on user location
-            _map = await JS.InvokeAsync<IJSObjectReference>(
-                "mapInterop.initMap", "map", UserLocation.Value.lat, UserLocation.Value.lng);
-
-            // Add user marker
-            await JS.InvokeVoidAsync("mapInterop.addMarker", _map, 
-                UserLocation.Value.lat, UserLocation.Value.lng, "You are here");
-
-            // Add truck markers
-            if (Trucks != null)
-            {
-                foreach (var t in Trucks)
-                {
-                    await JS.InvokeVoidAsync("mapInterop.addMarker", _map, t.lat, t.lng, t.label);
-                }
-            }
-
-            // Add load markers
-            if (Loads != null)
-            {
-                foreach (var l in Loads)
-                {
-                    await JS.InvokeVoidAsync("mapInterop.addMarker", _map, l.lat, l.lng, l.label);
-                }
-            }
-        }
-    }
+    // No JS interop here — just a placeholder container.
+    // You can later replace this with Azure Maps or another mapping SDK.
 }
