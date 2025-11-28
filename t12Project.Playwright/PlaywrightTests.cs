@@ -69,6 +69,33 @@ public class PlaywrightTests
         await RunWithPageAsync("customer-login", page => LoginAndAssertAsync(page, CustomerEmail, CustomerPassword, "**/dashboard/customer", "Customer Dashboard"));
     }
 
+    [Test]
+    public async Task Admin_Route_ShouldRedirectToLogin_WhenUnauthenticated()
+    {
+        await RunWithPageAsync("admin-unauthenticated-redirect", async page =>
+        {
+            await TryNavigateWithFallbackAsync(page, $"{BaseUrl}/admin");
+            await page.WaitForURLAsync("**/login**", new() { Timeout = 10000 });
+            var loginHeading = page.GetByText("Welcome back");
+            await Expect(loginHeading).ToBeVisibleAsync();
+        });
+    }
+
+    [Test]
+    public async Task Login_Fails_WithBadPassword()
+    {
+        await RunWithPageAsync("login-bad-password", async page =>
+        {
+            await TryNavigateWithFallbackAsync(page, $"{BaseUrl}/login");
+            await page.GetByPlaceholder("you@company.com").FillAsync(AdminEmail);
+            await page.GetByPlaceholder("Enter your password").FillAsync("bad-password");
+            await page.GetByRole(AriaRole.Button, new() { Name = "Sign in" }).ClickAsync();
+
+            var errorAlert = page.GetByText("Login failed");
+            await Expect(errorAlert).ToBeVisibleAsync(new() { Timeout = 5000 });
+        });
+    }
+
     private static ILocatorAssertions Expect(ILocator locator) => Microsoft.Playwright.Assertions.Expect(locator);
 
     private static async Task RunWithPageAsync(string name, Func<IPage, Task> testBody)
