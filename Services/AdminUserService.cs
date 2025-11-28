@@ -84,11 +84,13 @@ public class AdminUserService(
         var actingUserId = GetActingUserId();
         if (!string.IsNullOrEmpty(actingUserId) && string.Equals(userId, actingUserId, StringComparison.Ordinal))
         {
+            await LogAsync($"Blocked attempt to change own role for user {user.Email}");
             return OperationResult.Failure("You cannot change your own role.");
         }
 
         if (await IsOnlyAdminAsync(user) && role != AccountRole.Admin)
         {
+            await LogAsync($"Blocked attempt to demote last admin: {user.Email}");
             return OperationResult.Failure("You cannot demote the last remaining admin.");
         }
 
@@ -121,6 +123,7 @@ public class AdminUserService(
         var actingUserId = GetActingUserId();
         if (!string.IsNullOrEmpty(actingUserId) && string.Equals(userId, actingUserId, StringComparison.Ordinal))
         {
+            await LogAsync($"Blocked attempt to block own account for user {user.Email}");
             return OperationResult.Failure("You cannot block your own account.");
         }
 
@@ -128,6 +131,7 @@ public class AdminUserService(
         var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
         if (isAdmin)
         {
+            await LogAsync($"Blocked attempt to block admin user {user.Email}");
             return OperationResult.Failure("Admin users cannot be blocked.");
         }
 
@@ -212,11 +216,13 @@ public class AdminUserService(
         var actingUserId = GetActingUserId();
         if (!string.IsNullOrEmpty(actingUserId) && string.Equals(userId, actingUserId, StringComparison.Ordinal))
         {
+            await LogAsync($"Blocked attempt to delete own account for user {user.Email}");
             return OperationResult.Failure("You cannot delete your own account.");
         }
 
         if (await IsOnlyAdminAsync(user))
         {
+            await LogAsync($"Blocked attempt to delete last admin: {user.Email}");
             return OperationResult.Failure("You cannot delete the last remaining admin.");
         }
 

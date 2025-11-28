@@ -32,6 +32,9 @@
     <Compile Remove="t12Project.Tests/**/*.cs" />
     <EmbeddedResource Remove="t12Project.Tests/**/*.cs" />
     <None Remove="t12Project.Tests/**/*.cs" />
+    <Compile Remove="t12Project.Playwright/**/*.cs" />
+    <EmbeddedResource Remove="t12Project.Playwright/**/*" />
+    <None Remove="t12Project.Playwright/**/*" />
   </ItemGroup>
 
 </Project>

@@ -37,6 +37,14 @@ LoadHitch is a streamlined logistics platform that addresses the challenge of co
 -   **Deployment & CI/CD:** Microsoft Azure (App Service, Azure DB for PostgreSQL) & GitHub Actions
 -   **Testing:** xUnit (Unit Tests), bUnit (Component Tests), Playwright (End-to-End Tests)
 
+### End-to-End (Playwright)
+
+- Prereq: browsers installed via `dotnet tool run playwright install` (run once inside `t12Project.Playwright`).
+- Quick run on Windows/PowerShell:  
+  `.\scripts\run-e2e.ps1`  
+  Options: `-BaseUrl https://localhost:7218`, `-DotnetPath "C:\Program Files\dotnet\dotnet.exe"`, `-InstallBrowsers`.
+- The helper starts the app, waits for readiness, sets `E2E_BASEURL`, runs Playwright tests, collects artifacts to `t12Project.Playwright\artifacts`.
+
 ## Getting Started (Local Setup)
 
 Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
