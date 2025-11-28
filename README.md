@@ -118,3 +118,12 @@ This project was a collaborative effort by the following team members:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+Role	Email	Password
+Admin	admin@loadhitch.com	Admin@123456!
+Driver	driver@loadhitch.com	Driver@123456!
+Customer	customer@loadhitch.com	Customer@123456!
+
+Email: testauth999@example.com
+Password: Test@12345!
+Role: Customer

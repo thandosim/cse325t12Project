@@ -1,0 +1,367 @@
+@page "/account/profile"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using t12Project.Models
+@attribute [Authorize]
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<Profile> Logger
+
+<PageTitle>My Profile - LoadHitch</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-12">
+    <div class="max-w-2xl mx-auto px-6">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <!-- Profile Header -->
+            <div class="p-8 border-b border-slate-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center">
+                        <span class="text-2xl font-bold text-teal-600">@(_user?.FullName?.FirstOrDefault())</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">@_user?.FullName</h1>
+                        <p class="text-slate-600">@_user?.Email</p>
+                        <span class="inline-flex items-center rounded-full bg-teal-100 px-3 py-1 text-xs font-medium text-teal-700 mt-2">@_userRole</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="px-8 pt-6">
+                @if (!string.IsNullOrWhiteSpace(_successMessage))
+                {
+                    <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">@_successMessage</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <div class="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">@_errorMessage</div>
+                }
+            </div>
+
+            <!-- Profile Form -->
+            <div class="p-8">
+                @if (_isLoading)
+                {
+                    <div class="flex justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+                    </div>
+                }
+                else if (_user is not null)
+                {
+                    <EditForm EditContext="_editContext" OnValidSubmit="SaveProfileAsync">
+                        <DataAnnotationsValidator />
+                        
+                        @if (!_isAdmin)
+                        {
+                            <!-- Read-only fields notice for non-admins -->
+                            <div class="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div>
+                                        <p class="text-sm font-medium text-amber-800">Some fields are restricted</p>
+                                        <p class="text-xs text-amber-700 mt-1">Name and email can only be changed by an administrator. Please contact support if you need to update this information.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Admin notice -->
+                            <div class="mb-6 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    <div>
+                                        <p class="text-sm font-medium text-teal-800">Admin privileges</p>
+                                        <p class="text-xs text-teal-700 mt-1">As an administrator, you can edit all fields including your name and email.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="space-y-4">
+                            <!-- Full Name -->
+                            <div>
+                                @if (_isAdmin)
+                                {
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                                    <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_model.FullName" />
+                                    <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
+                                }
+                                else
+                                {
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                                        Full Name
+                                        <span class="ml-2 text-xs text-slate-400">(Contact admin to change)</span>
+                                    </label>
+                                    <input type="text" class="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-slate-500 cursor-not-allowed" value="@_user.FullName" disabled />
+                                }
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                @if (_isAdmin)
+                                {
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
+                                    <InputText type="email" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_model.Email" />
+                                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
+                                }
+                                else
+                                {
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                                        Email Address
+                                        <span class="ml-2 text-xs text-slate-400">(Contact admin to change)</span>
+                                    </label>
+                                    <input type="email" class="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-slate-500 cursor-not-allowed" value="@_user.Email" disabled />
+                                }
+                            </div>
+
+                            <!-- Phone Number (Editable) -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Phone Number</label>
+                                <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_model.PhoneNumber" placeholder="Enter your phone number" />
+                                <ValidationMessage For="@(() => _model.PhoneNumber)" class="mt-1 text-xs text-red-600" />
+                            </div>
+
+                            <!-- Account Type (Read-only) -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Account Type</label>
+                                <input type="text" class="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-slate-500 cursor-not-allowed" value="@_userRole" disabled />
+                            </div>
+
+                            <!-- Member Since -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Member Since</label>
+                                <input type="text" class="w-full rounded-lg border border-slate-200 bg-slate-100 px-4 py-2.5 text-slate-500 cursor-not-allowed" value="@_user.CreatedAt.ToString("MMMM d, yyyy")" disabled />
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex gap-4">
+                            <button type="submit" class="flex-1 rounded-full bg-teal-500 px-6 py-3 text-sm font-medium text-white hover:bg-teal-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors" disabled="@_isSaving">
+                                @(_isSaving ? "Saving..." : "Save Changes")
+                            </button>
+                            <a href="@_dashboardUrl" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors text-center">
+                                Back to Dashboard
+                            </a>
+                        </div>
+                    </EditForm>
+
+                    <!-- Change Password Section -->
+                    <div class="mt-8 pt-8 border-t border-slate-200">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4">Change Password</h3>
+                        <EditForm EditContext="_passwordEditContext" OnValidSubmit="ChangePasswordAsync">
+                            <DataAnnotationsValidator />
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Current Password</label>
+                                    <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_passwordModel.CurrentPassword" />
+                                    <ValidationMessage For="@(() => _passwordModel.CurrentPassword)" class="mt-1 text-xs text-red-600" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
+                                    <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_passwordModel.NewPassword" />
+                                    <ValidationMessage For="@(() => _passwordModel.NewPassword)" class="mt-1 text-xs text-red-600" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm New Password</label>
+                                    <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" @bind-Value="_passwordModel.ConfirmPassword" />
+                                    <ValidationMessage For="@(() => _passwordModel.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
+                                </div>
+                            </div>
+                            <button type="submit" class="mt-6 rounded-full border-2 border-teal-500 px-6 py-3 text-sm font-medium text-teal-600 hover:bg-teal-50 disabled:border-slate-300 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors" disabled="@_isChangingPassword">
+                                @(_isChangingPassword ? "Changing..." : "Change Password")
+                            </button>
+                        </EditForm>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private ApplicationUser? _user;
+    private string? _userRole;
+    private bool _isAdmin;
+    private string _dashboardUrl = "/dashboard";
+    private ProfileModel _model = new();
+    private PasswordChangeModel _passwordModel = new();
+    private EditContext? _editContext;
+    private EditContext? _passwordEditContext;
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _isChangingPassword;
+    private string? _successMessage;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _editContext = new EditContext(_model);
+        _passwordEditContext = new EditContext(_passwordModel);
+        await LoadUserAsync();
+    }
+
+    private async Task LoadUserAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        _user = await UserManager.FindByIdAsync(userId);
+        if (_user is null)
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        var roles = await UserManager.GetRolesAsync(_user);
+        _userRole = roles.FirstOrDefault() ?? "User";
+        _isAdmin = _userRole == "Admin";
+        
+        _dashboardUrl = _userRole switch
+        {
+            "Admin" => "/admin",
+            "Driver" => "/dashboard/driver",
+            "Customer" => "/dashboard/customer",
+            _ => "/dashboard"
+        };
+
+        _model.FullName = _user.FullName ?? "";
+        _model.Email = _user.Email ?? "";
+        _model.PhoneNumber = _user.PhoneNumber ?? "";
+
+        _isLoading = false;
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        if (_user is null) return;
+
+        _isSaving = true;
+        _successMessage = null;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Admins can edit their name and email
+            if (_isAdmin)
+            {
+                _user.FullName = _model.FullName;
+                _user.Email = _model.Email;
+                _user.UserName = _model.Email;
+                _user.NormalizedEmail = _model.Email.ToUpperInvariant();
+                _user.NormalizedUserName = _model.Email.ToUpperInvariant();
+            }
+            _user.PhoneNumber = _model.PhoneNumber;
+            var result = await UserManager.UpdateAsync(_user);
+
+            if (result.Succeeded)
+            {
+                _successMessage = "Profile updated successfully!";
+            }
+            else
+            {
+                _errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating profile");
+            _errorMessage = "An error occurred while updating your profile.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        if (_user is null) return;
+
+        if (_passwordModel.NewPassword != _passwordModel.ConfirmPassword)
+        {
+            _errorMessage = "New passwords do not match.";
+            return;
+        }
+
+        _isChangingPassword = true;
+        _successMessage = null;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await UserManager.ChangePasswordAsync(_user, _passwordModel.CurrentPassword, _passwordModel.NewPassword);
+
+            if (result.Succeeded)
+            {
+                _successMessage = "Password changed successfully!";
+                _passwordModel = new PasswordChangeModel();
+                _passwordEditContext = new EditContext(_passwordModel);
+            }
+            else
+            {
+                _errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error changing password");
+            _errorMessage = "An error occurred while changing your password.";
+        }
+        finally
+        {
+            _isChangingPassword = false;
+        }
+    }
+
+    private sealed class ProfileModel
+    {
+        [Required(ErrorMessage = "Full name is required")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone]
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
+    private sealed class PasswordChangeModel
+    {
+        [Required(ErrorMessage = "Current password is required")]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "New password is required")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please confirm your new password")]
+        [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}
