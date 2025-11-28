@@ -73,7 +73,7 @@ $summary | Out-File -FilePath $summaryPath -Encoding utf8
 
 # Gather server log context: try to extract lines within +/- 30 seconds of test times
 $logBundlePath = Join-Path $bundleDir 'server-log-snippet.txt'
-if (Test-Path $LogFile -and $startTime -and $endTime) {
+if ((Test-Path $LogFile) -and $startTime -and $endTime) {
     # try to detect ISO timestamp at start of line
     $lines = Get-Content -Path $LogFile -ErrorAction SilentlyContinue
     $matched = @()

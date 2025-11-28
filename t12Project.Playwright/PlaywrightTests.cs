@@ -66,7 +66,7 @@ public class PlaywrightTests
     [Test]
     public async Task Customer_Login_ShouldReachDashboard()
     {
-        await RunWithPageAsync("customer-login", page => LoginAndAssertAsync(page, CustomerEmail, CustomerPassword, "**/dashboard/customer", "Customer Dashboard"));
+        await RunWithPageAsync("customer-login", page => LoginAndAssertAsync(page, CustomerEmail, CustomerPassword, "**/dashboard/customer", "Customer Portal"));
     }
 
     [Test]
@@ -91,7 +91,7 @@ public class PlaywrightTests
             await page.GetByPlaceholder("Enter your password").FillAsync("bad-password");
             await page.GetByRole(AriaRole.Button, new() { Name = "Sign in" }).ClickAsync();
 
-            var errorAlert = page.GetByText("Login failed");
+            var errorAlert = page.GetByText("Invalid email or password", new PageGetByTextOptions { Exact = false });
             await Expect(errorAlert).ToBeVisibleAsync(new() { Timeout = 5000 });
         });
     }
