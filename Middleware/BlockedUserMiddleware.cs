@@ -38,8 +38,8 @@ public class BlockedUserMiddleware
                     // Clear authentication cookie
                     await context.SignOutAsync(IdentityConstants.ApplicationScheme);
                     
-                    // Redirect to login with a message
-                    context.Response.Redirect("/login?blocked=true");
+                    // Redirect to account blocked page
+                    context.Response.Redirect("/account-blocked");
                     return;
                 }
             }

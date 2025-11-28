@@ -100,14 +100,6 @@
         Logger.LogInformation("Login page initialized");
         _editContext = new EditContext(_model);
         
-        // Check if user was redirected due to being blocked
-        var uri = new Uri(Navigation.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        if (query["blocked"] == "true")
-        {
-            _error = "Your account has been blocked. Please contact support for assistance.";
-        }
-        
         // Redirect if already logged in
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
@@ -162,6 +154,14 @@
 
             if (!result.Succeeded || result.Payload is null)
             {
+                // Redirect to blocked page if user is blocked
+                if (result.IsBlocked)
+                {
+                    Logger.LogWarning("User is blocked, redirecting to blocked page");
+                    Navigation.NavigateTo("/account-blocked", forceLoad: true);
+                    return;
+                }
+
                 _error = result.Message ?? "Login failed. Please check your credentials.";
                 Logger.LogWarning("Login failed: {Error}", _error);
                 StateHasChanged();
@@ -220,12 +220,20 @@
     [JSInvokable]
     public async Task HandleExternalAuthMessage(string json)
     {
-        Logger.LogInformation("Received external auth message: {Json}", json);
-        
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(json);
             var root = doc.RootElement;
+
+            // Only process LoadHitch auth messages, ignore browser extension messages
+            if (!root.TryGetProperty("type", out var typeProp))
+                return;
+            
+            var messageType = typeProp.GetString();
+            if (messageType != "loadhitch:auth" && messageType != "loadhitch:auth-error")
+                return;
+
+            Logger.LogInformation("Received auth message: {Type}", messageType);
 
             // Check for error in payload (auth-error message)
             if (root.TryGetProperty("payload", out var payload))
@@ -249,17 +257,7 @@
                 }
             }
 
-            // Fallback: check root level for backwards compatibility
-            if (root.TryGetProperty("error", out var rootError))
-            {
-                _error = rootError.GetString() ?? "Google sign-in failed.";
-                StateHasChanged();
-                return;
-            }
-
-            Logger.LogWarning("No dashboardUrl found in message");
-            _error = "Failed to complete Google sign-in.";
-            StateHasChanged();
+            Logger.LogWarning("No dashboardUrl found in auth message");
         }
         catch (Exception ex)
         {
