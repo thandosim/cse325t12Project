@@ -200,24 +200,6 @@ try {
         Write-Host "Test logs and results saved to: $artifactsDir"
     }
 
-    # Attempt to convert TRX -> HTML for easier browsing (trx2html)
-    try {
-        if (Test-Path $trxPath) {
-            Write-Host "Converting TRX to HTML report..."
-            if (-not (Get-Command trx2html -ErrorAction SilentlyContinue)) {
-                Write-Host "trx2html not found. Installing dotnet tool trx2html (one-time)..."
-                dotnet tool install --global trx2html | Out-Null
-            }
-            $htmlOut = Join-Path $artifactsDir 'e2e-report.html'
-            trx2html $trxPath -o $htmlOut 2>$null
-            if (Test-Path $htmlOut) { Write-Host "TRX converted to HTML: $htmlOut" }
-            else { Write-Warning "Failed to produce HTML from TRX." }
-        }
-    }
-    catch {
-        Write-Warning "TRX -> HTML conversion failed: $_"
-    }
-
     # Video retention: keep recent N videos and/or remove files older than retention days
     try {
         $videoRetentionDays = 14
