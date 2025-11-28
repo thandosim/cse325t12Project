@@ -327,6 +327,12 @@ public class AuthController : ControllerBase
             await _userManager.AddToRoleAsync(user, AccountRole.Customer.ToString());
         }
 
+        // Check if user is blocked
+        if (user.IsBlocked)
+        {
+            return ErrorScriptResult("Your account has been blocked. Please contact support.");
+        }
+
         var authResult = await _tokenService.IssueTokensAsync(
             user,
             rememberMe: true,
@@ -381,9 +387,14 @@ public class AuthController : ControllerBase
         return "/dashboard";
     }
 
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private ContentResult SuccessScriptResult(AuthResponse response, string? state)
     {
-        var payload = JsonSerializer.Serialize(response);
+        var payload = JsonSerializer.Serialize(response, _jsonOptions);
         var stateJson = state is null ? "null" : JsonSerializer.Serialize(state);
         var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth', state: {stateJson}, payload: {payload} }}, '*'); window.close();</script>";
         return Content(script, "text/html");
@@ -391,7 +402,7 @@ public class AuthController : ControllerBase
 
     private ContentResult ErrorScriptResult(string message)
     {
-        var payload = JsonSerializer.Serialize(new { error = message });
+        var payload = JsonSerializer.Serialize(new { error = message }, _jsonOptions);
         var script = $"<script>window.opener && window.opener.postMessage({{ type: 'loadhitch:auth-error', payload: {payload} }}, '*'); window.close();</script>";
         return Content(script, "text/html");
     }
