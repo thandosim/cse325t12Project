@@ -34,6 +34,9 @@ public static class SeedData
         await EnsureSampleTrucksAsync(context, drivers);
         await EnsureSampleLoadsAsync(context, customers);
 
+        // 🚀 Added: seed location updates for drivers and customers
+        await EnsureSampleLocationUpdatesAsync(context, drivers, customers);
+
         await context.SaveChangesAsync();
     }
 

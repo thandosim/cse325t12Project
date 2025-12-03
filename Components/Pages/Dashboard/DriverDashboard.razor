@@ -22,23 +22,16 @@
 </DashboardLayout>
 
 @code {
-    // Inject DbContext via DI
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
 
-    // Table headers (added Description column)
     private List<string> loadHeaders = new() { "Load ID", "Pickup", "Dropoff", "Status", "Description" };
-
-    // Table rows (string-based for DashboardTable)
     private List<List<string>> loadItems = new();
-
-    // Map pins (tuple-based for MapView)
     private List<(double lat, double lng, string label)> loadPins = new();
-
-    // Driver location (center of map)
     private (double lat, double lng) driverLocation;
 
     protected override void OnInitialized()
     {
+        // Query loads
         var loads = Context.Loads
             .Select(l => new
             {
@@ -46,12 +39,13 @@
                 l.PickupLocation,
                 l.DropoffLocation,
                 l.Status,
-                l.Description,   // <-- new field
-                l.Title
+                l.Description,
+                l.Title,
+                l.CustomerId
             })
             .ToList();
 
-        // Populate table rows (names + description, no geo data)
+        // Populate table rows
         loadItems = loads
             .Select(l => new List<string>
             {
@@ -63,12 +57,16 @@
             })
             .ToList();
 
-        // Map pins (placeholder until lat/lng fields or geocoding are added)
-        loadPins = loads
-            .Select(l => (-26.305, 31.136, $"Load {l.Id} - {l.Status}"))
+        // Map pins from CustomerLocationUpdates (instead of placeholders)
+        var customerPins = Context.CustomerLocationUpdates
+            .OrderByDescending(c => c.ReportedAt)
             .ToList();
 
-        // Driver’s latest location
+        loadPins = customerPins
+            .Select(c => ((double)c.Latitude, (double)c.Longitude, $"Customer {c.CustomerId} - {c.Notes ?? "Load"}"))
+            .ToList();
+
+        // Driver’s latest location from LocationUpdates
         var driverUpdate = Context.LocationUpdates
             .OrderByDescending(u => u.ReportedAt)
             .FirstOrDefault();
