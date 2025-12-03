@@ -1,0 +1,240 @@
+@page "/select-role"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<SelectRole> Logger
+
+<PageTitle>Choose Your Role - LoadHitch</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-16">
+    <div class="mx-auto max-w-2xl px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
+        </div>
+        
+        <!-- Role Selection Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-slate-900">Welcome to LoadHitch!</h1>
+                <p class="mt-2 text-slate-600">Tell us how you'd like to use our platform</p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">@_error</div>
+            }
+
+            @if (_isLoading)
+            {
+                <div class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500"></div>
+                </div>
+            }
+            else
+            {
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Driver Option -->
+                    <button @onclick="() => SelectRoleAsync(AccountRole.Driver)" 
+                            disabled="@_isSubmitting"
+                            class="group relative rounded-2xl border-2 border-slate-200 p-6 text-left transition-all hover:border-teal-500 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed @(_selectedRole == AccountRole.Driver ? "border-teal-500 bg-teal-50" : "")">
+                        <div class="mb-4">
+                            <div class="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                                <svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-900 mb-2">I'm a Driver</h3>
+                        <p class="text-sm text-slate-600">I have a truck and want to find loads to transport. I'll browse available shipments and connect with customers.</p>
+                        <div class="mt-4 flex items-center text-sm font-medium text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Get started as a driver</span>
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <!-- Customer Option -->
+                    <button @onclick="() => SelectRoleAsync(AccountRole.Customer)" 
+                            disabled="@_isSubmitting"
+                            class="group relative rounded-2xl border-2 border-slate-200 p-6 text-left transition-all hover:border-teal-500 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed @(_selectedRole == AccountRole.Customer ? "border-teal-500 bg-teal-50" : "")">
+                        <div class="mb-4">
+                            <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                                <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-slate-900 mb-2">I Need Transport</h3>
+                        <p class="text-sm text-slate-600">I have goods that need to be shipped. I'll post loads and find reliable drivers to transport my cargo.</p>
+                        <div class="mt-4 flex items-center text-sm font-medium text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Get started as a customer</span>
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+
+                @if (_isSubmitting)
+                {
+                    <div class="mt-6 text-center">
+                        <div class="inline-flex items-center gap-2 text-teal-600">
+                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-500"></div>
+                            <span>Setting up your account...</span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <p class="mt-6 text-center text-sm text-slate-500">
+            You can change your account type later by contacting support.
+        </p>
+    </div>
+</section>
+
+@code {
+    private bool _isLoading = true;
+    private bool _isSubmitting;
+    private string? _error;
+    private ApplicationUser? _user;
+    private AccountRole? _selectedRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("SelectRole page initialized");
+        
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            Logger.LogWarning("User not authenticated, redirecting to login");
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            Logger.LogWarning("No user ID found, redirecting to login");
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        _user = await UserManager.FindByIdAsync(userId);
+        if (_user is null)
+        {
+            Logger.LogWarning("User not found, redirecting to login");
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        if (_user.IsBlocked)
+        {
+            Logger.LogWarning("Blocked user attempted to access SelectRole, redirecting to account-blocked");
+            Navigation.NavigateTo("/account-blocked", forceLoad: true);
+            return;
+        }
+
+        // Check if user already has a role assigned
+        var roles = await UserManager.GetRolesAsync(_user);
+        if (roles.Any())
+        {
+            Logger.LogInformation("User already has role {Role}, redirecting to dashboard", roles.First());
+            var dashboardUrl = roles.First() switch
+            {
+                "Admin" => "/admin",
+                "Driver" => "/dashboard/driver",
+                "Customer" => "/dashboard/customer",
+                _ => "/dashboard"
+            };
+            Navigation.NavigateTo(dashboardUrl, forceLoad: true);
+            return;
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task SelectRoleAsync(AccountRole role)
+    {
+        if (_user is null || _isSubmitting) return;
+
+        _isSubmitting = true;
+        _selectedRole = role;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            Logger.LogInformation("Assigning role {Role} to user {UserId}", role, _user.Id);
+
+            // Remove any previously assigned selectable roles before adding the new one
+            var currentRoles = await UserManager.GetRolesAsync(_user);
+            var selectableRoles = new[] { AccountRole.Driver.ToString(), AccountRole.Customer.ToString() };
+            var rolesToRemove = currentRoles.Where(r => selectableRoles.Contains(r)).ToList();
+            if (rolesToRemove.Count > 0)
+            {
+                var removeResult = await UserManager.RemoveFromRolesAsync(_user, rolesToRemove);
+                if (!removeResult.Succeeded)
+                {
+                    _error = "Failed to update existing role. Please try again.";
+                    Logger.LogError("Failed to remove roles: {Errors}", string.Join(", ", removeResult.Errors.Select(e => e.Description)));
+                    return;
+                }
+            }
+
+            // Add the role
+            var roleResult = await UserManager.AddToRoleAsync(_user, role.ToString());
+            if (!roleResult.Succeeded)
+            {
+                var nonDuplicateErrors = roleResult.Errors.Where(e => !string.Equals(e.Code, "UserAlreadyInRole", StringComparison.OrdinalIgnoreCase)).ToList();
+                if (nonDuplicateErrors.Count > 0)
+                {
+                    _error = "Failed to assign role. Please try again.";
+                    Logger.LogError("Failed to add role: {Errors}", string.Join(", ", nonDuplicateErrors.Select(e => e.Description)));
+                    return;
+                }
+            }
+
+            // Update user's account type after role assignment succeeds
+            _user.AccountType = role;
+            var updateResult = await UserManager.UpdateAsync(_user);
+            if (!updateResult.Succeeded)
+            {
+                _error = "Failed to update account. Please try again.";
+                Logger.LogError("Failed to update user: {Errors}", string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                return;
+            }
+
+            // Determine dashboard to send the user to
+            Logger.LogInformation("Role {Role} assigned successfully, redirecting to dashboard", role);
+
+            var dashboardUrl = role switch
+            {
+                AccountRole.Driver => "/dashboard/driver",
+                AccountRole.Customer => "/dashboard/customer",
+                _ => "/dashboard"
+            };
+
+            // Force a full refresh through the complete-signin endpoint so the new role is baked into the auth cookie
+            var email = _user.Email ?? string.Empty;
+            var encodedEmail = System.Net.WebUtility.UrlEncode(email);
+            var encodedReturnUrl = System.Net.WebUtility.UrlEncode(dashboardUrl);
+            Navigation.NavigateTo($"/auth/complete-signin?email={encodedEmail}&returnUrl={encodedReturnUrl}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error assigning role");
+            _error = "An error occurred. Please try again.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}

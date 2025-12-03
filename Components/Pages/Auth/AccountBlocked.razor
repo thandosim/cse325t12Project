@@ -1,0 +1,57 @@
+@page "/account-blocked"
+@inject NavigationManager Navigation
+
+<PageTitle>Account Blocked - LoadHitch</PageTitle>
+
+<section class="min-h-screen bg-slate-50 flex items-center justify-center py-16">
+    <div class="mx-auto max-w-md px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
+        </div>
+        
+        <!-- Blocked Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+            <!-- Warning Icon -->
+            <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+
+            <h1 class="text-2xl font-bold text-slate-900 mb-3">Account Blocked</h1>
+            
+            <p class="text-slate-600 mb-6">
+                Your account has been temporarily suspended. This may be due to a violation of our terms of service or unusual activity detected on your account.
+            </p>
+
+            <div class="bg-slate-50 rounded-xl p-4 mb-6">
+                <p class="text-sm text-slate-500">
+                    If you believe this is a mistake or would like to appeal this decision, please contact our support team.
+                </p>
+            </div>
+
+            <!-- Contact Support Button -->
+            <a href="mailto:support@loadhitch.com?subject=Account%20Blocked%20-%20Appeal%20Request&body=Hello%20LoadHitch%20Support%2C%0A%0AI%20am%20writing%20to%20appeal%20the%20suspension%20of%20my%20account.%0A%0AMy%20email%20address%3A%20%0AReason%20for%20appeal%3A%20%0A%0AThank%20you."
+               class="inline-flex items-center justify-center gap-2 w-full rounded-full bg-teal-500 px-6 py-3 text-base font-medium text-white transition hover:bg-teal-600 mb-4">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Contact Support
+            </a>
+
+            <!-- Back to Login -->
+            <a href="/login" class="inline-flex items-center justify-center gap-2 w-full rounded-full border border-slate-300 px-6 py-3 text-base font-medium text-slate-700 transition hover:bg-slate-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Login
+            </a>
+        </div>
+
+        <!-- Additional Info -->
+        <p class="mt-6 text-center text-sm text-slate-500">
+            Support hours: Monday - Friday, 9 AM - 5 PM EST
+        </p>
+    </div>
+</section>
