@@ -1,13 +1,42 @@
 @namespace t12Project.Components.Shared
+@inject IJSRuntime JS
 
-<div id="map" class="w-full h-96 rounded-lg shadow"></div>
+<div id="map" class="w-full h-96 rounded-lg shadow">
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAxvzaQMDmyOYMCr_c3p2KnStQc5rzaBa8&callback=initMap">
+    </script>
+
+</div>
 
 @code {
-    // Parameters for map data (kept for future use)
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Trucks { get; set; }
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
     [Parameter] public (double lat, double lng)? UserLocation { get; set; }
 
-    // No JS interop here — just a placeholder container.
-    // You can later replace this with Azure Maps or another mapping SDK.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Prepare pins from parameters
+            var pins = new List<object>();
+
+            if (Trucks != null)
+            {
+                pins.AddRange(Trucks.Select(t => new { lat = t.lat, lng = t.lng, label = t.label }));
+            }
+
+            if (Loads != null)
+            {
+                pins.AddRange(Loads.Select(l => new { lat = l.lat, lng = l.lng, label = l.label }));
+            }
+
+            if (UserLocation.HasValue)
+            {
+                pins.Add(new { lat = UserLocation.Value.lat, lng = UserLocation.Value.lng, label = "You" });
+            }
+
+            // Call JS function defined in site.js
+            await JS.InvokeVoidAsync("initMapWithPins", pins);
+        }
+    }
 }
