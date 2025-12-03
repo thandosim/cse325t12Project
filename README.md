@@ -127,3 +127,15 @@ Customer	customer@loadhitch.com	Customer@123456!
 Email: testauth999@example.com
 Password: Test@12345!
 Role: Customer
+
+
+Role	Email	Password	Notes
+Admin	admin@loadhitch.com	Admin@123456!	System administrator
+Driver	driver1@loadhitch.com	Driver@123456!	Owns Truck T001 (Flatbed)
+Driver	driver2@loadhitch.com	Driver@123456!	Owns Truck T002 (Box Truck)
+Driver	driver3@loadhitch.com	Driver@123456!	Owns Truck T003 (Tanker)
+Driver	driver4@loadhitch.com	Driver@123456!	Owns Truck T004 (Refrigerated)
+Customer	customer1@loadhitch.com	Customer@123456!	Has 2 loads (Electronics, Steel Beams)
+Customer	customer2@loadhitch.com	Customer@123456!	Has 1 load (Liquid Chemicals)
+Customer	customer3@loadhitch.com	Customer@123456!	Has 2 loads (Frozen Food, Furniture)
+Customer	testauth999@example.com	Test@12345!	Extra test account
