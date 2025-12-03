@@ -68,7 +68,15 @@ builder.Services.Configure<JwtOptions>(jwtSection);
 var jwtOptions = jwtSection.Get<JwtOptions>();
 if (jwtOptions is null || string.IsNullOrWhiteSpace(jwtOptions.SigningKey))
 {
-    throw new InvalidOperationException("JWT configuration missing. Ensure Jwt:SigningKey, Issuer, Audience are set.");
+    if (builder.Environment.IsDevelopment())
+    {
+        // Provide a safe development fallback so local runs don't require production secrets.
+        jwtOptions = new JwtOptions { SigningKey = "dev-signing-key-please-change", Issuer = "dev", Audience = "dev" };
+    }
+    else
+    {
+        throw new InvalidOperationException("JWT configuration missing. Ensure Jwt:SigningKey, Issuer, Audience are set.");
+    }
 }
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
@@ -108,43 +116,40 @@ builder.Services.AddAuthorization(options =>
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-<<<<<<< HEAD
-builder.Services.AddScoped<DatabaseService>();
-=======
+// Additional services from main branch: authentication helpers, controllers and HTTP utilities
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ProtectedLocalStorage>();
 
+// Application services
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
 builder.Services.AddScoped<AuthClient>();
->>>>>>> origin/main
 
 var app = builder.Build();
 
 // Run database seed/migrations. In Development, don't crash the app if the DB isn't available;
 // instead log a warning so developers without Postgres can still run the app locally.
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-try
+if (!app.Environment.IsDevelopment())
 {
-    await SeedData.InitializeAsync(app.Services);
-}
-catch (Exception ex)
-{
-    if (app.Environment.IsDevelopment())
+    try
     {
-        logger.LogWarning(ex, "Database seed/migration failed — continuing in Development mode without DB initialization.");
+        await SeedData.InitializeAsync(app.Services);
     }
-    else
+    catch (Exception ex)
     {
         // In non-development environments, fail fast so issues are addressed.
         logger.LogCritical(ex, "Database seed/migration failed during startup.");
         throw;
     }
+}
+else
+{
+    logger.LogInformation("Development environment detected — skipping database seed/migration.");
 }
 
 // Configure the HTTP request pipeline.
@@ -161,14 +166,10 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-
-<<<<<<< HEAD
-=======
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
->>>>>>> origin/main
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
