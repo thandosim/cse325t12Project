@@ -12,6 +12,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<AvailabilitySlot> AvailabilitySlots => Set<AvailabilitySlot>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<LocationUpdate> LocationUpdates => Set<LocationUpdate>();
+    public DbSet<CustomerLocationUpdate> CustomerLocationUpdates { get; set; }
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
