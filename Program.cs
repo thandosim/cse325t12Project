@@ -159,7 +159,25 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    logger.LogInformation("Development environment detected — skipping database seed/migration.");
+    // In Development, only run the seed if explicitly enabled via RUN_DB_SEED=true
+    var runSeed = (Environment.GetEnvironmentVariable("RUN_DB_SEED") ?? "").ToLowerInvariant() == "true";
+    if (runSeed)
+    {
+        try
+        {
+            logger.LogInformation("RUN_DB_SEED=true — running database seed/migration in Development.");
+            await SeedData.InitializeAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            // Log and continue — developers may not have a working DB locally.
+            logger.LogWarning(ex, "Database seed/migration failed in Development while RUN_DB_SEED=true; continuing without DB initialization.");
+        }
+    }
+    else
+    {
+        logger.LogInformation("Development environment detected — skipping database seed/migration. Set RUN_DB_SEED=true to enable.");
+    }
 }
 
 // Configure the HTTP request pipeline.
