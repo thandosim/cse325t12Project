@@ -81,30 +81,40 @@ if (jwtOptions is null || string.IsNullOrWhiteSpace(jwtOptions.SigningKey))
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
 
-builder.Services.AddAuthentication()
-    .AddJwtBearer(options =>
+// Configure authentication. Register JWT always; register Google only when credentials are present.
+var authBuilder = builder.Services.AddAuthentication();
+authBuilder.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = true;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.RequireHttpsMetadata = true;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ValidIssuer = jwtOptions.Issuer,
-            ValidAudience = jwtOptions.Audience,
-            IssuerSigningKey = signingKey,
-            ClockSkew = TimeSpan.FromMinutes(1)
-        };
-    })
-    .AddGoogle(options =>
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        ValidIssuer = jwtOptions.Issuer,
+        ValidAudience = jwtOptions.Audience,
+        IssuerSigningKey = signingKey,
+        ClockSkew = TimeSpan.FromMinutes(1)
+    };
+});
+
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authBuilder.AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
-            ?? throw new InvalidOperationException("Authentication:Google:ClientId missing");
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
-            ?? throw new InvalidOperationException("Authentication:Google:ClientSecret missing");
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
     });
+}
+else
+{
+    // No Google credentials found. In Development this is expected for local runs.
+    // The application will continue without Google external login configured.
+}
 
 builder.Services.AddAuthorization(options =>
 {
