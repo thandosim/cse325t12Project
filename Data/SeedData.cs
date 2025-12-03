@@ -28,8 +28,13 @@ public static class SeedData
         var userManager = scopedProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         await EnsureAdminAsync(userManager);
-        await EnsureSampleDriverAsync(userManager);
-        await EnsureSampleCustomerAsync(userManager);
+        var drivers = await EnsureSampleDriversAsync(userManager);
+        var customers = await EnsureSampleCustomersAsync(userManager);
+
+        await EnsureSampleTrucksAsync(context, drivers);
+        await EnsureSampleLoadsAsync(context, customers);
+
+        await context.SaveChangesAsync();
     }
 
     private static async Task EnsureAdminAsync(UserManager<ApplicationUser> userManager)
@@ -55,49 +60,149 @@ public static class SeedData
         }
     }
 
-    private static async Task EnsureSampleDriverAsync(UserManager<ApplicationUser> userManager)
+    private static async Task<List<ApplicationUser>> EnsureSampleDriversAsync(UserManager<ApplicationUser> userManager)
     {
-        const string email = "driver@loadhitch.com";
-        var driver = await userManager.FindByEmailAsync(email);
-        if (driver is null)
+        var driverEmails = new[] { "driver1@loadhitch.com", "driver2@loadhitch.com", "driver3@loadhitch.com", "driver4@loadhitch.com" };
+        var drivers = new List<ApplicationUser>();
+
+        foreach (var email in driverEmails)
         {
-            driver = new ApplicationUser
+            var driver = await userManager.FindByEmailAsync(email);
+            if (driver is null)
             {
-                UserName = email,
-                Email = email,
-                EmailConfirmed = true,
-                FullName = "Sample Driver",
-                AccountType = AccountRole.Driver
-            };
-            await userManager.CreateAsync(driver, "Driver@123456!");
+                driver = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                    FullName = $"Sample {email.Split('@')[0]}",
+                    AccountType = AccountRole.Driver
+                };
+                await userManager.CreateAsync(driver, "Driver@123456!");
+            }
+
+            if (!await userManager.IsInRoleAsync(driver, "Driver"))
+            {
+                await userManager.AddToRoleAsync(driver, "Driver");
+            }
+
+            drivers.Add(driver);
         }
 
-        if (!await userManager.IsInRoleAsync(driver, "Driver"))
+        return drivers;
+    }
+
+    private static async Task<List<ApplicationUser>> EnsureSampleCustomersAsync(UserManager<ApplicationUser> userManager)
+    {
+        var customerEmails = new[] { "customer1@loadhitch.com", "customer2@loadhitch.com", "customer3@loadhitch.com" };
+        var customers = new List<ApplicationUser>();
+
+        foreach (var email in customerEmails)
         {
-            await userManager.AddToRoleAsync(driver, "Driver");
+            var customer = await userManager.FindByEmailAsync(email);
+            if (customer is null)
+            {
+                customer = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                    FullName = $"Sample {email.Split('@')[0]}",
+                    AccountType = AccountRole.Customer
+                };
+                await userManager.CreateAsync(customer, "Customer@123456!");
+            }
+
+            if (!await userManager.IsInRoleAsync(customer, "Customer"))
+            {
+                await userManager.AddToRoleAsync(customer, "Customer");
+            }
+
+            customers.Add(customer);
+        }
+
+        return customers;
+    }
+
+    private static async Task EnsureSampleTrucksAsync(ApplicationDbContext context, List<ApplicationUser> drivers)
+    {
+        if (!context.Trucks.Any())
+        {
+            context.Trucks.AddRange(
+                new Truck { DriverId = drivers[0].Id, Name = "Truck T001", EquipmentType = "Flatbed", CapacityLbs = 20000, IsActive = true },
+                new Truck { DriverId = drivers[1].Id, Name = "Truck T002", EquipmentType = "Box Truck", CapacityLbs = 15000, IsActive = true },
+                new Truck { DriverId = drivers[2].Id, Name = "Truck T003", EquipmentType = "Tanker", CapacityLbs = 25000, IsActive = true },
+                new Truck { DriverId = drivers[3].Id, Name = "Truck T004", EquipmentType = "Refrigerated", CapacityLbs = 18000, IsActive = true }
+            );
         }
     }
 
-    private static async Task EnsureSampleCustomerAsync(UserManager<ApplicationUser> userManager)
+    private static async Task EnsureSampleLoadsAsync(ApplicationDbContext context, List<ApplicationUser> customers)
     {
-        const string email = "customer@loadhitch.com";
-        var customer = await userManager.FindByEmailAsync(email);
-        if (customer is null)
+        if (!context.Loads.Any())
         {
-            customer = new ApplicationUser
-            {
-                UserName = email,
-                Email = email,
-                EmailConfirmed = true,
-                FullName = "Sample Customer",
-                AccountType = AccountRole.Customer
-            };
-            await userManager.CreateAsync(customer, "Customer@123456!");
-        }
-
-        if (!await userManager.IsInRoleAsync(customer, "Customer"))
-        {
-            await userManager.AddToRoleAsync(customer, "Customer");
+            context.Loads.AddRange(
+                new Load
+                {
+                    Title = "Fragile Electronics",
+                    Status = "Pending",
+                    PickupLocation = "Mbabane",
+                    DropoffLocation = "Manzini",
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 1200,
+                    Description = "Fragile boxed electronics, handle with care",
+                    CargoType = "Fragile",
+                    CustomerId = customers[0].Id
+                },
+                new Load
+                {
+                    Title = "Steel Beams",
+                    Status = "Draft",
+                    PickupLocation = "Sidwashini",
+                    DropoffLocation = "Nhlangano",
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
+                    WeightLbs = 3000,
+                    Description = "Heavy steel beams, flatbed required",
+                    CargoType = "Flatbed",
+                    CustomerId = customers[0].Id
+                },
+                new Load
+                {
+                    Title = "Liquid Chemicals",
+                    Status = "Available",
+                    PickupLocation = "Ezulwini",
+                    DropoffLocation = "Big Bend",
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
+                    WeightLbs = 5000,
+                    Description = "500L liquid chemicals, hazmat handling required",
+                    CargoType = "Liquid",
+                    CustomerId = customers[1].Id
+                },
+                new Load
+                {
+                    Title = "Frozen Food",
+                    Status = "Available",
+                    PickupLocation = "Manzini",
+                    DropoffLocation = "Siteki",
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 2000,
+                    Description = "Frozen goods, refrigerated truck required",
+                    CargoType = "Refrigerated",
+                    CustomerId = customers[2].Id
+                },
+                new Load
+                {
+                    Title = "Furniture",
+                    Status = "Pending",
+                    PickupLocation = "Mbabane",
+                    DropoffLocation = "Piggs Peak",
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(4),
+                    WeightLbs = 2500,
+                    Description = "Large furniture items, boxed and palletized",
+                    CargoType = "General",
+                    CustomerId = customers[2].Id
+                }
+            );
         }
     }
 }
