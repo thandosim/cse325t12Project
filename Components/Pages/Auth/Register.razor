@@ -1,70 +1,94 @@
 @page "/register"
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@implements IAsyncDisposable
+@inject AuthClient AuthClient
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<Register> Logger
 
-<PageTitle>Create account</PageTitle>
+<PageTitle>Create account - LoadHitch</PageTitle>
 
 <section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-lg rounded-3xl bg-white p-10 shadow">
-        <h1 class="text-3xl font-bold text-hitchBlue">Create your LoadHitch account</h1>
-        <p class="mt-2 text-sm text-slate-500">Choose a role to get the right dashboard experience.</p>
-
-        @if (!string.IsNullOrWhiteSpace(_error))
-        {
-            <div class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">@_error</div>
-        }
-
-        @if (!string.IsNullOrWhiteSpace(_success))
-        {
-            <div class="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">@_success</div>
-        }
-
-        <EditForm EditContext="_editContext" FormName="register-form" OnValidSubmit="HandleRegistrationAsync">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700" />
-            <div class="mt-6 space-y-4">
-                <label class="block text-sm font-semibold text-slate-700">
-                    Full name
-                    <InputText class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.FullName" />
-                    <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Email address
-                    <InputText type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Email" />
-                    <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.Password" />
-                    <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Confirm password
-                    <InputText type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.ConfirmPassword" />
-                    <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
-                </label>
-                <label class="block text-sm font-semibold text-slate-700">
-                    Role
-                    <InputSelect class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3" @bind-Value="_model.SelectedRole">
-                        @foreach (var role in _allowedRoles)
-                        {
-                            <option value="@role">@role</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
-                </label>
+    <div class="mx-auto max-w-md px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-serif italic text-teal-500">LoadHitch</a>
+        </div>
+        
+        <!-- Register Card -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">Create your account</h1>
+                <p class="mt-2 text-slate-600">Start connecting with loads instantly</p>
             </div>
 
-            <button type="submit" class="mt-6 w-full rounded-2xl bg-hitchBlue px-6 py-3 text-white font-semibold disabled:opacity-60" disabled="@_isSubmitting">
-                @_buttonText
-            </button>
-        </EditForm>
+            @if (!string.IsNullOrWhiteSpace(_banner))
+            {
+                <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">@_banner</div>
+            }
 
-        <p class="mt-4 text-center text-sm text-slate-500">
-            Already have an account?
-            <a class="text-hitchBlue font-semibold" href="/login">Log in</a>
-        </p>
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">@_error</div>
+            }
+
+            <EditForm EditContext="_editContext" OnValidSubmit="HandleRegistrationAsync">
+                <DataAnnotationsValidator />
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Full name</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="John Doe" @bind-Value="_model.FullName" />
+                        <ValidationMessage For="@(() => _model.FullName)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+                        <InputText type="email" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="you@company.com" @bind-Value="_model.Email" />
+                        <ValidationMessage For="@(() => _model.Email)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                        <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="Create a password" @bind-Value="_model.Password" />
+                        <ValidationMessage For="@(() => _model.Password)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm password</label>
+                        <InputText type="password" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" placeholder="Confirm your password" @bind-Value="_model.ConfirmPassword" />
+                        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">I am a</label>
+                        <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white" @bind-Value="_model.SelectedRole">
+                            @foreach (var role in _allowedRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => _model.SelectedRole)" class="mt-1 text-xs text-red-600" />
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-6 w-full rounded-full bg-teal-500 px-6 py-3 text-base font-medium text-white transition hover:bg-teal-600 disabled:bg-slate-300 disabled:cursor-not-allowed" disabled="@_isSubmitting">
+                    @(_isSubmitting ? "Creating account..." : "Create account")
+                </button>
+            </EditForm>
+
+            <div class="mt-6 flex items-center gap-4 text-xs uppercase tracking-wider text-slate-400">
+                <span class="h-px flex-1 bg-slate-200" />
+                or
+                <span class="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <button class="mt-4 flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:bg-slate-100 disabled:cursor-not-allowed" @onclick="StartGoogleSignInAsync" disabled="@_isSubmitting">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="h-5 w-5" />
+                Continue with Google
+            </button>
+
+            <p class="mt-6 text-center text-sm text-slate-600">
+                Already have an account?
+                <a class="font-medium text-teal-600 hover:text-teal-500" href="/login">Sign in</a>
+            </p>
+        </div>
     </div>
 </section>
 
@@ -73,63 +97,161 @@
     private EditContext? _editContext;
     private readonly AccountRole[] _allowedRoles = [AccountRole.Customer, AccountRole.Driver];
     private bool _isSubmitting;
-    private string _error = string.Empty;
-    private string _success = string.Empty;
+    private string? _error;
+    private string? _banner;
+    private DotNetObjectReference<Register>? _jsRef;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        Logger.LogInformation("Register page initialized");
         _editContext = new EditContext(_model);
+        
+        // Redirect if already logged in
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/dashboard", forceLoad: true);
+        }
     }
 
-    private string _buttonText => _isSubmitting ? "Creating account..." : "Create account";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("loadhitchAuth.registerHandler", _jsRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsRef is not null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("loadhitchAuth.unregisterHandler", _jsRef);
+            }
+            catch { }
+            _jsRef.Dispose();
+        }
+    }
 
     private async Task HandleRegistrationAsync()
     {
-        _error = string.Empty;
-        _success = string.Empty;
+        _error = null;
+        _banner = null;
+        Logger.LogInformation("Registration form submitted for {Email}", _model.Email);
+
         if (_model.Password != _model.ConfirmPassword)
         {
             _error = "Passwords do not match.";
+            Logger.LogWarning("Password mismatch for {Email}", _model.Email);
             return;
         }
 
         _isSubmitting = true;
+        StateHasChanged();
+
         try
         {
-            var user = new ApplicationUser
+            var request = new RegisterRequest
             {
-                UserName = _model.Email,
-                Email = _model.Email,
                 FullName = _model.FullName,
-                EmailConfirmed = true,
-                AccountType = _model.SelectedRole
+                Email = _model.Email,
+                Password = _model.Password,
+                ConfirmPassword = _model.ConfirmPassword,
+                Role = _model.SelectedRole
             };
 
-            var createResult = await UserManager.CreateAsync(user, _model.Password);
-            if (!createResult.Succeeded)
+            Logger.LogInformation("Calling AuthClient.RegisterAsync for {Email}", _model.Email);
+            var response = await AuthClient.RegisterAsync(request);
+            Logger.LogInformation("AuthClient.RegisterAsync returned: Succeeded={Succeeded}, Message={Message}", response.Succeeded, response.Message);
+
+            if (!response.Succeeded || response.Payload is null)
             {
-                _error = string.Join(" ", createResult.Errors.Select(e => e.Description));
+                _error = string.IsNullOrWhiteSpace(response.Message) ? "Registration failed. Please try again." : response.Message;
+                Logger.LogWarning("Registration failed for {Email}: {Error}", _model.Email, _error);
                 return;
             }
 
-            await UserManager.AddToRoleAsync(user, _model.SelectedRole.ToString());
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            _success = $"Account created for {_model.FullName}. Redirecting you to the {_model.SelectedRole} dashboard...";
+            _banner = $"Account created for {response.Payload.FullName}. Redirecting...";
+            Logger.LogInformation("Registration successful for {Email}, completing sign-in", _model.Email);
             StateHasChanged();
-
-            var target = _model.SelectedRole switch
-            {
-                AccountRole.Driver => "/dashboard/driver",
-                AccountRole.Customer => "/dashboard/customer",
-                _ => "/dashboard"
-            };
-
-            await Task.Delay(1200);
-            Navigation.NavigateTo(target, forceLoad: true);
+            await Task.Delay(500);
+            
+            // Redirect to complete sign-in endpoint which sets the cookie properly
+            var returnUrl = Uri.EscapeDataString(response.Payload.DashboardUrl);
+            Navigation.NavigateTo($"/auth/complete-signin?email={Uri.EscapeDataString(response.Payload.Email)}&returnUrl={returnUrl}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _error = "An unexpected error occurred. Please try again.";
+            Logger.LogError(ex, "Exception during registration for {Email}", _model.Email);
         }
         finally
         {
             _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StartGoogleSignInAsync()
+    {
+        Logger.LogInformation("Starting Google Sign-In");
+        _error = null;
+        _banner = null;
+        _isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            var state = Guid.NewGuid().ToString("N");
+            var googleUrl = $"{Navigation.BaseUri}api/auth/google/signin?state={state}";
+            await JS.InvokeVoidAsync("loadhitchAuth.startGoogleSignIn", googleUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to start Google sign-in");
+            _error = "Failed to start Google sign-in. Please try again.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleExternalAuthMessage(string json)
+    {
+        Logger.LogInformation("Received external auth message: {Json}", json);
+        
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("error", out var errorProp))
+            {
+                _error = errorProp.GetString() ?? "Google sign-in failed.";
+                StateHasChanged();
+                return;
+            }
+
+            if (root.TryGetProperty("dashboardUrl", out var dashboardProp))
+            {
+                var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
+                _banner = "Signed in with Google! Redirecting...";
+                StateHasChanged();
+                await Task.Delay(500);
+                Navigation.NavigateTo(dashboardUrl, forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to parse auth message");
+            _error = "Failed to complete Google sign-in.";
+            StateHasChanged();
         }
     }
 
@@ -147,9 +269,9 @@
         [MinLength(8)]
         public string Password { get; set; } = string.Empty;
 
-    [Required]
-    [Compare(nameof(Password), ErrorMessage = "Passwords must match.")]
-    public string ConfirmPassword { get; set; } = string.Empty;
+        [Required]
+        [Compare(nameof(Password), ErrorMessage = "Passwords must match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         [Required]
         public AccountRole SelectedRole { get; set; } = AccountRole.Customer;

@@ -1,0 +1,13 @@
+namespace t12Project.Options;
+
+public class JwtOptions
+{
+    public const string SectionName = "Jwt";
+
+    public string Issuer { get; set; } = string.Empty;
+    public string Audience { get; set; } = string.Empty;
+    public string SigningKey { get; set; } = string.Empty;
+    public int AccessTokenMinutes { get; set; } = 15;
+    public int RefreshTokenDays { get; set; } = 7;
+    public int RefreshTokenDaysRememberMe { get; set; } = 30;
+}
