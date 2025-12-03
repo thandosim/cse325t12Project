@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using t12Project.Components.Shared
-@* @attribute [Authorize(Roles = "Driver")] *@
+@using t12Project.Models
 
 <PageTitle>Driver Dashboard - LoadHitch</PageTitle>
 
@@ -22,23 +22,64 @@
 </DashboardLayout>
 
 @code {
-    // Table headers
-    private List<string> loadHeaders = new() { "Load ID", "Origin", "Destination", "Status" };
+    // Inject DbContext via DI
+    [Inject] private ApplicationDbContext Context { get; set; } = default!;
+
+    // Table headers (added Description column)
+    private List<string> loadHeaders = new() { "Load ID", "Pickup", "Dropoff", "Status", "Description" };
 
     // Table rows (string-based for DashboardTable)
-    private List<List<string>> loadItems = new()
-    {
-        new() { "L001", "Mbabane", "Manzini", "Pending" },
-        new() { "L002", "Sidwashini", "Nhlangano", "Delivered" }
-    };
+    private List<List<string>> loadItems = new();
 
     // Map pins (tuple-based for MapView)
-    private List<(double lat, double lng, string label)> loadPins = new()
-    {
-        (-26.305, 31.136, "Load L001 - Pending"),
-        (-26.310, 31.140, "Load L002 - Delivered")
-    };
+    private List<(double lat, double lng, string label)> loadPins = new();
 
     // Driver location (center of map)
-    private (double lat, double lng) driverLocation = (-26.320, 31.150); // placeholder coords
+    private (double lat, double lng) driverLocation;
+
+    protected override void OnInitialized()
+    {
+        var loads = Context.Loads
+            .Select(l => new
+            {
+                l.Id,
+                l.PickupLocation,
+                l.DropoffLocation,
+                l.Status,
+                l.Description,   // <-- new field
+                l.Title
+            })
+            .ToList();
+
+        // Populate table rows (names + description, no geo data)
+        loadItems = loads
+            .Select(l => new List<string>
+            {
+                l.Id.ToString(),
+                l.PickupLocation,
+                l.DropoffLocation,
+                l.Status,
+                l.Description
+            })
+            .ToList();
+
+        // Map pins (placeholder until lat/lng fields or geocoding are added)
+        loadPins = loads
+            .Select(l => (-26.305, 31.136, $"Load {l.Id} - {l.Status}"))
+            .ToList();
+
+        // Driver’s latest location
+        var driverUpdate = Context.LocationUpdates
+            .OrderByDescending(u => u.ReportedAt)
+            .FirstOrDefault();
+
+        if (driverUpdate != null)
+        {
+            driverLocation = ((double)driverUpdate.Latitude, (double)driverUpdate.Longitude);
+        }
+        else
+        {
+            driverLocation = (-26.320, 31.150); // fallback coords
+        }
+    }
 }
