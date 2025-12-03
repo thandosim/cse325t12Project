@@ -205,4 +205,37 @@ public static class SeedData
             );
         }
     }
+
+    private static async Task EnsureSampleLocationUpdatesAsync(
+        ApplicationDbContext context,
+        List<ApplicationUser> drivers,
+        List<ApplicationUser> customers)
+    {
+        if (!context.LocationUpdates.Any())
+        {
+            // Driver locations (match trucks)
+            context.LocationUpdates.AddRange(
+                new LocationUpdate { DriverId = drivers[0].Id, Latitude = -26.3167m, Longitude = 31.1333m, Notes = "Truck T001 in Mbabane" },
+                new LocationUpdate { DriverId = drivers[1].Id, Latitude = -26.4833m, Longitude = 31.3667m, Notes = "Truck T002 in Manzini" },
+                new LocationUpdate { DriverId = drivers[2].Id, Latitude = -26.4333m, Longitude = 31.2000m, Notes = "Truck T003 in Ezulwini" },
+                new LocationUpdate { DriverId = drivers[3].Id, Latitude = -25.9667m, Longitude = 31.2500m, Notes = "Truck T004 in Piggs Peak" }
+            );
+        }
+
+        if (!context.CustomerLocationUpdates.Any())
+        {
+            // Customer load locations
+            context.CustomerLocationUpdates.AddRange(
+                new CustomerLocationUpdate { CustomerId = customers[0].Id, Latitude = -26.3167m, Longitude = 31.1333m, Notes = "Load pickup in Mbabane" },
+                new CustomerLocationUpdate { CustomerId = customers[0].Id, Latitude = -27.1167m, Longitude = 31.2000m, Notes = "Load dropoff in Nhlangano" },
+                new CustomerLocationUpdate { CustomerId = customers[1].Id, Latitude = -26.8167m, Longitude = 31.9333m, Notes = "Load pickup in Big Bend" },
+                new CustomerLocationUpdate { CustomerId = customers[2].Id, Latitude = -26.4500m, Longitude = 31.9500m, Notes = "Load dropoff in Siteki" },
+                new CustomerLocationUpdate { CustomerId = customers[2].Id, Latitude = -26.4833m, Longitude = 31.3667m, Notes = "Load pickup in Manzini" }
+            );
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+
 }
