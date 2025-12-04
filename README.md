@@ -37,6 +37,95 @@ LoadHitch is a streamlined logistics platform that addresses the challenge of co
 -   **Deployment & CI/CD:** Microsoft Azure (App Service, Azure DB for PostgreSQL) & GitHub Actions
 -   **Testing:** xUnit (Unit Tests), bUnit (Component Tests), Playwright (End-to-End Tests)
 
+### End-to-End (Playwright)
+
+Playwright is used for end-to-end testing. The repository includes a helper script (`scripts/run-e2e.ps1`) that starts the app (unless you pass `-NoStart`), waits for readiness, runs the Playwright tests, collects artifacts (traces, screenshots, page HTML, videos) and stops the app.
+
+Install browsers (two approaches):
+
+- Quick / machine-wide (one-time):
+
+    ```powershell
+    dotnet tool install --global Microsoft.Playwright.CLI
+    playwright install
+    ```
+
+- Repo-local (recommended for CI reproducibility):
+
+    ```powershell
+    cd t12Project.Playwright
+    dotnet new tool-manifest # if you don't already have one
+    dotnet tool install Microsoft.Playwright.CLI
+    dotnet tool restore
+    dotnet tool run playwright install
+    ```
+
+Run the helper from the repo root (PowerShell):
+
+```powershell
+.\scripts\run-e2e.ps1        # starts server, runs tests, collects artifacts
+.\scripts\run-e2e.ps1 -NoStart  # use an already-running server
+.\scripts\run-e2e.ps1 -BaseUrl 'https://localhost:7218' -InstallBrowsers
+```
+
+Artifacts produced by the helper
+
+- `./artifacts/e2e-test-results.trx` — NUnit/TRX test results
+- `./artifacts/e2e-report.html` — TRX → HTML conversion (helper will attempt to produce this)
+- `./artifacts/test-output.log` — combined test output and helper logs
+- `./artifacts/playwright/` — Playwright artifacts: `trace-*.zip`, screenshots, `page-*.html`, and `.webm` videos
+- On failure the helper creates a triage bundle: `./artifacts/triage-YYYYMMDD-HHMMSS.zip` containing a short `summary.txt`, a server log snippet around the failing test, the TRX and related Playwright artifacts for quick sharing
+
+Debug tip — Playwright trace viewer
+
+The Playwright trace `.zip` is the most useful interactive artifact (it contains DOM snapshots, network and console). Open it with the Playwright trace viewer:
+
+```powershell
+playwright show-trace .\artifacts\playwright\trace-*.zip
+# or if running from the repo-local tool manifest:
+dotnet tool run playwright show-trace .\artifacts\playwright\trace-*.zip
+```
+
+## Running tests (unit & integration)
+
+A small helper script is provided to run unit tests and integration (Playwright) tests and collect artifacts in `./artifacts/`.
+
+- `scripts/run-tests.ps1` — unified test runner. It will run unit tests, integration tests (via the existing `scripts/run-e2e.ps1` helper), or both.
+
+Usage examples (PowerShell):
+
+```powershell
+# Run unit tests only
+.\scripts\run-tests.ps1 -Unit
+
+# Run integration (E2E) tests only — the helper will start the app, run Playwright tests, and collect artifacts
+.\scripts\run-tests.ps1 -Integration
+
+# Run both unit and integration tests (default)
+.\scripts\run-tests.ps1 -All
+
+# If you already started the web app yourself, skip starting it by passing -NoStart
+.\scripts\run-tests.ps1 -Integration -NoStart
+```
+
+Artifacts produced by the helper
+
+- `./artifacts/unit-tests.trx` and `./artifacts/unit-tests.log` — unit test TRX and console log
+- `./artifacts/e2e-test-results.trx` and `./artifacts/test-output.log` — integration test TRX and combined helper logs
+- `./artifacts/playwright/` — Playwright artifacts (trace zips, screenshots, page HTML, videos)
+- `./artifacts/triage-YYYYMMDD-HHMMSS.zip` — triage bundle created when a failing integration test run is detected
+
+CI tip
+
+Add the `scripts/run-tests.ps1` invocation to your CI job and upload `./artifacts/` when a job fails so you can inspect TRX, Playwright traces and screenshots.
+
+
+Notes & troubleshooting
+
+- If `dotnet test` fails with `net::ERR_CONNECTION_REFUSED`, either run the helper (it starts the app) or start the app yourself and set `E2E_BASEURL` before running tests.
+- If `e2e-report.html` isn't generated, open the TRX in Visual Studio or add a repo-local TRX→HTML tool (the helper attempts to run `trx2html` and will try to restore a dotnet tool if missing).
+- Recorded videos may be small/blank for very short tests; prefer the Playwright trace + screenshots. To improve video output, tests can wait for `LoadState.NetworkIdle` or you can increase the post-test flush delay in the Playwright test helper.
+
 ## Getting Started (Local Setup)
 
 Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.

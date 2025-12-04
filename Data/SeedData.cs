@@ -14,7 +14,14 @@ public static class SeedData
         using var scope = services.CreateScope();
         var scopedProvider = scope.ServiceProvider;
         var context = scopedProvider.GetRequiredService<ApplicationDbContext>();
-        await context.Database.MigrateAsync();
+        if (context.Database.ProviderName?.Contains("InMemory", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            await context.Database.MigrateAsync();
+        }
 
         var roleManager = scopedProvider.GetRequiredService<RoleManager<IdentityRole>>();
         foreach (var role in Roles)
