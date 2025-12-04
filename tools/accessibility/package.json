@@ -1,0 +1,13 @@
+{
+  "name": "t12-accessibility",
+  "version": "1.0.0",
+  "description": "Playwright + axe accessibility scan for local app",
+  "private": true,
+  "scripts": {
+    "scan": "node scan.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0",
+    "axe-core": "^4.8.0"
+  }
+}

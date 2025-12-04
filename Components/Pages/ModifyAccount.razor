@@ -12,23 +12,23 @@
                 <EditForm Model="account" OnValidSubmit="Save">
                     <div class="grid grid-cols-1 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">First name</label>
-                            <InputText class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.FirstName" />
+                            <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First name</label>
+                            <InputText id="firstName" class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.FirstName" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
-                            <InputText class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.LastName" />
+                            <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
+                            <InputText id="lastName" class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.LastName" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <InputText type="email" class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.Email" />
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <InputText id="email" type="email" class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.Email" />
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                            <InputText class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.Phone" />
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <InputText id="phone" class="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring hitchBlue focus:border-hitchBlue" @bind-Value="account.Phone" />
                         </div>
 
                         <div class="flex items-center gap-3 mt-2">
