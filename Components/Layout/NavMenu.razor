@@ -10,14 +10,15 @@
 	
 	<!-- Navigation Links -->
 	<div class="flex flex-wrap items-center gap-8 text-slate-700">
-		<a class="hover:text-teal-500 transition-colors" href="/#features">Features</a>
-		<a class="hover:text-teal-500 transition-colors" href="/#how-it-works">How It Works</a>
-		<a class="hover:text-teal-500 transition-colors" href="/#benefits">Benefits</a>
 		<AuthorizeView>
 			<Authorized>
 				<a href="/dashboard" class="hover:text-teal-500 transition-colors font-medium text-teal-600">Dashboard</a>
+				<a href="/account/profile" class="hover:text-teal-500 transition-colors">My Profile</a>
 			</Authorized>
 			<NotAuthorized>
+				<a class="hover:text-teal-500 transition-colors" href="/#features">Features</a>
+				<a class="hover:text-teal-500 transition-colors" href="/#how-it-works">How It Works</a>
+				<a class="hover:text-teal-500 transition-colors" href="/#benefits">Benefits</a>
 				<a href="/login" class="hover:text-teal-500 transition-colors">Sign In</a>
 			</NotAuthorized>
 		</AuthorizeView>

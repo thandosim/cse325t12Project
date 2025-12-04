@@ -154,6 +154,14 @@
 
             if (!result.Succeeded || result.Payload is null)
             {
+                // Redirect to blocked page if user is blocked
+                if (result.IsBlocked)
+                {
+                    Logger.LogWarning("User is blocked, redirecting to blocked page");
+                    Navigation.NavigateTo("/account-blocked", forceLoad: true);
+                    return;
+                }
+
                 _error = result.Message ?? "Login failed. Please check your credentials.";
                 Logger.LogWarning("Login failed: {Error}", _error);
                 StateHasChanged();
@@ -212,28 +220,44 @@
     [JSInvokable]
     public async Task HandleExternalAuthMessage(string json)
     {
-        Logger.LogInformation("Received external auth message: {Json}", json);
-        
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.TryGetProperty("error", out var errorProp))
-            {
-                _error = errorProp.GetString() ?? "Google sign-in failed.";
-                StateHasChanged();
+            // Only process LoadHitch auth messages, ignore browser extension messages
+            if (!root.TryGetProperty("type", out var typeProp))
                 return;
+            
+            var messageType = typeProp.GetString();
+            if (messageType != "loadhitch:auth" && messageType != "loadhitch:auth-error")
+                return;
+
+            Logger.LogInformation("Received auth message: {Type}", messageType);
+
+            // Check for error in payload (auth-error message)
+            if (root.TryGetProperty("payload", out var payload))
+            {
+                if (payload.TryGetProperty("error", out var errorProp))
+                {
+                    _error = errorProp.GetString() ?? "Google sign-in failed.";
+                    StateHasChanged();
+                    return;
+                }
+
+                // Success - get dashboardUrl from payload (camelCase from JSON serializer)
+                if (payload.TryGetProperty("dashboardUrl", out var dashboardProp))
+                {
+                    var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
+                    _banner = "Signed in with Google! Redirecting...";
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    Navigation.NavigateTo(dashboardUrl, forceLoad: true);
+                    return;
+                }
             }
 
-            if (root.TryGetProperty("dashboardUrl", out var dashboardProp))
-            {
-                var dashboardUrl = dashboardProp.GetString() ?? "/dashboard";
-                _banner = "Signed in with Google! Redirecting...";
-                StateHasChanged();
-                await Task.Delay(500);
-                Navigation.NavigateTo(dashboardUrl, forceLoad: true);
-            }
+            Logger.LogWarning("No dashboardUrl found in auth message");
         }
         catch (Exception ex)
         {
