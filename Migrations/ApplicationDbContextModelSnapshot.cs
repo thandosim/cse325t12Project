@@ -314,7 +314,7 @@ namespace t12Project.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("t12Project.Models.Load", b =>
+            modelBuilder.Entity("t12Project.Models.CustomerLocationUpdate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -323,6 +323,45 @@ namespace t12Project.Migrations
                     b.Property<string>("CustomerId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ReportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CustomerLocationUpdates");
+                });
+
+            modelBuilder.Entity("t12Project.Models.Load", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CargoType")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("DropoffLocation")
                         .IsRequired()
@@ -563,6 +602,17 @@ namespace t12Project.Migrations
                     b.Navigation("Driver");
 
                     b.Navigation("Load");
+                });
+
+            modelBuilder.Entity("t12Project.Models.CustomerLocationUpdate", b =>
+                {
+                    b.HasOne("t12Project.Models.ApplicationUser", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("t12Project.Models.Load", b =>

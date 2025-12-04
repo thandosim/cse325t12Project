@@ -1,0 +1,49 @@
+@namespace t12Project.Components.Shared
+@inject IJSRuntime JS
+
+<div id="map" class="w-full h-96 rounded-lg shadow">
+
+</div>
+
+@code {
+    [Parameter] public IEnumerable<(double lat, double lng, string label)>? Trucks { get; set; }
+    [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
+    [Parameter] public (double lat, double lng)? UserLocation { get; set; }
+
+    private void TestOutput()
+    {
+        Console.WriteLine(">>> MapView test function executed!");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Call the test function on every render
+            TestOutput();
+        if (firstRender)
+        {
+            // Call the test function on every render
+            TestOutput();
+            // Prepare pins from parameters
+            var pins = new List<object>();
+
+            if (Trucks != null)
+            {
+                pins.AddRange(Trucks.Select(t => new { lat = t.lat, lng = t.lng, label = t.label }));
+            }
+
+            if (Loads != null)
+            {
+                pins.AddRange(Loads.Select(l => new { lat = l.lat, lng = l.lng, label = l.label }));
+            }
+
+            if (UserLocation.HasValue)
+            {
+                pins.Add(new { lat = UserLocation.Value.lat, lng = UserLocation.Value.lng, label = "You" });
+            }
+
+            // Call JS function defined in site.js
+            Console.WriteLine($"Calling initMapWithPins with {pins.Count} pins");
+            await JS.InvokeVoidAsync("initMapWithPins", pins);
+        }
+    }
+}

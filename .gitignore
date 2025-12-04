@@ -31,9 +31,6 @@ Plan.md
 
 ## Logs
 *.log
-latestlogs/
-LogFiles/
-deployments/
 
 ## Publish output
 publish/
@@ -55,7 +52,9 @@ artifacts/
 *.generated.cs
 *.g.cs
 *.g.i.cs
-publish.zip
-log.zip
-dump.zip
-*.scm
+bin/
+
+obj/
+
+node_modules/
+

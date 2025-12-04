@@ -2,65 +2,83 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
-@attribute [Authorize(Roles = "Driver")]
+@using t12Project.Components.Shared
+@using t12Project.Models
+@attribute [Authorize (Roles = "Driver")]
 
 <PageTitle>Driver Dashboard - LoadHitch</PageTitle>
 
-<section class="min-h-screen bg-slate-50 py-12">
-    <div class="max-w-6xl mx-auto px-6">
-        <!-- Header -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm mb-8">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Driver Portal</p>
-                    <h1 class="mt-2 text-3xl font-bold text-slate-900">Welcome to your Dashboard</h1>
-                    <p class="mt-2 text-slate-600">Find loads, manage your trips, and maximize your earnings.</p>
-                </div>
-                <div class="flex gap-3">
-                    <a href="/account/profile" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                        My Profile
-                    </a>
-                    <a href="/api/auth/signout" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                        Sign out
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Quick Actions -->
-        <div class="grid gap-6 md:grid-cols-3 mb-8">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-slate-900">Find Loads</h3>
-                <p class="mt-1 text-sm text-slate-500">Browse available shipments in your area.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-slate-900">My Schedule</h3>
-                <p class="mt-1 text-sm text-slate-500">View your upcoming pickups and deliveries.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <h3 class="font-semibold text-slate-900">Earnings</h3>
-                <p class="mt-1 text-sm text-slate-500">Track your payments and revenue.</p>
-            </div>
-        </div>
-        
-        <!-- Placeholder Content -->
-        <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p class="text-slate-400">Available loads and your trips will appear here.</p>
-        </div>
-    </div>
-</section>
+<DashboardLayout>
+    <DashboardHeader 
+        Label="Driver area" 
+        LabelColor="text-hitchBlue"
+        Title="Driver dashboard"
+        Subtitle="Browse available loads below." />
+
+    <!-- Table shows string-based load data -->
+    <DashboardTable Headers="loadHeaders" Items="loadItems" />
+
+    <!-- MapView now uses tuple-based pins -->
+    <MapView Loads="loadPins" UserLocation="driverLocation" />
+</DashboardLayout>
+
+@code {
+    [Inject] private ApplicationDbContext Context { get; set; } = default!;
+
+    private List<string> loadHeaders = new() { "Load ID", "Pickup", "Dropoff", "Status", "Description" };
+    private List<List<string>> loadItems = new();
+    private List<(double lat, double lng, string label)> loadPins = new();
+    private (double lat, double lng) driverLocation;
+
+    protected override void OnInitialized()
+    {
+        // Query loads
+        var loads = Context.Loads
+            .Select(l => new
+            {
+                l.Id,
+                l.PickupLocation,
+                l.DropoffLocation,
+                l.Status,
+                l.Description,
+                l.Title,
+                l.CustomerId
+            })
+            .ToList();
+
+        // Populate table rows
+        loadItems = loads
+            .Select(l => new List<string>
+            {
+                l.Id.ToString(),
+                l.PickupLocation,
+                l.DropoffLocation,
+                l.Status,
+                l.Description
+            })
+            .ToList();
+
+        // Map pins from CustomerLocationUpdates (instead of placeholders)
+        var customerPins = Context.CustomerLocationUpdates
+            .OrderByDescending(c => c.ReportedAt)
+            .ToList();
+
+        loadPins = customerPins
+            .Select(c => ((double)c.Latitude, (double)c.Longitude, $"Customer {c.CustomerId} - {c.Notes ?? "Load"}"))
+            .ToList();
+
+        // Driver’s latest location from LocationUpdates
+        var driverUpdate = Context.LocationUpdates
+            .OrderByDescending(u => u.ReportedAt)
+            .FirstOrDefault();
+
+        if (driverUpdate != null)
+        {
+            driverLocation = ((double)driverUpdate.Latitude, (double)driverUpdate.Longitude);
+        }
+        else
+        {
+            driverLocation = (-26.320, 31.150); // fallback coords
+        }
+    }
+}
