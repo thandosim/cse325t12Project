@@ -141,6 +141,44 @@ builder.Services.AddScoped<AuthClient>();
 
 var app = builder.Build();
 
+// --- Diagnostics: register lifetime and exception handlers to capture unexpected shutdowns ---
+try
+{
+    var lifetime = app.Services.GetRequiredService<Microsoft.Extensions.Hosting.IHostApplicationLifetime>();
+    lifetime.ApplicationStopping.Register(() =>
+    {
+        var diagLogger = app.Services.GetService<ILogger<Program>>();
+        diagLogger?.LogWarning("ApplicationStopping triggered. Stack trace:\n{stack}", Environment.StackTrace);
+        try { System.Diagnostics.Debug.WriteLine("ApplicationStopping: " + Environment.StackTrace); } catch { }
+    });
+    lifetime.ApplicationStopped.Register(() =>
+    {
+        var diagLogger = app.Services.GetService<ILogger<Program>>();
+        diagLogger?.LogWarning("ApplicationStopped triggered. Stack trace:\n{stack}", Environment.StackTrace);
+        try { System.Diagnostics.Debug.WriteLine("ApplicationStopped: " + Environment.StackTrace); } catch { }
+    });
+
+    AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+    {
+        var diagLogger = app.Services.GetService<ILogger<Program>>();
+        diagLogger?.LogError(e.ExceptionObject as Exception, "Unhandled exception in AppDomain");
+        try { System.Diagnostics.Debug.WriteLine("UnhandledException: " + (e.ExceptionObject as Exception)?.ToString()); } catch { }
+    };
+
+    TaskScheduler.UnobservedTaskException += (s, e) =>
+    {
+        var diagLogger = app.Services.GetService<ILogger<Program>>();
+        diagLogger?.LogError(e.Exception, "Unobserved task exception");
+        try { System.Diagnostics.Debug.WriteLine("UnobservedTaskException: " + e.Exception.ToString()); } catch { }
+    };
+}
+catch (Exception ex)
+{
+    var loggerFallback = app.Services.GetService<ILogger<Program>>();
+    loggerFallback?.LogWarning(ex, "Failed to register diagnostic handlers");
+}
+
+
 // Run database seed/migrations. In Development, don't crash the app if the DB isn't available;
 // instead log a warning so developers without Postgres can still run the app locally.
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
