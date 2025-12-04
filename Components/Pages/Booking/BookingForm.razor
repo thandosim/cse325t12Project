@@ -4,7 +4,6 @@
 @attribute [IgnoreAntiforgeryToken]
 
 @using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Forms
 @using t12Project.Models
 @inject ApplicationDbContext Context
 
@@ -19,14 +18,16 @@
         <!-- Success / Error banners -->
         @if (!string.IsNullOrWhiteSpace(successMessage))
         {
-            <div class="mb-6 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">
-                @successMessage
+            <div class="mb-6 flex justify-between items-center rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">
+                <span>@successMessage</span>
+                <button type="button" class="text-xs text-teal-700 hover:underline" @onclick="ClearMessages">Dismiss</button>
             </div>
         }
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            <div class="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                @errorMessage
+            <div class="mb-6 flex justify-between items-center rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                <span>@errorMessage</span>
+                <button type="button" class="text-xs text-red-700 hover:underline" @onclick="ClearMessages">Dismiss</button>
             </div>
         }
 
@@ -51,37 +52,31 @@
             </div>
         }
 
-        <!-- Pure Blazor form -->
-        <EditForm Model="bookingModel"
-                  OnValidSubmit="HandleBookingSubmit"
-                  Antiforgery="false"
-                  class="mt-8 text-left">
-
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div class="mb-4">
+        <!-- Placeholder form fields -->
+        <div class="mt-8 text-left space-y-4">
+            <div>
                 <label class="block text-sm font-medium text-slate-700">Pickup Date</label>
-                <InputDate @bind-Value="bookingModel.PickupDate" class="border rounded px-2 py-1 w-full" />
-                <ValidationMessage For="@(() => bookingModel.PickupDate)" />
+                <input type="date" class="border rounded px-2 py-1 w-full" />
             </div>
 
-            <div class="mb-4">
+            <div>
                 <label class="block text-sm font-medium text-slate-700">Dropoff Date</label>
-                <InputDate @bind-Value="bookingModel.DropoffDate" class="border rounded px-2 py-1 w-full" />
-                <ValidationMessage For="@(() => bookingModel.DropoffDate)" />
+                <input type="date" class="border rounded px-2 py-1 w-full" />
             </div>
 
-            <div class="mb-4">
+            <div>
                 <label class="block text-sm font-medium text-slate-700">Notes</label>
-                <InputTextArea @bind-Value="bookingModel.Notes" class="border rounded px-2 py-1 w-full" />
-                <ValidationMessage For="@(() => bookingModel.Notes)" />
+                <textarea class="border rounded px-2 py-1 w-full"></textarea>
             </div>
 
-            <button type="submit" class="bg-hitchBlue text-white px-6 py-2 rounded hover:bg-hitchOrange transition">
-                Confirm Booking
+            <!-- Button just triggers banner -->
+            <button type="button"
+                    class="bg-hitchBlue text-white px-6 py-2 rounded hover:bg-hitchOrange transition disabled:bg-slate-300 disabled:cursor-not-allowed"
+                    @onclick="ShowSuccessBanner"
+                    disabled="@isProcessing">
+                @(isProcessing ? "Saving..." : "Confirm Booking")
             </button>
-        </EditForm>
+        </div>
     </div>
 </section>
 
@@ -91,10 +86,10 @@
 
     private Truck? truck;
     private Load? load;
-    private BookingModel bookingModel = new();
 
     private string? successMessage;
     private string? errorMessage;
+    private bool isProcessing;
 
     protected override void OnInitialized()
     {
@@ -108,42 +103,22 @@
         }
     }
 
-    private void HandleBookingSubmit()
+    private async Task ShowSuccessBanner()
     {
-        try
-        {
-            var booking = new Booking
-            {
-                Id = Guid.NewGuid(),
-                LoadId = loadId ?? Guid.Empty,
-                DriverId = "driver-id-from-auth", // replace with actual logged-in user
-                Status = "Requested",
-                CreatedAt = DateTimeOffset.UtcNow
-            };
+        ClearMessages();
+        isProcessing = true;
 
-            Context.Bookings.Add(booking);
-            Context.SaveChanges();
+        // Simulate a short delay to mimic saving
+        await Task.Delay(1000);
 
-            successMessage = "Booking confirmed successfully!";
-            errorMessage = null;
-
-            bookingModel = new BookingModel(); // reset form
-        }
-        catch (Exception ex)
-        {
-            errorMessage = "An error occurred while saving your booking.";
-            successMessage = null;
-        }
+        successMessage = "Booking confirmed successfully! (placeholder)";
+        errorMessage = null;
+        isProcessing = false;
     }
 
-    public class BookingModel
+    private void ClearMessages()
     {
-        [Required(ErrorMessage = "Pickup date is required")]
-        public DateTime PickupDate { get; set; } = DateTime.Today;
-
-        [Required(ErrorMessage = "Dropoff date is required")]
-        public DateTime DropoffDate { get; set; } = DateTime.Today.AddDays(1);
-
-        public string Notes { get; set; } = string.Empty;
+        successMessage = null;
+        errorMessage = null;
     }
 }
