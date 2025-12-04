@@ -15,6 +15,8 @@ using t12Project.Middleware;
 using t12Project.Models;
 using t12Project.Options;
 using t12Project.Services;
+using Microsoft.AspNetCore.Mvc;
+
 
 if (File.Exists(Path.Combine(AppContext.BaseDirectory, ".env")))
 {
@@ -112,6 +114,13 @@ builder.Services.AddAuthorization(options =>
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+
+builder.Services.AddControllers(options =>
+{
+    // Disable antiforgery globally for controllers if you don’t need it
+    options.Filters.Add(new IgnoreAntiforgeryTokenAttribute());
+});
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddControllers();

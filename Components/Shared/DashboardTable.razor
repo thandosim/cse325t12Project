@@ -12,10 +12,15 @@
         {
             foreach (var row in Items)
             {
-                <tr class="border-t border-slate-200">
+                <tr class="border-t border-slate-200 hover:bg-slate-50 cursor-pointer">
                     @foreach (var cell in row)
                     {
-                        <td class="px-4 py-2 text-sm text-slate-600">@cell</td>
+                        <td class="px-4 py-2 text-sm text-slate-600">
+                            <a href="@($"{BaseUrl}/{row[0]}")" 
+                               class="block w-full h-full text-slate-600 hover:text-hitchOrange">
+                                @cell
+                            </a>
+                        </td>
                     }
                 </tr>
             }
@@ -26,4 +31,7 @@
 @code {
     [Parameter] public List<string> Headers { get; set; } = new();
     [Parameter] public List<List<string>> Items { get; set; } = new();
+
+    // Base URL for navigation (e.g. "/booking/truck" or "/booking/load")
+    [Parameter] public string BaseUrl { get; set; } = string.Empty;
 }

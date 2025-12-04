@@ -15,28 +15,22 @@
         Title="Customer dashboard"
         Subtitle="Browse available trucks below." />
 
-    <!-- Table shows string-based truck data -->
-    <DashboardTable Headers="truckHeaders" Items="truckItems" />
+    <!-- Table now supports row click -->
+    <DashboardTable Headers="truckHeaders" Items="truckItems" BaseUrl="/booking/truck" />
+
 
     <!-- MapView now uses tuple-based pins -->
     <MapView Trucks="truckPins" UserLocation="customerLocation" />
 </DashboardLayout>
 
 @code {
-    // Inject DbContext via DI
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
+    [Inject] private NavigationManager NavManager { get; set; } = default!;
 
-    // Table headers (matching Truck model)
     private List<string> truckHeaders = new() { "Truck ID", "Name", "Equipment Type", "Capacity (lbs)", "Active" };
-
-    // Table rows (string-based for DashboardTable)
     private List<List<string>> truckItems = new();
-
-    // Map pins (tuple-based for MapView)
     private List<(double lat, double lng, string label)> truckPins = new();
-
-    // Customer location (center of map)
-    private (double lat, double lng) customerLocation = (-26.305, 31.136); // placeholder coords
+    private (double lat, double lng) customerLocation = (-26.305, 31.136);
 
     protected override void OnInitialized()
     {
@@ -51,7 +45,6 @@
             })
             .ToList();
 
-        // Populate table rows
         truckItems = trucks
             .Select(t => new List<string>
             {
@@ -63,9 +56,14 @@
             })
             .ToList();
 
-        // Map pins (placeholder until Truck has lat/lng fields)
         truckPins = trucks
             .Select(t => (-26.320, 31.150, $"Truck {t.Name} - {(t.IsActive ? "Active" : "Inactive")}"))
             .ToList();
+    }
+
+    private void HandleTruckClick(List<string> row)
+    {
+        var truckId = row[0]; // first cell is Truck ID
+        NavManager.NavigateTo($"/booking/truck/{truckId}");
     }
 }

@@ -1,0 +1,149 @@
+@page "/booking/truck/{truckId:guid}"
+@page "/booking/load/{loadId:guid}"
+@using Microsoft.AspNetCore.Mvc
+@attribute [IgnoreAntiforgeryToken]
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using t12Project.Models
+@inject ApplicationDbContext Context
+
+<PageTitle>Booking Form - LoadHitch</PageTitle>
+
+<section class="min-h-screen flex items-center justify-center bg-slate-50 py-16">
+    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 shadow">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchGreen">Booking</p>
+        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Booking Form</h1>
+        <p class="mt-4 text-slate-500">Complete your booking below.</p>
+
+        <!-- Success / Error banners -->
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="mb-6 rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">
+                @successMessage
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                @errorMessage
+            </div>
+        }
+
+        @if (truck != null)
+        {
+            <div class="mt-6 text-left">
+                <h3 class="text-lg font-semibold mb-2">Truck Booking</h3>
+                <p class="mb-1">Booking Truck: <strong>@truck.Name</strong></p>
+                <p class="text-slate-600">
+                    Equipment: @truck.EquipmentType | Capacity: @truck.CapacityLbs lbs | Active: @(truck.IsActive ? "Yes" : "No")
+                </p>
+            </div>
+        }
+        else if (load != null)
+        {
+            <div class="mt-6 text-left">
+                <h3 class="text-lg font-semibold mb-2">Load Booking</h3>
+                <p class="mb-1">Booking Load: <strong>@load.Title</strong></p>
+                <p class="text-slate-600">
+                    Pickup: @load.PickupLocation → Dropoff: @load.DropoffLocation | Status: @load.Status
+                </p>
+            </div>
+        }
+
+        <!-- Pure Blazor form -->
+        <EditForm Model="bookingModel"
+                  OnValidSubmit="HandleBookingSubmit"
+                  Antiforgery="false"
+                  class="mt-8 text-left">
+
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700">Pickup Date</label>
+                <InputDate @bind-Value="bookingModel.PickupDate" class="border rounded px-2 py-1 w-full" />
+                <ValidationMessage For="@(() => bookingModel.PickupDate)" />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700">Dropoff Date</label>
+                <InputDate @bind-Value="bookingModel.DropoffDate" class="border rounded px-2 py-1 w-full" />
+                <ValidationMessage For="@(() => bookingModel.DropoffDate)" />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700">Notes</label>
+                <InputTextArea @bind-Value="bookingModel.Notes" class="border rounded px-2 py-1 w-full" />
+                <ValidationMessage For="@(() => bookingModel.Notes)" />
+            </div>
+
+            <button type="submit" class="bg-hitchBlue text-white px-6 py-2 rounded hover:bg-hitchOrange transition">
+                Confirm Booking
+            </button>
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    [Parameter] public Guid? truckId { get; set; }
+    [Parameter] public Guid? loadId { get; set; }
+
+    private Truck? truck;
+    private Load? load;
+    private BookingModel bookingModel = new();
+
+    private string? successMessage;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        if (truckId != null)
+        {
+            truck = Context.Trucks.FirstOrDefault(t => t.Id == truckId);
+        }
+        else if (loadId != null)
+        {
+            load = Context.Loads.FirstOrDefault(l => l.Id == loadId);
+        }
+    }
+
+    private void HandleBookingSubmit()
+    {
+        try
+        {
+            var booking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                LoadId = loadId ?? Guid.Empty,
+                DriverId = "driver-id-from-auth", // replace with actual logged-in user
+                Status = "Requested",
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            Context.Bookings.Add(booking);
+            Context.SaveChanges();
+
+            successMessage = "Booking confirmed successfully!";
+            errorMessage = null;
+
+            bookingModel = new BookingModel(); // reset form
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while saving your booking.";
+            successMessage = null;
+        }
+    }
+
+    public class BookingModel
+    {
+        [Required(ErrorMessage = "Pickup date is required")]
+        public DateTime PickupDate { get; set; } = DateTime.Today;
+
+        [Required(ErrorMessage = "Dropoff date is required")]
+        public DateTime DropoffDate { get; set; } = DateTime.Today.AddDays(1);
+
+        public string Notes { get; set; } = string.Empty;
+    }
+}
