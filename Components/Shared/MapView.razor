@@ -10,10 +10,19 @@
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
     [Parameter] public (double lat, double lng)? UserLocation { get; set; }
 
+    private void TestOutput()
+    {
+        Console.WriteLine(">>> MapView test function executed!");
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Call the test function on every render
+            TestOutput();
         if (firstRender)
         {
+            // Call the test function on every render
+            TestOutput();
             // Prepare pins from parameters
             var pins = new List<object>();
 
@@ -33,6 +42,7 @@
             }
 
             // Call JS function defined in site.js
+            Console.WriteLine($"Calling initMapWithPins with {pins.Count} pins");
             await JS.InvokeVoidAsync("initMapWithPins", pins);
         }
     }
