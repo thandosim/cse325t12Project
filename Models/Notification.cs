@@ -26,7 +26,7 @@ public class Notification
 
     // Optional: Link to related entity
     public Guid? RelatedEntityId { get; set; }
-    
+
     [MaxLength(50)]
     public string? RelatedEntityType { get; set; } // "Load", "Booking", "Driver", etc.
 }

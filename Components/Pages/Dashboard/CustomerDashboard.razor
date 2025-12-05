@@ -475,6 +475,7 @@
     {
         // Load customer's own loads
         _myLoads = await Context.Loads
+            .AsNoTracking()
             .Where(l => l.CustomerId == _currentUserId)
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
@@ -574,7 +575,10 @@
         _showLoadForm = !_showLoadForm;
         if (_showLoadForm)
         {
-            _newLoad = new Load();
+            _newLoad = new Load
+            {
+                CustomerId = _currentUserId  // Set CustomerId immediately to pass validation
+            };
             _pickupDate = DateTime.Today.AddDays(1);
             _errorMessage = null;
             _successMessage = null;
@@ -586,9 +590,18 @@
         _errorMessage = null;
         _successMessage = null;
 
+        // Ensure CustomerId is set before validation
+        _newLoad.CustomerId = _currentUserId;
+
         if (!editContext.Validate())
         {
-            _errorMessage = "Please fill in all required fields (Load Title is required).";
+            // Get actual validation errors
+            var errors = editContext.GetValidationMessages();
+            _errorMessage = string.Join(" ", errors);
+            if (string.IsNullOrWhiteSpace(_errorMessage))
+            {
+                _errorMessage = "Please fill in all required fields.";
+            }
             StateHasChanged();
             return;
         }
@@ -606,7 +619,8 @@
         {
             _newLoad.CustomerId = _currentUserId;
             _newLoad.Status = "Available";
-            _newLoad.PickupDate = new DateTimeOffset(_pickupDate, TimeSpan.Zero);
+            // Convert local date to DateTimeOffset properly
+            _newLoad.PickupDate = new DateTimeOffset(_pickupDate.Year, _pickupDate.Month, _pickupDate.Day, 0, 0, 0, TimeSpan.Zero);
             
             // Set default coordinates based on location (in production, use geocoding API)
             // Using approximate coordinates for Eswatini/South Africa region
@@ -625,6 +639,8 @@
             _showLoadForm = false;
             
             await LoadDataAsync();
+            await LoadNotificationsAsync();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -633,6 +649,7 @@
         finally
         {
             _isPosting = false;
+            StateHasChanged();
         }
     }
 
