@@ -1,0 +1,124 @@
+@page "/booking/truck/{truckId:guid}"
+@page "/booking/load/{loadId:guid}"
+@using Microsoft.AspNetCore.Mvc
+@attribute [IgnoreAntiforgeryToken]
+
+@using Microsoft.AspNetCore.Components
+@using t12Project.Models
+@inject ApplicationDbContext Context
+
+<PageTitle>Booking Form - LoadHitch</PageTitle>
+
+<section class="min-h-screen flex items-center justify-center bg-slate-50 py-16">
+    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 shadow">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-hitchGreen">Booking</p>
+        <h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">Booking Form</h1>
+        <p class="mt-4 text-slate-500">Complete your booking below.</p>
+
+        <!-- Success / Error banners -->
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="mb-6 flex justify-between items-center rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">
+                <span>@successMessage</span>
+                <button type="button" class="text-xs text-teal-700 hover:underline" @onclick="ClearMessages">Dismiss</button>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="mb-6 flex justify-between items-center rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                <span>@errorMessage</span>
+                <button type="button" class="text-xs text-red-700 hover:underline" @onclick="ClearMessages">Dismiss</button>
+            </div>
+        }
+
+        @if (truck != null)
+        {
+            <div class="mt-6 text-left">
+                <h3 class="text-lg font-semibold mb-2">Truck Booking</h3>
+                <p class="mb-1">Booking Truck: <strong>@truck.Name</strong></p>
+                <p class="text-slate-600">
+                    Equipment: @truck.EquipmentType | Capacity: @truck.CapacityLbs lbs | Active: @(truck.IsActive ? "Yes" : "No")
+                </p>
+            </div>
+        }
+        else if (load != null)
+        {
+            <div class="mt-6 text-left">
+                <h3 class="text-lg font-semibold mb-2">Load Booking</h3>
+                <p class="mb-1">Booking Load: <strong>@load.Title</strong></p>
+                <p class="text-slate-600">
+                    Pickup: @load.PickupLocation → Dropoff: @load.DropoffLocation | Status: @load.Status
+                </p>
+            </div>
+        }
+
+        <!-- Placeholder form fields -->
+        <div class="mt-8 text-left space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700">Pickup Date</label>
+                <input type="date" class="border rounded px-2 py-1 w-full" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700">Dropoff Date</label>
+                <input type="date" class="border rounded px-2 py-1 w-full" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700">Notes</label>
+                <textarea class="border rounded px-2 py-1 w-full"></textarea>
+            </div>
+
+            <!-- Button just triggers banner -->
+            <button type="button"
+                    class="bg-hitchBlue text-white px-6 py-2 rounded hover:bg-hitchOrange transition disabled:bg-slate-300 disabled:cursor-not-allowed"
+                    @onclick="ShowSuccessBanner"
+                    disabled="@isProcessing">
+                @(isProcessing ? "Saving..." : "Confirm Booking")
+            </button>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public Guid? truckId { get; set; }
+    [Parameter] public Guid? loadId { get; set; }
+
+    private Truck? truck;
+    private Load? load;
+
+    private string? successMessage;
+    private string? errorMessage;
+    private bool isProcessing;
+
+    protected override void OnInitialized()
+    {
+        if (truckId != null)
+        {
+            truck = Context.Trucks.FirstOrDefault(t => t.Id == truckId);
+        }
+        else if (loadId != null)
+        {
+            load = Context.Loads.FirstOrDefault(l => l.Id == loadId);
+        }
+    }
+
+    private async Task ShowSuccessBanner()
+    {
+        ClearMessages();
+        isProcessing = true;
+
+        // Simulate a short delay to mimic saving
+        await Task.Delay(1000);
+
+        successMessage = "Booking confirmed successfully! (placeholder)";
+        errorMessage = null;
+        isProcessing = false;
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = null;
+        errorMessage = null;
+    }
+}

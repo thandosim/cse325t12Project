@@ -15,8 +15,9 @@
         Title="Driver dashboard"
         Subtitle="Browse available loads below." />
 
-    <!-- Table shows string-based load data -->
-    <DashboardTable Headers="loadHeaders" Items="loadItems" />
+    <!-- Table now supports row click -->
+    <DashboardTable Headers="loadHeaders" Items="loadItems" BaseUrl="/booking/load" />
+
 
     <!-- MapView now uses tuple-based pins -->
     <MapView Loads="loadPins" UserLocation="driverLocation" />
@@ -24,6 +25,7 @@
 
 @code {
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
+    [Inject] private NavigationManager NavManager { get; set; } = default!;
 
     private List<string> loadHeaders = new() { "Load ID", "Pickup", "Dropoff", "Status", "Description" };
     private List<List<string>> loadItems = new();
@@ -32,7 +34,6 @@
 
     protected override void OnInitialized()
     {
-        // Query loads
         var loads = Context.Loads
             .Select(l => new
             {
@@ -46,7 +47,6 @@
             })
             .ToList();
 
-        // Populate table rows
         loadItems = loads
             .Select(l => new List<string>
             {
@@ -58,7 +58,6 @@
             })
             .ToList();
 
-        // Map pins from CustomerLocationUpdates (instead of placeholders)
         var customerPins = Context.CustomerLocationUpdates
             .OrderByDescending(c => c.ReportedAt)
             .ToList();
@@ -67,18 +66,18 @@
             .Select(c => ((double)c.Latitude, (double)c.Longitude, $"Customer {c.CustomerId} - {c.Notes ?? "Load"}"))
             .ToList();
 
-        // Driver’s latest location from LocationUpdates
         var driverUpdate = Context.LocationUpdates
             .OrderByDescending(u => u.ReportedAt)
             .FirstOrDefault();
 
-        if (driverUpdate != null)
-        {
-            driverLocation = ((double)driverUpdate.Latitude, (double)driverUpdate.Longitude);
-        }
-        else
-        {
-            driverLocation = (-26.320, 31.150); // fallback coords
-        }
+        driverLocation = driverUpdate != null
+            ? ((double)driverUpdate.Latitude, (double)driverUpdate.Longitude)
+            : (-26.320, 31.150);
+    }
+
+    private void HandleLoadClick(List<string> row)
+    {
+        var loadId = row[0]; // first cell is Load ID
+        NavManager.NavigateTo($"/booking/load/{loadId}");
     }
 }
