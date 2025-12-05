@@ -132,6 +132,7 @@ builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
 builder.Services.AddScoped<AuthClient>();
+builder.Services.AddScoped<NotificationService>();
 
 var app = builder.Build();
 

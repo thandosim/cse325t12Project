@@ -1,69 +1,664 @@
 @page "/dashboard/customer"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
 @using t12Project.Components.Shared
 @using t12Project.Models
-@attribute [Authorize (Roles = "Customer")]
+@using t12Project.Services
+@attribute [Authorize(Roles = "Customer")]
 
 <PageTitle>Customer Dashboard - LoadHitch</PageTitle>
 
 <DashboardLayout>
     <DashboardHeader 
         Label="Customer area" 
-        LabelColor="text-hitchOrange"
-        Title="Customer dashboard"
-        Subtitle="Browse available trucks below." />
+        LabelColor="text-amber-600"
+        Title="Customer Dashboard"
+        Subtitle="Post loads and find available drivers for your shipments.">
+        <ActionContent>
+            <button type="button" 
+                    class="inline-flex items-center gap-2 rounded-full bg-teal-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
+                    @onclick="ToggleLoadForm">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Post New Load
+            </button>
+            <a href="/account/profile" class="inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Profile
+            </a>
+        </ActionContent>
+    </DashboardHeader>
 
-    <!-- Table now supports row click -->
-    <DashboardTable Headers="truckHeaders" Items="truckItems" BaseUrl="/booking/truck" />
+    <!-- Success/Error Messages -->
+    @if (!string.IsNullOrWhiteSpace(_successMessage))
+    {
+        <div class="mb-6 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800 flex items-center justify-between">
+            <span>@_successMessage</span>
+            <button type="button" class="text-green-600 hover:text-green-800" @onclick="() => _successMessage = null">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    }
 
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800 flex items-center justify-between">
+            <span>@_errorMessage</span>
+            <button type="button" class="text-red-600 hover:text-red-800" @onclick="() => _errorMessage = null">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    }
 
-    <!-- MapView now uses tuple-based pins -->
-    <MapView Trucks="truckPins" UserLocation="customerLocation" />
+    <!-- Post Load Form (Collapsible) -->
+    @if (_showLoadForm)
+    {
+        <div class="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-slate-900">Post a New Load</h3>
+                <button type="button" class="text-slate-400 hover:text-slate-600" @onclick="ToggleLoadForm">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <EditForm Model="_newLoad" OnSubmit="HandleLoadFormSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="mb-4 text-sm text-red-600" />
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Load Title</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   placeholder="e.g., Electronics shipment to Johannesburg"
+                                   @bind-Value="_newLoad.Title" />
+                        <ValidationMessage For="@(() => _newLoad.Title)" class="mt-1 text-xs text-red-600" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Cargo Type</label>
+                        <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                     @bind-Value="_newLoad.CargoType">
+                            <option value="General">General</option>
+                            <option value="Fragile">Fragile</option>
+                            <option value="Perishable">Perishable</option>
+                            <option value="Hazardous">Hazardous</option>
+                            <option value="Liquid">Liquid</option>
+                            <option value="Flatbed">Flatbed</option>
+                            <option value="Refrigerated">Refrigerated</option>
+                        </InputSelect>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Pickup Location</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   placeholder="e.g., Mbabane, Eswatini"
+                                   @bind-Value="_newLoad.PickupLocation" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Dropoff Location</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   placeholder="e.g., Johannesburg, South Africa"
+                                   @bind-Value="_newLoad.DropoffLocation" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Pickup Date</label>
+                        <InputDate class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   @bind-Value="_pickupDate" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Weight (lbs)</label>
+                        <InputNumber class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                     placeholder="e.g., 5000"
+                                     @bind-Value="_newLoad.WeightLbs" />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
+                        <InputTextArea class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                       rows="3"
+                                       placeholder="Describe the cargo, any special handling requirements, etc."
+                                       @bind-Value="_newLoad.Description" />
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" 
+                            class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                            @onclick="ToggleLoadForm">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="rounded-full bg-teal-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+                            disabled="@_isPosting">
+                        @(_isPosting ? "Posting..." : "Post Load")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-teal-100 p-2.5">
+                    <svg class="h-5 w-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">My Loads</p>
+                    <p class="text-2xl font-bold text-slate-900">@_myLoads.Count</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-green-100 p-2.5">
+                    <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">Available</p>
+                    <p class="text-2xl font-bold text-slate-900">@_myLoads.Count(l => l.Status == "Available")</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-blue-100 p-2.5">
+                    <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">In Transit</p>
+                    <p class="text-2xl font-bold text-slate-900">@_myLoads.Count(l => l.Status == "InTransit")</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-amber-100 p-2.5">
+                    <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">Available Drivers</p>
+                    <p class="text-2xl font-bold text-slate-900">@_availableDrivers.Count</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    @if (_notifications.Any())
+    {
+        <div class="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    Notifications (@_notifications.Count unread)
+                </h3>
+                <button type="button" 
+                        class="text-xs text-amber-700 hover:text-amber-900 underline"
+                        @onclick="MarkAllNotificationsAsRead">
+                    Mark all as read
+                </button>
+            </div>
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+                @foreach (var notification in _notifications.Take(5))
+                {
+                    <div class="flex items-start gap-3 p-2 rounded-lg bg-white/50 text-sm">
+                        <div class="flex-1">
+                            <p class="font-medium text-slate-900">@notification.Title</p>
+                            <p class="text-slate-600">@notification.Message</p>
+                            <p class="text-xs text-slate-400 mt-1">@HumanizeDate(notification.CreatedAt)</p>
+                        </div>
+                        <button type="button" 
+                                class="text-slate-400 hover:text-slate-600"
+                                @onclick="() => MarkNotificationAsRead(notification.Id)">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-slate-200">
+        <nav class="flex gap-6" aria-label="Tabs">
+            <button type="button" 
+                    class="@GetTabClass("loads")" 
+                    @onclick="@(() => SetActiveTab("loads"))">
+                My Loads
+            </button>
+            <button type="button" 
+                    class="@GetTabClass("drivers")" 
+                    @onclick="@(() => SetActiveTab("drivers"))">
+                Available Drivers
+            </button>
+            <button type="button" 
+                    class="@GetTabClass("notifications")" 
+                    @onclick="@(() => SetActiveTab("notifications"))">
+                All Notifications
+                @if (_allNotifications.Any(n => !n.IsRead))
+                {
+                    <span class="ml-2 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                        @_allNotifications.Count(n => !n.IsRead)
+                    </span>
+                }
+            </button>
+        </nav>
+    </div>
+
+    <!-- My Loads Tab -->
+    @if (_activeTab == "loads")
+    {
+        <DashboardTable 
+            Headers="loadHeaders" 
+            Items="loadItems" 
+            BaseUrl="/booking/load"
+            TableTitle="My Posted Loads"
+            TableSubtitle="Track the status of your shipments"
+            EmptyMessage="You haven't posted any loads yet. Click 'Post New Load' to get started." />
+    }
+
+    <!-- Available Drivers Tab -->
+    @if (_activeTab == "drivers")
+    {
+        <DashboardTable 
+            Headers="driverHeaders" 
+            Items="driverItems" 
+            BaseUrl="/booking/truck"
+            TableTitle="Available Drivers"
+            TableSubtitle="Browse drivers who can transport your loads"
+            EmptyMessage="No drivers are currently available. Check back later." />
+    }
+
+    <!-- All Notifications Tab -->
+    @if (_activeTab == "notifications")
+    {
+        <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-slate-900">All Notifications</h3>
+                    <p class="text-sm text-slate-500">View all your notifications and updates</p>
+                </div>
+                @if (_allNotifications.Any(n => !n.IsRead))
+                {
+                    <button type="button" 
+                            class="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                            @onclick="MarkAllNotificationsAsRead">
+                        Mark all as read
+                    </button>
+                }
+            </div>
+            @if (_allNotifications.Any())
+            {
+                <div class="divide-y divide-slate-100">
+                    @foreach (var notification in _allNotifications)
+                    {
+                        <div class="@(notification.IsRead ? "bg-white" : "bg-blue-50") px-6 py-4 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 rounded-full p-2 @GetNotificationIconClass(notification.Type)">
+                                    @GetNotificationIcon(notification.Type)
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <p class="font-medium text-slate-900">@notification.Title</p>
+                                        @if (!notification.IsRead)
+                                        {
+                                            <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">New</span>
+                                        }
+                                    </div>
+                                    <p class="text-sm text-slate-600 mt-1">@notification.Message</p>
+                                    <p class="text-xs text-slate-400 mt-2">@HumanizeDate(notification.CreatedAt)</p>
+                                </div>
+                                @if (!notification.IsRead)
+                                {
+                                    <button type="button" 
+                                            class="text-slate-400 hover:text-slate-600"
+                                            @onclick="() => MarkNotificationAsRead(notification.Id)">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="px-6 py-12 text-center text-slate-500">
+                    <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <p class="font-medium">No notifications yet</p>
+                    <p class="text-sm">You'll receive notifications when drivers interact with your loads.</p>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Map Section -->
+    <div class="mt-8">
+        <h3 class="text-lg font-semibold text-slate-900 mb-4">
+            @(_activeTab == "loads" ? "Your Loads on Map" : "Available Drivers Near You")
+        </h3>
+        <MapView Trucks="driverPins" 
+                 Loads="loadPins" 
+                 UserLocation="customerLocation" 
+                 AutoGetLocation="true"
+                 ShowLocationInfo="true"
+                 OnLocationChanged="HandleLocationChanged" />
+    </div>
 </DashboardLayout>
 
 @code {
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
     [Inject] private NavigationManager NavManager { get; set; } = default!;
+    [Inject] private NotificationService NotificationService { get; set; } = default!;
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
-    private List<string> truckHeaders = new() { "Truck ID", "Name", "Equipment Type", "Capacity (lbs)", "Active" };
-    private List<List<string>> truckItems = new();
-    private List<(double lat, double lng, string label)> truckPins = new();
+    private string _activeTab = "loads";
+    private bool _showLoadForm = false;
+    private bool _isPosting = false;
+    private string? _successMessage;
+    private string? _errorMessage;
+    private string _currentUserId = string.Empty;
+    private DateTime _pickupDate = DateTime.Today.AddDays(1);
+
+    private Load _newLoad = new();
+    private List<Load> _myLoads = new();
+    private List<dynamic> _availableDrivers = new();
+    private List<Notification> _notifications = new();
+    private List<Notification> _allNotifications = new();
+
+    // Table data
+    private List<string> loadHeaders = new() { "Load ID", "Title", "Pickup", "Dropoff", "Status" };
+    private List<List<string>> loadItems = new();
+    private List<string> driverHeaders = new() { "Driver ID", "Name", "Equipment", "Capacity", "Status" };
+    private List<List<string>> driverItems = new();
+
+    // Map pins
+    private List<(double lat, double lng, string label)> driverPins = new();
+    private List<(double lat, double lng, string label)> loadPins = new();
     private (double lat, double lng) customerLocation = (-26.305, 31.136);
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var trucks = Context.Trucks
-            .Select(t => new
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await LoadDataAsync();
+        await LoadNotificationsAsync();
+    }
+
+    private async Task LoadNotificationsAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId)) return;
+        
+        _notifications = await NotificationService.GetUnreadNotificationsAsync(_currentUserId);
+        _allNotifications = await NotificationService.GetNotificationsAsync(_currentUserId, 50);
+    }
+
+    private async Task MarkNotificationAsRead(Guid notificationId)
+    {
+        await NotificationService.MarkAsReadAsync(notificationId);
+        await LoadNotificationsAsync();
+        StateHasChanged();
+    }
+
+    private async Task MarkAllNotificationsAsRead()
+    {
+        await NotificationService.MarkAllAsReadAsync(_currentUserId);
+        await LoadNotificationsAsync();
+        StateHasChanged();
+    }
+
+    private string HumanizeDate(DateTimeOffset date)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var diff = now - date;
+        
+        if (diff.TotalMinutes < 1) return "Just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+        return date.ToString("MMM d, yyyy");
+    }
+
+    private string GetNotificationIconClass(string type) => type switch
+    {
+        "LoadPosted" => "bg-teal-100 text-teal-600",
+        "BookingRequest" => "bg-amber-100 text-amber-600",
+        "BookingConfirmed" => "bg-green-100 text-green-600",
+        "LoadBooked" => "bg-blue-100 text-blue-600",
+        _ => "bg-slate-100 text-slate-600"
+    };
+
+    private MarkupString GetNotificationIcon(string type) => type switch
+    {
+        "LoadPosted" => new MarkupString("<svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4\" /></svg>"),
+        "BookingRequest" => new MarkupString("<svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\" /></svg>"),
+        "BookingConfirmed" => new MarkupString("<svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\" /></svg>"),
+        "LoadBooked" => new MarkupString("<svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4\" /></svg>"),
+        _ => new MarkupString("<svg class=\"h-5 w-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9\" /></svg>")
+    };
+
+    private async Task LoadDataAsync()
+    {
+        // Load customer's own loads
+        _myLoads = await Context.Loads
+            .Where(l => l.CustomerId == _currentUserId)
+            .OrderByDescending(l => l.CreatedAt)
+            .ToListAsync();
+
+        loadItems = _myLoads
+            .Select(l => new List<string>
             {
-                t.Id,
-                t.Name,
-                t.EquipmentType,
-                t.CapacityLbs,
-                t.IsActive
+                l.Id.ToString(),
+                l.Title,
+                l.PickupLocation,
+                l.DropoffLocation,
+                l.Status
             })
             .ToList();
 
-        truckItems = trucks
+        // Load available drivers (trucks with active status and recent location)
+        var trucks = await Context.Trucks
+            .Include(t => t.Driver)
+            .Where(t => t.IsActive)
+            .ToListAsync();
+
+        // Get latest locations for drivers
+        var driverLocations = await Context.LocationUpdates
+            .GroupBy(l => l.DriverId)
+            .Select(g => g.OrderByDescending(l => l.ReportedAt).First())
+            .ToListAsync();
+
+        _availableDrivers = trucks.Select(t => new 
+        {
+            t.Id,
+            t.Name,
+            t.EquipmentType,
+            t.CapacityLbs,
+            t.IsActive,
+            t.DriverId,
+            DriverName = t.Driver?.FullName ?? "Unknown"
+        }).ToList<dynamic>();
+
+        driverItems = trucks
             .Select(t => new List<string>
             {
                 t.Id.ToString(),
-                t.Name,
+                t.Driver?.FullName ?? t.Name,
                 t.EquipmentType,
-                t.CapacityLbs.ToString("N0"),
-                t.IsActive ? "Yes" : "No"
+                t.CapacityLbs.ToString("N0") + " lbs",
+                t.IsActive ? "Available" : "Unavailable"
             })
             .ToList();
 
-        truckPins = trucks
-            .Select(t => (-26.320, 31.150, $"Truck {t.Name} - {(t.IsActive ? "Active" : "Inactive")}"))
+        // Build map pins for drivers
+        driverPins = driverLocations
+            .Select(loc => ((double)loc.Latitude, (double)loc.Longitude, $"Driver - {loc.Notes ?? "Available"}"))
             .ToList();
+
+        // Build map pins for customer's loads
+        loadPins = _myLoads
+            .Where(l => l.PickupLatitude != 0 && l.PickupLongitude != 0)
+            .Select(l => ((double)l.PickupLatitude, (double)l.PickupLongitude, $"{l.Title} - {l.Status}"))
+            .ToList();
+
+        // If no coordinates, use default location for demonstration
+        if (!loadPins.Any() && _myLoads.Any())
+        {
+            loadPins = _myLoads.Select((l, i) => 
+                (-26.305 + (i * 0.01), 31.136 + (i * 0.01), $"{l.Title} - {l.Status}")).ToList();
+        }
+
+        // Get customer's location from their updates
+        var customerLoc = await Context.CustomerLocationUpdates
+            .Where(c => c.CustomerId == _currentUserId)
+            .OrderByDescending(c => c.ReportedAt)
+            .FirstOrDefaultAsync();
+
+        if (customerLoc != null)
+        {
+            customerLocation = ((double)customerLoc.Latitude, (double)customerLoc.Longitude);
+        }
     }
 
-    private void HandleTruckClick(List<string> row)
+    private string GetTabClass(string tabName)
     {
-        var truckId = row[0]; // first cell is Truck ID
-        NavManager.NavigateTo($"/booking/truck/{truckId}");
+        var baseClass = "whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors";
+        if (_activeTab == tabName)
+        {
+            return $"border-teal-600 text-teal-600 {baseClass}";
+        }
+        return $"border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 {baseClass}";
+    }
+
+    private void SetActiveTab(string tabName)
+    {
+        _activeTab = tabName;
+    }
+
+    private void ToggleLoadForm()
+    {
+        _showLoadForm = !_showLoadForm;
+        if (_showLoadForm)
+        {
+            _newLoad = new Load();
+            _pickupDate = DateTime.Today.AddDays(1);
+            _errorMessage = null;
+            _successMessage = null;
+        }
+    }
+
+    private async Task HandleLoadFormSubmit(EditContext editContext)
+    {
+        _errorMessage = null;
+        _successMessage = null;
+
+        if (!editContext.Validate())
+        {
+            _errorMessage = "Please fill in all required fields (Load Title is required).";
+            StateHasChanged();
+            return;
+        }
+
+        await PostLoadAsync();
+    }
+
+    private async Task PostLoadAsync()
+    {
+        _isPosting = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            _newLoad.CustomerId = _currentUserId;
+            _newLoad.Status = "Available";
+            _newLoad.PickupDate = new DateTimeOffset(_pickupDate, TimeSpan.Zero);
+            
+            // Set default coordinates based on location (in production, use geocoding API)
+            // Using approximate coordinates for Eswatini/South Africa region
+            _newLoad.PickupLatitude = -26.305m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            _newLoad.PickupLongitude = 31.136m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            _newLoad.DropoffLatitude = -26.200m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            _newLoad.DropoffLongitude = 28.040m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+
+            Context.Loads.Add(_newLoad);
+            await Context.SaveChangesAsync();
+
+            // Notify all drivers about the new load
+            await NotificationService.NotifyDriversOfNewLoadAsync(_newLoad);
+
+            _successMessage = $"Load '{_newLoad.Title}' posted successfully! Drivers have been notified.";
+            _showLoadForm = false;
+            
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to post load: {ex.Message}";
+        }
+        finally
+        {
+            _isPosting = false;
+        }
+    }
+
+    private async Task HandleLocationChanged((double lat, double lng) location)
+    {
+        // Update the customer's location in the database
+        try
+        {
+            var locationUpdate = new CustomerLocationUpdate
+            {
+                CustomerId = _currentUserId,
+                Latitude = (decimal)location.lat,
+                Longitude = (decimal)location.lng,
+                Notes = "Location from browser geolocation"
+            };
+
+            Context.CustomerLocationUpdates.Add(locationUpdate);
+            await Context.SaveChangesAsync();
+
+            // Update the local variable
+            customerLocation = location;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to save location: {ex.Message}");
+        }
     }
 }

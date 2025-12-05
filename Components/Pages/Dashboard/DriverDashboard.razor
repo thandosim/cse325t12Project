@@ -1,83 +1,585 @@
 @page "/dashboard/driver"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
 @using t12Project.Components.Shared
 @using t12Project.Models
-@attribute [Authorize (Roles = "Driver")]
+@using t12Project.Services
+@attribute [Authorize(Roles = "Driver")]
 
 <PageTitle>Driver Dashboard - LoadHitch</PageTitle>
 
 <DashboardLayout>
     <DashboardHeader 
         Label="Driver area" 
-        LabelColor="text-hitchBlue"
-        Title="Driver dashboard"
-        Subtitle="Browse available loads below." />
+        LabelColor="text-teal-600"
+        Title="Driver Dashboard"
+        Subtitle="Find loads and manage your routes and availability.">
+        <ActionContent>
+            <button type="button" 
+                    class="inline-flex items-center gap-2 rounded-full bg-teal-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
+                    @onclick="ToggleRouteForm">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Post Route
+            </button>
+            @if (_notifications.Any())
+            {
+                <button type="button" 
+                        class="relative inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-5 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                        @onclick="ToggleNotifications">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">@_unreadCount</span>
+                </button>
+            }
+            <a href="/account/profile" class="inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Profile
+            </a>
+        </ActionContent>
+    </DashboardHeader>
 
-    <!-- Table now supports row click -->
-    <DashboardTable Headers="loadHeaders" Items="loadItems" BaseUrl="/booking/load" />
+    <!-- Notifications Panel -->
+    @if (_showNotifications && _notifications.Any())
+    {
+        <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-amber-800">New Notifications</h3>
+                <div class="flex gap-2">
+                    <button type="button" 
+                            class="text-sm text-amber-600 hover:text-amber-800"
+                            @onclick="MarkAllAsReadAsync">
+                        Mark all as read
+                    </button>
+                    <button type="button" class="text-amber-400 hover:text-amber-600" @onclick="ToggleNotifications">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+                @foreach (var notification in _notifications.Take(5))
+                {
+                    <div class="flex items-start gap-3 rounded-lg bg-white p-3 border border-amber-100">
+                        <div class="rounded-full bg-teal-100 p-2">
+                            <svg class="h-4 w-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-slate-900">@notification.Title</p>
+                            <p class="text-xs text-slate-600 mt-0.5">@notification.Message</p>
+                            <p class="text-xs text-slate-400 mt-1">@HumanizeDate(notification.CreatedAt)</p>
+                        </div>
+                        @if (notification.RelatedEntityId.HasValue)
+                        {
+                            <a href="/booking/load/@notification.RelatedEntityId" 
+                               class="text-xs text-teal-600 hover:text-teal-800 font-medium">
+                                View
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
+    <!-- Success/Error Messages -->
+    @if (!string.IsNullOrWhiteSpace(_successMessage))
+    {
+        <div class="mb-6 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800 flex items-center justify-between">
+            <span>@_successMessage</span>
+            <button type="button" class="text-green-600 hover:text-green-800" @onclick="() => _successMessage = null">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    }
 
-    <!-- MapView now uses tuple-based pins -->
-    <MapView Loads="loadPins" UserLocation="driverLocation" />
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800 flex items-center justify-between">
+            <span>@_errorMessage</span>
+            <button type="button" class="text-red-600 hover:text-red-800" @onclick="() => _errorMessage = null">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    }
+
+    <!-- Post Route/Availability Form -->
+    @if (_showRouteForm)
+    {
+        <div class="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-slate-900">Post Your Route & Availability</h3>
+                <button type="button" class="text-slate-400 hover:text-slate-600" @onclick="ToggleRouteForm">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <EditForm Model="_newRoute" OnValidSubmit="PostRouteAsync">
+                <DataAnnotationsValidator />
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Starting Location</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   placeholder="e.g., Mbabane, Eswatini"
+                                   @bind-Value="_newRoute.StartLocation" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Destination</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   placeholder="e.g., Johannesburg, South Africa"
+                                   @bind-Value="_newRoute.EndLocation" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Available From</label>
+                        <InputDate class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   @bind-Value="_availableFrom" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Available To</label>
+                        <InputDate class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                   @bind-Value="_availableTo" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Equipment Type</label>
+                        <InputSelect class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                     @bind-Value="_newRoute.EquipmentType">
+                            <option value="General">General</option>
+                            <option value="Flatbed">Flatbed</option>
+                            <option value="Refrigerated">Refrigerated</option>
+                            <option value="Tanker">Tanker</option>
+                            <option value="Box Truck">Box Truck</option>
+                            <option value="Van">Van</option>
+                        </InputSelect>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Max Weight (lbs)</label>
+                        <InputNumber class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                     placeholder="e.g., 10000"
+                                     @bind-Value="_newRoute.MaxWeightLbs" />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Notes (optional)</label>
+                        <InputTextArea class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                                       rows="2"
+                                       placeholder="Any additional information about your route or truck"
+                                       @bind-Value="_newRoute.Notes" />
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" 
+                            class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                            @onclick="ToggleRouteForm">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="rounded-full bg-teal-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+                            disabled="@_isPosting">
+                        @(_isPosting ? "Posting..." : "Post Route")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-teal-100 p-2.5">
+                    <svg class="h-5 w-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">Available Loads</p>
+                    <p class="text-2xl font-bold text-slate-900">@_availableLoads.Count</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-blue-100 p-2.5">
+                    <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">My Routes</p>
+                    <p class="text-2xl font-bold text-slate-900">@_myRoutes.Count</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-green-100 p-2.5">
+                    <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">Completed Trips</p>
+                    <p class="text-2xl font-bold text-slate-900">@_completedBookings</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="flex items-center gap-3">
+                <div class="rounded-lg bg-amber-100 p-2.5">
+                    <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-600">New Loads</p>
+                    <p class="text-2xl font-bold text-slate-900">@_unreadCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-slate-200">
+        <nav class="flex gap-6" aria-label="Tabs">
+            <button type="button" 
+                    class="@GetTabClass("loads")" 
+                    @onclick="@(() => SetActiveTab("loads"))">
+                Available Loads
+            </button>
+            <button type="button" 
+                    class="@GetTabClass("routes")" 
+                    @onclick="@(() => SetActiveTab("routes"))">
+                My Routes
+            </button>
+            <button type="button" 
+                    class="@GetTabClass("bookings")" 
+                    @onclick="@(() => SetActiveTab("bookings"))">
+                My Bookings
+            </button>
+        </nav>
+    </div>
+
+    <!-- Available Loads Tab -->
+    @if (_activeTab == "loads")
+    {
+        <DashboardTable 
+            Headers="loadHeaders" 
+            Items="loadItems" 
+            BaseUrl="/booking/load"
+            TableTitle="Available Loads"
+            TableSubtitle="Browse loads that need transport"
+            EmptyMessage="No loads are currently available. Check back later." />
+    }
+
+    <!-- My Routes Tab -->
+    @if (_activeTab == "routes")
+    {
+        <DashboardTable 
+            Headers="routeHeaders" 
+            Items="routeItems" 
+            TableTitle="My Posted Routes"
+            TableSubtitle="Routes where you're available for loads"
+            EmptyMessage="You haven't posted any routes yet. Click 'Post Route' to get started." />
+    }
+
+    <!-- My Bookings Tab -->
+    @if (_activeTab == "bookings")
+    {
+        <DashboardTable 
+            Headers="bookingHeaders" 
+            Items="bookingItems" 
+            BaseUrl="/booking/load"
+            TableTitle="My Bookings"
+            TableSubtitle="Loads you've accepted or are transporting"
+            EmptyMessage="You don't have any bookings yet. Browse available loads to get started." />
+    }
+
+    <!-- Map Section -->
+    <div class="mt-8">
+        <h3 class="text-lg font-semibold text-slate-900 mb-4">Available Loads Near You</h3>
+        <MapView Loads="loadPins" 
+                 UserLocation="driverLocation"
+                 AutoGetLocation="true"
+                 ShowLocationInfo="true"
+                 OnLocationChanged="HandleLocationChanged" />
+    </div>
 </DashboardLayout>
 
 @code {
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
     [Inject] private NavigationManager NavManager { get; set; } = default!;
+    [Inject] private NotificationService NotificationService { get; set; } = default!;
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
-    private List<string> loadHeaders = new() { "Load ID", "Pickup", "Dropoff", "Status", "Description" };
+    private string _activeTab = "loads";
+    private bool _showRouteForm = false;
+    private bool _showNotifications = false;
+    private bool _isPosting = false;
+    private string? _successMessage;
+    private string? _errorMessage;
+    private string _currentUserId = string.Empty;
+    private int _unreadCount = 0;
+    private int _completedBookings = 0;
+
+    private DateTime _availableFrom = DateTime.Today;
+    private DateTime _availableTo = DateTime.Today.AddDays(7);
+
+    private DriverRoute _newRoute = new();
+    private List<Load> _availableLoads = new();
+    private List<DriverRoute> _myRoutes = new();
+    private List<Booking> _myBookings = new();
+    private List<Notification> _notifications = new();
+
+    // Table data
+    private List<string> loadHeaders = new() { "Load ID", "Title", "Pickup", "Dropoff", "Weight", "Status" };
     private List<List<string>> loadItems = new();
+    private List<string> routeHeaders = new() { "Route ID", "From", "To", "Available From", "Equipment", "Status" };
+    private List<List<string>> routeItems = new();
+    private List<string> bookingHeaders = new() { "Booking ID", "Load", "Pickup", "Dropoff", "Status" };
+    private List<List<string>> bookingItems = new();
+
+    // Map pins
     private List<(double lat, double lng, string label)> loadPins = new();
-    private (double lat, double lng) driverLocation;
+    private (double lat, double lng) driverLocation = (-26.320, 31.150);
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var loads = Context.Loads
-            .Select(l => new
-            {
-                l.Id,
-                l.PickupLocation,
-                l.DropoffLocation,
-                l.Status,
-                l.Description,
-                l.Title,
-                l.CustomerId
-            })
-            .ToList();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-        loadItems = loads
+        await LoadDataAsync();
+        await LoadNotificationsAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        // Load available loads (not yet booked)
+        _availableLoads = await Context.Loads
+            .Where(l => l.Status == "Available")
+            .OrderByDescending(l => l.CreatedAt)
+            .ToListAsync();
+
+        loadItems = _availableLoads
             .Select(l => new List<string>
             {
                 l.Id.ToString(),
+                l.Title,
                 l.PickupLocation,
                 l.DropoffLocation,
-                l.Status,
-                l.Description
+                l.WeightLbs.ToString("N0") + " lbs",
+                l.Status
             })
             .ToList();
 
-        var customerPins = Context.CustomerLocationUpdates
-            .OrderByDescending(c => c.ReportedAt)
+        // Build map pins for available loads
+        loadPins = _availableLoads
+            .Select((l, i) => 
+            {
+                // Use actual coordinates if available, otherwise generate demo coordinates
+                var lat = l.PickupLatitude != 0 ? (double)l.PickupLatitude : -26.305 + (i * 0.02);
+                var lng = l.PickupLongitude != 0 ? (double)l.PickupLongitude : 31.136 + (i * 0.02);
+                return (lat, lng, $"{l.Title} - {l.PickupLocation}");
+            })
             .ToList();
 
-        loadPins = customerPins
-            .Select(c => ((double)c.Latitude, (double)c.Longitude, $"Customer {c.CustomerId} - {c.Notes ?? "Load"}"))
+        // Load driver's routes
+        _myRoutes = await Context.DriverRoutes
+            .Where(r => r.DriverId == _currentUserId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        routeItems = _myRoutes
+            .Select(r => new List<string>
+            {
+                r.Id.ToString(),
+                r.StartLocation,
+                r.EndLocation,
+                r.AvailableFrom.ToString("MMM dd"),
+                r.EquipmentType,
+                r.IsActive ? "Active" : "Inactive"
+            })
             .ToList();
 
-        var driverUpdate = Context.LocationUpdates
-            .OrderByDescending(u => u.ReportedAt)
-            .FirstOrDefault();
+        // Load driver's bookings
+        _myBookings = await Context.Bookings
+            .Include(b => b.Load)
+            .Where(b => b.DriverId == _currentUserId)
+            .OrderByDescending(b => b.CreatedAt)
+            .ToListAsync();
 
-        driverLocation = driverUpdate != null
-            ? ((double)driverUpdate.Latitude, (double)driverUpdate.Longitude)
-            : (-26.320, 31.150);
+        bookingItems = _myBookings
+            .Select(b => new List<string>
+            {
+                b.Id.ToString(),
+                b.Load?.Title ?? "Unknown",
+                b.Load?.PickupLocation ?? "",
+                b.Load?.DropoffLocation ?? "",
+                b.Status
+            })
+            .ToList();
+
+        _completedBookings = _myBookings.Count(b => b.Status == "Completed" || b.Status == "Delivered");
+
+        // Get driver's current location
+        var driverLoc = await Context.LocationUpdates
+            .Where(l => l.DriverId == _currentUserId)
+            .OrderByDescending(l => l.ReportedAt)
+            .FirstOrDefaultAsync();
+
+        if (driverLoc != null)
+        {
+            driverLocation = ((double)driverLoc.Latitude, (double)driverLoc.Longitude);
+        }
     }
 
-    private void HandleLoadClick(List<string> row)
+    private async Task LoadNotificationsAsync()
     {
-        var loadId = row[0]; // first cell is Load ID
-        NavManager.NavigateTo($"/booking/load/{loadId}");
+        _notifications = await NotificationService.GetUnreadNotificationsAsync(_currentUserId);
+        _unreadCount = _notifications.Count;
+    }
+
+    private void ToggleRouteForm()
+    {
+        _showRouteForm = !_showRouteForm;
+        if (_showRouteForm)
+        {
+            _newRoute = new DriverRoute();
+            _availableFrom = DateTime.Today;
+            _availableTo = DateTime.Today.AddDays(7);
+        }
+    }
+
+    private void ToggleNotifications()
+    {
+        _showNotifications = !_showNotifications;
+    }
+
+    private async Task MarkAllAsReadAsync()
+    {
+        await NotificationService.MarkAllAsReadAsync(_currentUserId);
+        _notifications.Clear();
+        _unreadCount = 0;
+        _showNotifications = false;
+    }
+
+    private string GetTabClass(string tabName)
+    {
+        var baseClass = "whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors";
+        if (_activeTab == tabName)
+        {
+            return $"border-teal-600 text-teal-600 {baseClass}";
+        }
+        return $"border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 {baseClass}";
+    }
+
+    private void SetActiveTab(string tabName)
+    {
+        _activeTab = tabName;
+    }
+
+    private async Task PostRouteAsync()
+    {
+        _isPosting = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            _newRoute.DriverId = _currentUserId;
+            _newRoute.IsActive = true;
+            _newRoute.AvailableFrom = new DateTimeOffset(_availableFrom, TimeSpan.Zero);
+            _newRoute.AvailableTo = new DateTimeOffset(_availableTo, TimeSpan.Zero);
+            
+            // Set default coordinates (in production, use geocoding API)
+            _newRoute.StartLatitude = -26.305m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            _newRoute.StartLongitude = 31.136m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            _newRoute.EndLatitude = -26.200m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            _newRoute.EndLongitude = 28.040m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+
+            // Also update the driver's location
+            var locationUpdate = new LocationUpdate
+            {
+                DriverId = _currentUserId,
+                Latitude = _newRoute.StartLatitude,
+                Longitude = _newRoute.StartLongitude,
+                Notes = $"Route: {_newRoute.StartLocation} → {_newRoute.EndLocation}"
+            };
+
+            Context.DriverRoutes.Add(_newRoute);
+            Context.LocationUpdates.Add(locationUpdate);
+            await Context.SaveChangesAsync();
+
+            _successMessage = $"Route from {_newRoute.StartLocation} to {_newRoute.EndLocation} posted successfully!";
+            _showRouteForm = false;
+            
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to post route: {ex.Message}";
+        }
+        finally
+        {
+            _isPosting = false;
+        }
+    }
+
+    private string HumanizeDate(DateTimeOffset date)
+    {
+        var span = DateTimeOffset.UtcNow - date;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return date.ToString("MMM dd");
+    }
+
+    private async Task HandleLocationChanged((double lat, double lng) location)
+    {
+        // Update the driver's location in the database
+        try
+        {
+            var locationUpdate = new LocationUpdate
+            {
+                DriverId = _currentUserId,
+                Latitude = (decimal)location.lat,
+                Longitude = (decimal)location.lng,
+                Notes = "Location from browser geolocation"
+            };
+
+            Context.LocationUpdates.Add(locationUpdate);
+            await Context.SaveChangesAsync();
+
+            // Update the local variable
+            driverLocation = location;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to save location: {ex.Message}");
+        }
     }
 }
