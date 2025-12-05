@@ -1,12 +1,13 @@
 @namespace t12Project.Components.Shared
 
-<section class="min-h-screen bg-slate-50 py-16">
-    <div class="mx-auto max-w-4xl rounded-3xl bg-white px-10 py-16 text-center shadow">
-        @ChildContent
+<section class="min-h-screen bg-slate-50 py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="rounded-2xl bg-white px-6 py-8 shadow-sm border border-slate-200 sm:px-10 sm:py-10">
+            @ChildContent
+        </div>
     </div>
 </section>
 
 @code {
-    // This allows you to inject any content inside the layout
-    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
 }

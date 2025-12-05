@@ -1,12 +1,28 @@
 @namespace t12Project.Components.Shared
 
-<p class="text-sm font-semibold uppercase tracking-[0.2em] @LabelColor">@Label</p>
-<h1 class="mt-4 text-4xl font-extrabold text-hitchBlue">@Title</h1>
-<p class="mt-4 text-slate-500">@Subtitle</p>
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-wider @LabelColor">@Label</p>
+            <h1 class="mt-2 text-3xl font-bold text-slate-900">@Title</h1>
+            @if (!string.IsNullOrEmpty(Subtitle))
+            {
+                <p class="mt-2 text-slate-600">@Subtitle</p>
+            }
+        </div>
+        @if (ActionContent != null)
+        {
+            <div class="flex gap-3">
+                @ActionContent
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     [Parameter] public string Label { get; set; } = string.Empty;
-    [Parameter] public string LabelColor { get; set; } = "text-hitchBlue";
+    [Parameter] public string LabelColor { get; set; } = "text-teal-600";
     [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ActionContent { get; set; }
 }

@@ -58,3 +58,11 @@ obj/
 
 node_modules/
 
+## Azure deployment files
+azure-deploy.md
+.github/
+deploy.zip
+publish.zip
+log.zip
+latestlogs/
+*.zip

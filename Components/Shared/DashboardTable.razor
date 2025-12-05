@@ -1,37 +1,115 @@
-<table class="min-w-full border-collapse border border-slate-300 rounded-lg shadow-sm">
-    <thead class="bg-slate-100">
-        <tr>
-            @foreach (var header in Headers)
+@namespace t12Project.Components.Shared
+
+<div class="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    @if (!string.IsNullOrEmpty(TableTitle))
+    {
+        <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+            <h3 class="text-lg font-semibold text-slate-900">@TableTitle</h3>
+            @if (!string.IsNullOrEmpty(TableSubtitle))
             {
-                <th class="px-4 py-2 text-left text-sm font-semibold text-slate-700">@header</th>
+                <p class="text-sm text-slate-600 mt-1">@TableSubtitle</p>
             }
-        </tr>
-    </thead>
-    <tbody>
-        @if (Items != null)
-        {
-            foreach (var row in Items)
-            {
-                <tr class="border-t border-slate-200 hover:bg-slate-50 cursor-pointer">
-                    @foreach (var cell in row)
+        </div>
+    }
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    @foreach (var header in Headers)
                     {
-                        <td class="px-4 py-2 text-sm text-slate-600">
-                            <a href="@($"{BaseUrl}/{row[0]}")" 
-                               class="block w-full h-full text-slate-600 hover:text-hitchOrange">
-                                @cell
-                            </a>
-                        </td>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-700">@header</th>
+                    }
+                    @if (!string.IsNullOrEmpty(BaseUrl) && ShowActionColumn)
+                    {
+                        <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-700">Action</th>
                     }
                 </tr>
-            }
-        }
-    </tbody>
-</table>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+                @if (Items == null || Items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="@(Headers.Count + (ShowActionColumn ? 1 : 0))" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <svg class="h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                                <p class="mt-2 text-sm text-slate-500">@EmptyMessage</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var row in Items)
+                    {
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            @for (int i = 0; i < row.Count; i++)
+                            {
+                                var cell = row[i];
+                                var isFirst = i == 0;
+                                var isStatus = Headers.Count > i && (Headers[i].ToLower().Contains("status") || Headers[i].ToLower().Contains("active"));
+                                
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (isStatus)
+                                    {
+                                        <span class="@GetStatusBadgeClass(cell)">@cell</span>
+                                    }
+                                    else if (isFirst)
+                                    {
+                                        <span class="text-sm font-medium text-slate-900">@cell</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm text-slate-600">@cell</span>
+                                    }
+                                </td>
+                            }
+                            @if (!string.IsNullOrEmpty(BaseUrl) && ShowActionColumn && row.Count > 0)
+                            {
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <a href="@($"{BaseUrl}/{row[0]}")" 
+                                       class="inline-flex items-center gap-1.5 rounded-full bg-teal-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-teal-700 transition-colors">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        @ActionButtonText
+                                    </a>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
 @code {
     [Parameter] public List<string> Headers { get; set; } = new();
     [Parameter] public List<List<string>> Items { get; set; } = new();
-
-    // Base URL for navigation (e.g. "/booking/truck" or "/booking/load")
     [Parameter] public string BaseUrl { get; set; } = string.Empty;
+    [Parameter] public string TableTitle { get; set; } = string.Empty;
+    [Parameter] public string TableSubtitle { get; set; } = string.Empty;
+    [Parameter] public string EmptyMessage { get; set; } = "No items found";
+    [Parameter] public bool ShowActionColumn { get; set; } = true;
+    [Parameter] public string ActionButtonText { get; set; } = "View";
+
+    private string GetStatusBadgeClass(string status)
+    {
+        var baseClass = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium";
+        
+        return status.ToLower() switch
+        {
+            "available" or "active" or "yes" or "open" => $"{baseClass} bg-green-100 text-green-800",
+            "booked" or "pending" or "requested" => $"{baseClass} bg-amber-100 text-amber-800",
+            "intransit" or "in transit" or "in-transit" => $"{baseClass} bg-blue-100 text-blue-800",
+            "delivered" or "completed" or "done" => $"{baseClass} bg-teal-100 text-teal-800",
+            "cancelled" or "inactive" or "no" or "closed" => $"{baseClass} bg-red-100 text-red-800",
+            "draft" => $"{baseClass} bg-slate-100 text-slate-800",
+            _ => $"{baseClass} bg-slate-100 text-slate-700"
+        };
+    }
 }

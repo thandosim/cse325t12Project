@@ -12,13 +12,19 @@ public class Load
     public string Title { get; set; } = string.Empty;
 
     [MaxLength(60)]
-    public string Status { get; set; } = "Draft";
+    public string Status { get; set; } = "Available"; // Available, Booked, InTransit, Delivered, Cancelled
 
     [MaxLength(256)]
     public string PickupLocation { get; set; } = string.Empty;
 
     [MaxLength(256)]
     public string DropoffLocation { get; set; } = string.Empty;
+
+    // GPS Coordinates for map display
+    public decimal PickupLatitude { get; set; }
+    public decimal PickupLongitude { get; set; }
+    public decimal DropoffLatitude { get; set; }
+    public decimal DropoffLongitude { get; set; }
 
     public DateTimeOffset PickupDate { get; set; } = DateTimeOffset.UtcNow;
 
@@ -38,4 +44,6 @@ public class Load
     public ApplicationUser? Customer { get; set; }
 
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
