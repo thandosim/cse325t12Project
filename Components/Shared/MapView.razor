@@ -144,6 +144,7 @@
     private (double lat, double lng)? _currentLocation;
     private string? _locationError;
     private string? _currentAddress;
+    private bool _mapInitialized = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -151,11 +152,21 @@
         {
             _dotNetRef = DotNetObjectReference.Create(this);
             await InitializeMapAsync();
+            _mapInitialized = true;
 
             if (AutoGetLocation)
             {
                 await GetCurrentLocationAsync();
             }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Reinitialize map when parameters change (after first render)
+        if (_mapInitialized)
+        {
+            await InitializeMapAsync();
         }
     }
 
@@ -199,8 +210,11 @@
             {
                 _currentLocation = (location.Latitude, location.Longitude);
                 
-                // Update marker on map
+                // Update marker on map and pan to location
                 await JS.InvokeVoidAsync("updateUserMarker", location.Latitude, location.Longitude, "Your Location");
+                
+                // Zoom to the current location
+                await JS.InvokeVoidAsync("panToLocation", location.Latitude, location.Longitude, 12);
                 
                 // Try to get address
                 try

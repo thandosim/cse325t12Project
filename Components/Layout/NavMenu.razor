@@ -1,10 +1,4 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.EntityFrameworkCore
-@using System.Security.Claims
-@using t12Project.Models
-@using t12Project.Services
-@inject NotificationService NotificationService
-@inject AuthenticationStateProvider AuthStateProvider
 
 <nav class="mx-auto flex max-w-7xl flex-col gap-4 px-6 lg:px-12 py-5 text-sm sm:flex-row sm:items-center sm:justify-between bg-white">
 	<!-- Logo -->
@@ -20,15 +14,6 @@
 			<Authorized>
 				<a href="/dashboard" class="hover:text-teal-500 transition-colors font-medium text-teal-600">Dashboard</a>
 				<a href="/account/profile" class="hover:text-teal-500 transition-colors">My Profile</a>
-				@if (_unreadCount > 0)
-				{
-					<a href="/dashboard" class="relative hover:text-teal-500 transition-colors">
-						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-						</svg>
-						<span class="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">@(_unreadCount > 9 ? "9+" : _unreadCount.ToString())</span>
-					</a>
-				}
 			</Authorized>
 			<NotAuthorized>
 				<a class="hover:text-teal-500 transition-colors" href="/#features">Features</a>
@@ -55,31 +40,3 @@
 		</AuthorizeView>
 	</div>
 </nav>
-
-@code {
-	private int _unreadCount = 0;
-	private string _userId = string.Empty;
-
-	protected override async Task OnInitializedAsync()
-	{
-		try
-		{
-			var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-			var user = authState.User;
-			
-			if (user.Identity?.IsAuthenticated == true)
-			{
-				_userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
-				if (!string.IsNullOrEmpty(_userId))
-				{
-					_unreadCount = await NotificationService.GetUnreadCountAsync(_userId);
-				}
-			}
-		}
-		catch
-		{
-			// Ignore errors in navbar
-		}
-	}
-}
-

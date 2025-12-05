@@ -324,81 +324,27 @@
 
         try
         {
-            if (load == null)
-            {
-                errorMessage = "Load not found. Please try again.";
-                return;
-            }
-
             if (string.IsNullOrEmpty(_currentUserId))
             {
                 errorMessage = "You must be logged in to confirm a booking.";
                 return;
             }
 
-            // Determine who is the driver - for now, if the current user is a Driver, they're booking the load
-            // If current user is Customer, we need a different flow (this handles Customer confirming a driver's request)
-            string driverId;
-            string driverName;
-
-            if (_userRole == "Driver")
+            // Handle truck booking (Customer booking a truck)
+            if (truck != null)
             {
-                // Driver is booking the load
-                driverId = _currentUserId;
-                driverName = _currentUserName;
-            }
-            else if (_userRole == "Customer")
-            {
-                // Customer is confirming - we need to find a driver for this load
-                // For now, find the first available driver
-                var availableDriver = await Context.Users
-                    .Where(u => u.AccountType == AccountRole.Driver)
-                    .FirstOrDefaultAsync();
-
-                if (availableDriver == null)
-                {
-                    errorMessage = "No available drivers found.";
-                    return;
-                }
-
-                driverId = availableDriver.Id;
-                driverName = availableDriver.FullName;
-            }
-            else
-            {
-                errorMessage = "Invalid user role for booking.";
+                await ConfirmTruckBookingAsync();
                 return;
             }
 
-            // Create the booking
-            var booking = new Booking
+            // Handle load booking (Driver booking a load)
+            if (load != null)
             {
-                Id = Guid.NewGuid(),
-                LoadId = load.Id,
-                DriverId = driverId,
-                Status = "Confirmed",
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-
-            Context.Bookings.Add(booking);
-
-            // Update load status
-            load.Status = "Booked";
-            Context.Loads.Update(load);
-
-            await Context.SaveChangesAsync();
-
-            // Send notification to the driver
-            await NotificationService.NotifyDriverOfBookingConfirmationAsync(booking, _currentUserName);
-
-            // If a driver booked the load, also notify the customer
-            if (_userRole == "Driver" && load.Customer != null)
-            {
-                await NotificationService.NotifyCustomerOfLoadBookedAsync(load, _currentUserName);
+                await ConfirmLoadBookingAsync();
+                return;
             }
 
-            successMessage = "Booking confirmed successfully! The driver has been notified.";
-            _bookingConfirmed = true;
+            errorMessage = "No truck or load found to book. Please try again.";
         }
         catch (Exception ex)
         {
@@ -408,6 +354,119 @@
         {
             isProcessing = false;
         }
+    }
+
+    private async Task ConfirmTruckBookingAsync()
+    {
+        // Customer is booking a truck - create a load for this booking
+        if (_userRole != "Customer")
+        {
+            errorMessage = "Only customers can book trucks.";
+            return;
+        }
+
+        // Create a load for this truck booking
+        var newLoad = new Load
+        {
+            Id = Guid.NewGuid(),
+            Title = $"Truck Booking - {truck!.Name}",
+            Description = string.IsNullOrWhiteSpace(_notes) ? $"Booking for {truck.Name}" : _notes,
+            CustomerId = _currentUserId,
+            Status = "Booked",
+            PickupDate = new DateTimeOffset(_pickupDate.Year, _pickupDate.Month, _pickupDate.Day, 0, 0, 0, TimeSpan.Zero),
+            PickupLocation = "To be specified",
+            DropoffLocation = "To be specified",
+            WeightLbs = 0,
+            CargoType = truck.EquipmentType
+        };
+
+        Context.Loads.Add(newLoad);
+
+        // Create the booking linking the load to the truck's driver
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            LoadId = newLoad.Id,
+            DriverId = truck.DriverId,
+            Status = "Confirmed",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        Context.Bookings.Add(booking);
+        await Context.SaveChangesAsync();
+
+        // Notify the driver
+        await NotificationService.NotifyDriverOfBookingConfirmationAsync(booking, _currentUserName);
+
+        successMessage = $"Truck '{truck.Name}' booked successfully! The driver has been notified.";
+        _bookingConfirmed = true;
+    }
+
+    private async Task ConfirmLoadBookingAsync()
+    {
+        // Determine who is the driver - for now, if the current user is a Driver, they're booking the load
+        // If current user is Customer, we need a different flow (this handles Customer confirming a driver's request)
+        string driverId;
+        string driverName;
+
+        if (_userRole == "Driver")
+        {
+            // Driver is booking the load
+            driverId = _currentUserId;
+            driverName = _currentUserName;
+        }
+        else if (_userRole == "Customer")
+        {
+            // Customer is confirming - we need to find a driver for this load
+            // For now, find the first available driver
+            var availableDriver = await Context.Users
+                .Where(u => u.AccountType == AccountRole.Driver)
+                .FirstOrDefaultAsync();
+
+            if (availableDriver == null)
+            {
+                errorMessage = "No available drivers found.";
+                return;
+            }
+
+            driverId = availableDriver.Id;
+            driverName = availableDriver.FullName;
+        }
+        else
+        {
+            errorMessage = "Invalid user role for booking.";
+            return;
+        }
+
+        // Create the booking
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            LoadId = load!.Id,
+            DriverId = driverId,
+            Status = "Confirmed",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        Context.Bookings.Add(booking);
+
+        // Update load status
+        load.Status = "Booked";
+        Context.Loads.Update(load);
+
+        await Context.SaveChangesAsync();
+
+        // Send notification to the driver
+        await NotificationService.NotifyDriverOfBookingConfirmationAsync(booking, _currentUserName);
+
+        // If a driver booked the load, also notify the customer
+        if (_userRole == "Driver" && load.Customer != null)
+        {
+            await NotificationService.NotifyCustomerOfLoadBookedAsync(load, _currentUserName);
+        }
+
+        successMessage = "Booking confirmed successfully! The driver has been notified.";
+        _bookingConfirmed = true;
     }
 
     private string GetStatusBadgeClass(string status)

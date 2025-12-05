@@ -102,16 +102,22 @@
 
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Pickup Location</label>
-                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
-                                   placeholder="e.g., Mbabane, Eswatini"
-                                   @bind-Value="_newLoad.PickupLocation" />
+                        <AddressAutocomplete 
+                            Value="@_newLoad.PickupLocation"
+                            ValueChanged="@(v => _newLoad.PickupLocation = v)"
+                            Placeholder="Start typing address (e.g., 123 Main Street, Cape Town)"
+                            OnAddressSelected="HandlePickupAddressSelected"
+                            MinCharacters="10" />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Dropoff Location</label>
-                        <InputText class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
-                                   placeholder="e.g., Johannesburg, South Africa"
-                                   @bind-Value="_newLoad.DropoffLocation" />
+                        <AddressAutocomplete 
+                            Value="@_newLoad.DropoffLocation"
+                            ValueChanged="@(v => _newLoad.DropoffLocation = v)"
+                            Placeholder="Start typing address (e.g., 456 Long Street, Johannesburg)"
+                            OnAddressSelected="HandleDropoffAddressSelected"
+                            MinCharacters="10" />
                     </div>
 
                     <div>
@@ -622,12 +628,17 @@
             // Convert local date to DateTimeOffset properly
             _newLoad.PickupDate = new DateTimeOffset(_pickupDate.Year, _pickupDate.Month, _pickupDate.Day, 0, 0, 0, TimeSpan.Zero);
             
-            // Set default coordinates based on location (in production, use geocoding API)
-            // Using approximate coordinates for Eswatini/South Africa region
-            _newLoad.PickupLatitude = -26.305m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
-            _newLoad.PickupLongitude = 31.136m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
-            _newLoad.DropoffLatitude = -26.200m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
-            _newLoad.DropoffLongitude = 28.040m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            // Only set default coordinates if not already set by address autocomplete
+            if (_newLoad.PickupLatitude == 0 && _newLoad.PickupLongitude == 0)
+            {
+                _newLoad.PickupLatitude = -26.305m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+                _newLoad.PickupLongitude = 31.136m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            }
+            if (_newLoad.DropoffLatitude == 0 && _newLoad.DropoffLongitude == 0)
+            {
+                _newLoad.DropoffLatitude = -26.200m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+                _newLoad.DropoffLongitude = 28.040m + (decimal)(Random.Shared.NextDouble() * 0.1 - 0.05);
+            }
 
             Context.Loads.Add(_newLoad);
             await Context.SaveChangesAsync();
@@ -677,5 +688,21 @@
         {
             Console.WriteLine($"Failed to save location: {ex.Message}");
         }
+    }
+
+    private void HandlePickupAddressSelected(AddressAutocomplete.AddressResult result)
+    {
+        _newLoad.PickupLocation = result.Address;
+        _newLoad.PickupLatitude = (decimal)result.Latitude;
+        _newLoad.PickupLongitude = (decimal)result.Longitude;
+        StateHasChanged();
+    }
+
+    private void HandleDropoffAddressSelected(AddressAutocomplete.AddressResult result)
+    {
+        _newLoad.DropoffLocation = result.Address;
+        _newLoad.DropoffLatitude = (decimal)result.Latitude;
+        _newLoad.DropoffLongitude = (decimal)result.Longitude;
+        StateHasChanged();
     }
 }

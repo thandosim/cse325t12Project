@@ -303,3 +303,139 @@ async function getCoordinatesFromAddress(address) {
         });
     });
 }
+
+// ============================================================
+// Google Places Autocomplete for Address Fields
+// ============================================================
+
+// Store autocomplete instances by element ID
+window._autocompleteInstances = {};
+
+// Initialize Places Autocomplete on an input element
+function initAddressAutocomplete(elementId, dotNetHelper, minLength) {
+    // Wait for Google Maps to load
+    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+        console.warn('Google Maps Places API not loaded yet, retrying...');
+        setTimeout(() => initAddressAutocomplete(elementId, dotNetHelper, minLength), 500);
+        return;
+    }
+
+    const inputElement = document.getElementById(elementId);
+    if (!inputElement) {
+        console.error(`Element with ID '${elementId}' not found`);
+        return;
+    }
+
+    // Remove existing autocomplete if any
+    if (window._autocompleteInstances[elementId]) {
+        google.maps.event.clearInstanceListeners(window._autocompleteInstances[elementId]);
+        delete window._autocompleteInstances[elementId];
+    }
+
+    // Configure autocomplete options
+    const options = {
+        types: ['geocode', 'establishment'],
+        fields: ['formatted_address', 'geometry', 'name', 'address_components']
+    };
+
+    // Create autocomplete instance
+    const autocomplete = new google.maps.places.Autocomplete(inputElement, options);
+    window._autocompleteInstances[elementId] = autocomplete;
+
+    // Track input length to only show suggestions after significant input
+    const minChars = minLength || 10;
+    let lastValue = '';
+
+    // Listen for input changes to control when autocomplete shows
+    inputElement.addEventListener('input', function(e) {
+        const value = e.target.value;
+        
+        // Only allow autocomplete to show after minimum characters
+        if (value.length < minChars) {
+            // Hide the autocomplete dropdown by temporarily disabling it
+            autocomplete.setOptions({ types: [] });
+        } else if (lastValue.length < minChars && value.length >= minChars) {
+            // Re-enable autocomplete when threshold is reached
+            autocomplete.setOptions({ types: ['geocode', 'establishment'] });
+        }
+        lastValue = value;
+    });
+
+    // Handle place selection
+    autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        
+        if (!place.geometry || !place.geometry.location) {
+            console.warn('No geometry data for selected place');
+            return;
+        }
+
+        const result = {
+            address: place.formatted_address || place.name || inputElement.value,
+            latitude: place.geometry.location.lat(),
+            longitude: place.geometry.location.lng(),
+            name: place.name || '',
+            components: {}
+        };
+
+        // Extract address components
+        if (place.address_components) {
+            place.address_components.forEach(component => {
+                const types = component.types;
+                if (types.includes('street_number')) {
+                    result.components.streetNumber = component.long_name;
+                }
+                if (types.includes('route')) {
+                    result.components.street = component.long_name;
+                }
+                if (types.includes('locality')) {
+                    result.components.city = component.long_name;
+                }
+                if (types.includes('administrative_area_level_1')) {
+                    result.components.state = component.long_name;
+                }
+                if (types.includes('country')) {
+                    result.components.country = component.long_name;
+                }
+                if (types.includes('postal_code')) {
+                    result.components.postalCode = component.long_name;
+                }
+            });
+        }
+
+        // Update the input value with the formatted address
+        inputElement.value = result.address;
+
+        // Notify Blazor of the selection
+        dotNetHelper.invokeMethodAsync('OnPlaceSelected', result);
+    });
+
+    // Prevent form submission on Enter when autocomplete is open
+    inputElement.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const pacContainer = document.querySelector('.pac-container');
+            if (pacContainer && pacContainer.style.display !== 'none') {
+                e.preventDefault();
+            }
+        }
+    });
+
+    console.log(`Address autocomplete initialized for '${elementId}' with min ${minChars} chars`);
+}
+
+// Clean up autocomplete instance
+function destroyAddressAutocomplete(elementId) {
+    if (window._autocompleteInstances[elementId]) {
+        google.maps.event.clearInstanceListeners(window._autocompleteInstances[elementId]);
+        delete window._autocompleteInstances[elementId];
+        console.log(`Address autocomplete destroyed for '${elementId}'`);
+    }
+}
+
+// Set the value of an autocomplete input programmatically
+function setAutocompleteValue(elementId, value) {
+    const inputElement = document.getElementById(elementId);
+    if (inputElement) {
+        inputElement.value = value;
+    }
+}
