@@ -12,7 +12,11 @@ public class Load
     public string Title { get; set; } = string.Empty;
 
     [MaxLength(60)]
-    public string Status { get; set; } = "Available"; // Available, Booked, InTransit, Delivered, Cancelled
+    public string Status { get; set; } = "Available"; // Available, Accepted, PickedUp, InTransit, Delivered, Completed, Cancelled
+
+    // Driver assignment
+    public string? AssignedDriverId { get; set; }
+    public ApplicationUser? AssignedDriver { get; set; }
 
     [MaxLength(256)]
     public string PickupLocation { get; set; } = string.Empty;
@@ -45,5 +49,16 @@ public class Load
 
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
+    // Lifecycle timestamps
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? AcceptedAt { get; set; }
+    public DateTimeOffset? PickedUpAt { get; set; }
+    public DateTimeOffset? DeliveredAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+
+    // Estimated Time of Arrival (in minutes from current time)
+    public int? EstimatedTimeOfArrivalMinutes { get; set; }
+
+    // Delivery sequence for drivers managing multiple loads
+    public int? DeliverySequence { get; set; }
 }

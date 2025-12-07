@@ -2,20 +2,28 @@ using System.ComponentModel.DataAnnotations;
 
 namespace t12Project.Models;
 
-public class Booking
+public class Rating
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
+
+    [Required]
     public Guid LoadId { get; set; }
     public Load? Load { get; set; }
+
+    [Required]
+    public string CustomerId { get; set; } = default!;
+    public ApplicationUser? Customer { get; set; }
+
     [Required]
     public string DriverId { get; set; } = default!;
     public ApplicationUser? Driver { get; set; }
-    [MaxLength(40)]
-    public string Status { get; set; } = "Requested"; // Requested, Accepted, Rejected, Cancelled
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset? RespondedAt { get; set; }
-    
+
+    [Required, Range(1, 5)]
+    public int Stars { get; set; }
+
     [MaxLength(500)]
-    public string? Notes { get; set; }
+    public string? Comment { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

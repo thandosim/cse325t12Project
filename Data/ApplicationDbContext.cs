@@ -17,6 +17,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<DriverRoute> DriverRoutes => Set<DriverRoute>();
+    public DbSet<Rating> Ratings => Set<Rating>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -89,5 +90,23 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(r => r.DriverId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Rating>()
+            .HasOne(r => r.Load)
+            .WithMany()
+            .HasForeignKey(r => r.LoadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Rating>()
+            .HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Rating>()
+            .HasOne(r => r.Driver)
+            .WithMany()
+            .HasForeignKey(r => r.DriverId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

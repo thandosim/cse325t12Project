@@ -29,4 +29,7 @@ public class Notification
 
     [MaxLength(50)]
     public string? RelatedEntityType { get; set; } // "Load", "Booking", "Driver", etc.
+
+    [MaxLength(200)]
+    public string? ActionUrl { get; set; } // URL to navigate to when notification is clicked
 }

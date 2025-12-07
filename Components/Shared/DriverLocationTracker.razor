@@ -1,0 +1,192 @@
+@inject IJSRuntime JS
+@inject LocationTrackingService LocationService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<DriverLocationTracker> Logger
+@using System.Security.Claims
+@implements IAsyncDisposable
+
+<div class="location-tracker">
+    @if (IsTracking)
+    {
+        <div class="alert alert-info d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Tracking...</span>
+            </div>
+            <div>
+                <strong>Location Tracking Active</strong><br/>
+                <small>Last update: @LastUpdateTime?.ToString("HH:mm:ss") | Accuracy: @Accuracy?.ToString("F0")m</small>
+            </div>
+            <button class="btn btn-sm btn-outline-danger ms-auto" @onclick="StopTracking">
+                Stop Tracking
+            </button>
+        </div>
+    }
+    else
+    {
+        <button class="btn btn-primary" @onclick="StartTracking" disabled="@IsStarting">
+            @if (IsStarting)
+            {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Start Location Tracking
+        </button>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger mt-2">
+            @ErrorMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? LoadId { get; set; }
+    [Parameter] public int UpdateIntervalSeconds { get; set; } = 30;
+    [Parameter] public EventCallback<(double lat, double lng)> OnLocationUpdate { get; set; }
+
+    private bool IsTracking { get; set; }
+    private bool IsStarting { get; set; }
+    private DateTimeOffset? LastUpdateTime { get; set; }
+    private double? Accuracy { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string _currentUserId = string.Empty;
+    
+    private DotNetObjectReference<DriverLocationTracker>? _dotNetRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dotNetRef = DotNetObjectReference.Create(this);
+        
+        // Get current user ID
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+    }
+
+    private async Task StartTracking()
+    {
+        IsStarting = true;
+        ErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Check if geolocation is available
+            var isAvailable = await JS.InvokeAsync<bool>("isLocationAvailable");
+            if (!isAvailable)
+            {
+                ErrorMessage = "Location services are not available in this browser.";
+                IsStarting = false;
+                return;
+            }
+
+            // Request permission
+            var permission = await JS.InvokeAsync<string>("requestLocationPermission");
+            if (permission == "denied")
+            {
+                ErrorMessage = "Location permission denied. Please enable location access.";
+                IsStarting = false;
+                return;
+            }
+
+            // Start tracking
+            var started = await JS.InvokeAsync<bool>("startLocationTracking", 
+                UpdateIntervalSeconds * 1000, 
+                _dotNetRef);
+
+            if (started)
+            {
+                IsTracking = true;
+                Logger.LogInformation("Location tracking started for LoadId: {LoadId}", LoadId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error starting location tracking");
+            ErrorMessage = $"Failed to start tracking: {ex.Message}";
+        }
+        finally
+        {
+            IsStarting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StopTracking()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("stopLocationTracking");
+            IsTracking = false;
+            Logger.LogInformation("Location tracking stopped for LoadId: {LoadId}", LoadId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error stopping location tracking");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnLocationUpdated(double latitude, double longitude, double accuracy)
+    {
+        try
+        {
+            LastUpdateTime = DateTimeOffset.UtcNow;
+            Accuracy = accuracy;
+            
+            // Update location in database and broadcast via SignalR
+            if (!string.IsNullOrEmpty(_currentUserId))
+            {
+                await LocationService.UpdateDriverLocationAsync(
+                    _currentUserId,
+                    (decimal)latitude,
+                    (decimal)longitude,
+                    LoadId);
+            }
+
+            // Notify parent component
+            await OnLocationUpdate.InvokeAsync((latitude, longitude));
+
+            Logger.LogInformation(
+                "Location updated: ({Lat}, {Lng}) with accuracy {Accuracy}m for LoadId: {LoadId}",
+                latitude, longitude, accuracy, LoadId);
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing location update");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnLocationError(string errorMessage)
+    {
+        ErrorMessage = errorMessage;
+        IsTracking = false;
+        Logger.LogWarning("Location error: {Error}", errorMessage);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (IsTracking)
+        {
+            await StopTracking();
+        }
+
+        _dotNetRef?.Dispose();
+    }
+}
+
+<style>
+    .location-tracker {
+        margin: 1rem 0;
+    }
+
+    .driver-icon {
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+</style>

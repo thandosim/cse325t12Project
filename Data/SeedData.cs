@@ -140,10 +140,46 @@ public static class SeedData
         if (!context.Trucks.Any())
         {
             context.Trucks.AddRange(
-                new Truck { DriverId = drivers[0].Id, Name = "Truck T001", EquipmentType = "Flatbed", CapacityLbs = 20000, IsActive = true },
-                new Truck { DriverId = drivers[1].Id, Name = "Truck T002", EquipmentType = "Box Truck", CapacityLbs = 15000, IsActive = true },
-                new Truck { DriverId = drivers[2].Id, Name = "Truck T003", EquipmentType = "Tanker", CapacityLbs = 25000, IsActive = true },
-                new Truck { DriverId = drivers[3].Id, Name = "Truck T004", EquipmentType = "Refrigerated", CapacityLbs = 18000, IsActive = true }
+                new Truck
+                {
+                    DriverId = drivers[0].Id,
+                    Name = "Mercedes Actros 2541",
+                    EquipmentType = "Flatbed",
+                    CapacityLbs = 20000,
+                    IsActive = true
+                },
+                new Truck
+                {
+                    DriverId = drivers[1].Id,
+                    Name = "Isuzu NPR Refrigerated",
+                    EquipmentType = "Refrigerated",
+                    CapacityLbs = 15000,
+                    IsActive = true
+                },
+                new Truck
+                {
+                    DriverId = drivers[2].Id,
+                    Name = "MAN TGS Box Truck",
+                    EquipmentType = "Box Truck",
+                    CapacityLbs = 18000,
+                    IsActive = true
+                },
+                new Truck
+                {
+                    DriverId = drivers[3].Id,
+                    Name = "Scania R450 Flatbed",
+                    EquipmentType = "Flatbed",
+                    CapacityLbs = 22000,
+                    IsActive = true
+                },
+                new Truck
+                {
+                    DriverId = drivers[0].Id,
+                    Name = "Volvo FH16 Heavy Duty",
+                    EquipmentType = "General",
+                    CapacityLbs = 25000,
+                    IsActive = true
+                }
             );
         }
     }
@@ -153,146 +189,198 @@ public static class SeedData
         if (!context.Loads.Any())
         {
             context.Loads.AddRange(
+                // Loads from Pinelands and surrounding Cape Town areas
                 new Load
                 {
-                    Title = "Fragile Electronics",
-                    Status = "Pending",
-                    PickupLocation = "Mbabane",
-                    DropoffLocation = "Manzini",
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
-                    WeightLbs = 1200,
-                    Description = "Fragile boxed electronics, handle with care",
-                    CargoType = "Fragile",
-                    CustomerId = customers[0].Id
-                },
-                new Load
-                {
-                    Title = "Steel Beams",
-                    Status = "Draft",
-                    PickupLocation = "Sidwashini",
-                    DropoffLocation = "Nhlangano",
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
-                    WeightLbs = 3000,
-                    Description = "Heavy steel beams, flatbed required",
-                    CargoType = "Flatbed",
-                    CustomerId = customers[0].Id
-                },
-                new Load
-                {
-                    Title = "Liquid Chemicals",
+                    Title = "Office Furniture Relocation",
                     Status = "Available",
-                    PickupLocation = "Ezulwini",
-                    DropoffLocation = "Big Bend",
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
-                    WeightLbs = 5000,
-                    Description = "500L liquid chemicals, hazmat handling required",
-                    CargoType = "Liquid",
+                    PickupLocation = "Pinelands, Cape Town",
+                    DropoffLocation = "Bellville Industrial, Cape Town",
+                    PickupLatitude = -33.9349m,
+                    PickupLongitude = 18.4956m,
+                    DropoffLatitude = -33.9139m,
+                    DropoffLongitude = 18.6289m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 2500,
+                    Description = "Complete office furniture set - desks, chairs, filing cabinets. Handle with care.",
+                    CargoType = "General",
+                    CustomerId = customers[0].Id
+                },
+                new Load
+                {
+                    Title = "Medical Equipment",
+                    Status = "Available",
+                    PickupLocation = "Ndabeni, Cape Town",
+                    DropoffLocation = "Panorama Mediclinic, Cape Town",
+                    PickupLatitude = -33.9356m,
+                    PickupLongitude = 18.5112m,
+                    DropoffLatitude = -33.8694m,
+                    DropoffLongitude = 18.5686m,
+                    PickupDate = DateTimeOffset.UtcNow.AddHours(6),
+                    WeightLbs = 1200,
+                    Description = "Fragile medical diagnostic equipment. Temperature controlled transport preferred.",
+                    CargoType = "Fragile",
                     CustomerId = customers[1].Id
                 },
                 new Load
                 {
-                    Title = "Frozen Food",
+                    Title = "Restaurant Supplies",
                     Status = "Available",
-                    PickupLocation = "Manzini",
-                    DropoffLocation = "Siteki",
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
-                    WeightLbs = 2000,
-                    Description = "Frozen goods, refrigerated truck required",
+                    PickupLocation = "Maitland, Cape Town",
+                    DropoffLocation = "Claremont, Cape Town",
+                    PickupLatitude = -33.9442m,
+                    PickupLongitude = 18.5156m,
+                    DropoffLatitude = -33.9789m,
+                    DropoffLongitude = 18.4644m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
+                    WeightLbs = 3500,
+                    Description = "Industrial kitchen equipment and frozen food supplies. Refrigerated transport required.",
                     CargoType = "Refrigerated",
                     CustomerId = customers[2].Id
                 },
                 new Load
                 {
-                    Title = "Furniture",
-                    Status = "Pending",
-                    PickupLocation = "Mbabane",
-                    DropoffLocation = "Piggs Peak",
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(4),
-                    WeightLbs = 2500,
-                    Description = "Large furniture items, boxed and palletized",
-                    CargoType = "General",
-                    CustomerId = customers[2].Id
+                    Title = "Building Materials",
+                    Status = "Available",
+                    PickupLocation = "Goodwood, Cape Town",
+                    DropoffLocation = "Thornton, Cape Town",
+                    PickupLatitude = -33.9167m,
+                    PickupLongitude = 18.5500m,
+                    DropoffLatitude = -33.8956m,
+                    DropoffLongitude = 18.5167m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 8000,
+                    Description = "Cement bags, bricks, and steel reinforcement bars. Flatbed truck required.",
+                    CargoType = "Flatbed",
+                    CustomerId = customers[0].Id
                 },
-                // Cape Town Loads
                 new Load
                 {
-                    Title = "Wine Barrels",
+                    Title = "Electronics Shipment",
                     Status = "Available",
-                    PickupLocation = "Stellenbosch, Cape Town",
-                    DropoffLocation = "Johannesburg",
-                    PickupLatitude = -33.9321m,
-                    PickupLongitude = 18.8602m,
-                    DropoffLatitude = -26.2041m,
-                    DropoffLongitude = 28.0473m,
+                    PickupLocation = "Salt River, Cape Town",
+                    DropoffLocation = "Tyger Valley, Cape Town",
+                    PickupLatitude = -33.9344m,
+                    PickupLongitude = 18.4511m,
+                    DropoffLatitude = -33.8656m,
+                    DropoffLongitude = 18.6456m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
+                    WeightLbs = 1800,
+                    Description = "Consumer electronics - TVs, computers, tablets. Extremely fragile, insurance required.",
+                    CargoType = "Fragile",
+                    CustomerId = customers[1].Id
+                },
+                new Load
+                {
+                    Title = "Fresh Produce Delivery",
+                    Status = "Available",
+                    PickupLocation = "Epping Market, Cape Town",
+                    DropoffLocation = "Gardens Centre, Cape Town",
+                    PickupLatitude = -33.9167m,
+                    PickupLongitude = 18.5333m,
+                    DropoffLatitude = -33.9356m,
+                    DropoffLongitude = 18.4108m,
+                    PickupDate = DateTimeOffset.UtcNow.AddHours(12),
+                    WeightLbs = 2200,
+                    Description = "Fresh fruits and vegetables for restaurant. Early morning delivery preferred.",
+                    CargoType = "Refrigerated",
+                    CustomerId = customers[2].Id
+                },
+                new Load
+                {
+                    Title = "Gym Equipment",
+                    Status = "Available",
+                    PickupLocation = "Rondebosch, Cape Town",
+                    DropoffLocation = "Pinelands, Cape Town",
+                    PickupLatitude = -33.9633m,
+                    PickupLongitude = 18.4789m,
+                    DropoffLatitude = -33.9349m,
+                    DropoffLongitude = 18.4956m,
                     PickupDate = DateTimeOffset.UtcNow.AddDays(2),
-                    WeightLbs = 8000,
-                    Description = "Premium wine barrels from Stellenbosch vineyards",
+                    WeightLbs = 5500,
+                    Description = "Commercial gym equipment - treadmills, weight machines, free weights. Heavy lift required.",
                     CargoType = "General",
                     CustomerId = customers[0].Id
                 },
                 new Load
                 {
-                    Title = "Fresh Seafood",
+                    Title = "Pharmaceutical Supplies",
                     Status = "Available",
-                    PickupLocation = "Cape Town Harbour",
-                    DropoffLocation = "Durban",
+                    PickupLocation = "Brooklyn, Cape Town",
+                    DropoffLocation = "N1 City, Cape Town",
+                    PickupLatitude = -33.9450m,
+                    PickupLongitude = 18.4733m,
+                    DropoffLatitude = -33.8778m,
+                    DropoffLongitude = 18.5744m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 950,
+                    Description = "Temperature-sensitive pharmaceuticals. Must maintain 2-8°C throughout transit.",
+                    CargoType = "Refrigerated",
+                    CustomerId = customers[1].Id
+                },
+                new Load
+                {
+                    Title = "Auto Parts Delivery",
+                    Status = "Available",
+                    PickupLocation = "Parow, Cape Town",
+                    DropoffLocation = "Milnerton, Cape Town",
+                    PickupLatitude = -33.9000m,
+                    PickupLongitude = 18.5833m,
+                    DropoffLatitude = -33.8767m,
+                    DropoffLongitude = 18.4983m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(4),
+                    WeightLbs = 3200,
+                    Description = "Car engine parts and accessories for dealership. Some items fragile.",
+                    CargoType = "General",
+                    CustomerId = customers[2].Id
+                },
+                new Load
+                {
+                    Title = "Wine & Spirits",
+                    Status = "Available",
+                    PickupLocation = "Observatory, Cape Town",
+                    DropoffLocation = "Sea Point, Cape Town",
+                    PickupLatitude = -33.9378m,
+                    PickupLongitude = 18.4728m,
+                    DropoffLatitude = -33.9267m,
+                    DropoffLongitude = 18.3861m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(5),
+                    WeightLbs = 1600,
+                    Description = "Premium wine and spirits shipment. Fragile glass bottles, careful handling essential.",
+                    CargoType = "Fragile",
+                    CustomerId = customers[0].Id
+                },
+                new Load
+                {
+                    Title = "Textile Shipment",
+                    Status = "Available",
+                    PickupLocation = "Woodstock, Cape Town",
+                    DropoffLocation = "Durbanville, Cape Town",
+                    PickupLatitude = -33.9308m,
+                    PickupLongitude = 18.4472m,
+                    DropoffLatitude = -33.8328m,
+                    DropoffLongitude = 18.6489m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
+                    WeightLbs = 2800,
+                    Description = "Fabric rolls and clothing samples for fashion retailer.",
+                    CargoType = "General",
+                    CustomerId = customers[1].Id
+                },
+                new Load
+                {
+                    Title = "Frozen Seafood",
+                    Status = "Available",
+                    PickupLocation = "Table Bay Harbour, Cape Town",
+                    DropoffLocation = "Brackenfell, Cape Town",
                     PickupLatitude = -33.9062m,
                     PickupLongitude = 18.4232m,
-                    DropoffLatitude = -29.8587m,
-                    DropoffLongitude = 31.0218m,
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
-                    WeightLbs = 3500,
-                    Description = "Fresh catch from Cape Town harbour, refrigerated transport required",
+                    DropoffLatitude = -33.8667m,
+                    DropoffLongitude = 18.7000m,
+                    PickupDate = DateTimeOffset.UtcNow.AddHours(8),
+                    WeightLbs = 4200,
+                    Description = "Fresh frozen catch from local fishing vessels. Must maintain -18°C.",
                     CargoType = "Refrigerated",
-                    CustomerId = customers[1].Id
-                },
-                new Load
-                {
-                    Title = "IT Equipment",
-                    Status = "Available",
-                    PickupLocation = "Century City, Cape Town",
-                    DropoffLocation = "Pretoria",
-                    PickupLatitude = -33.8891m,
-                    PickupLongitude = 18.5126m,
-                    DropoffLatitude = -25.7479m,
-                    DropoffLongitude = 28.2293m,
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
-                    WeightLbs = 1500,
-                    Description = "Server racks and networking equipment, fragile handling required",
-                    CargoType = "Fragile",
-                    CustomerId = customers[0].Id
-                },
-                new Load
-                {
-                    Title = "Construction Materials",
-                    Status = "Available",
-                    PickupLocation = "Bellville, Cape Town",
-                    DropoffLocation = "George",
-                    PickupLatitude = -33.9000m,
-                    PickupLongitude = 18.6333m,
-                    DropoffLatitude = -33.9631m,
-                    DropoffLongitude = 22.4617m,
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
-                    WeightLbs = 15000,
-                    Description = "Building materials including cement bags and steel rebar",
-                    CargoType = "Flatbed",
                     CustomerId = customers[2].Id
-                },
-                new Load
-                {
-                    Title = "Automotive Parts",
-                    Status = "Available",
-                    PickupLocation = "Paarden Eiland, Cape Town",
-                    DropoffLocation = "Port Elizabeth",
-                    PickupLatitude = -33.9167m,
-                    PickupLongitude = 18.4500m,
-                    DropoffLatitude = -33.9608m,
-                    DropoffLongitude = 25.6022m,
-                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
-                    WeightLbs = 4500,
-                    Description = "Replacement auto parts for dealership network",
-                    CargoType = "General",
-                    CustomerId = customers[1].Id
                 }
             );
         }
@@ -303,66 +391,114 @@ public static class SeedData
         if (!context.DriverRoutes.Any())
         {
             context.DriverRoutes.AddRange(
-                // Cape Town routes
+                // Local Cape Town / Pinelands area routes
                 new DriverRoute
                 {
                     DriverId = drivers[0].Id,
-                    StartLocation = "Cape Town CBD",
-                    EndLocation = "Johannesburg",
-                    StartLatitude = -33.9249m,
-                    StartLongitude = 18.4241m,
-                    EndLatitude = -26.2041m,
-                    EndLongitude = 28.0473m,
+                    StartLocation = "Pinelands, Cape Town",
+                    EndLocation = "Bellville Industrial, Cape Town",
+                    StartLatitude = -33.9349m,
+                    StartLongitude = 18.4956m,
+                    EndLatitude = -33.9139m,
+                    EndLongitude = 18.6289m,
                     AvailableFrom = DateTimeOffset.UtcNow,
-                    AvailableTo = DateTimeOffset.UtcNow.AddDays(14),
+                    AvailableTo = DateTimeOffset.UtcNow.AddDays(7),
                     EquipmentType = "Flatbed",
                     MaxWeightLbs = 20000,
                     IsActive = true,
-                    Notes = "Weekly route from Cape Town to Joburg, can stop in Bloemfontein"
+                    Notes = "Daily local route, can handle construction materials and heavy equipment"
                 },
                 new DriverRoute
                 {
                     DriverId = drivers[1].Id,
-                    StartLocation = "Stellenbosch",
-                    EndLocation = "Durban",
-                    StartLatitude = -33.9321m,
-                    StartLongitude = 18.8602m,
-                    EndLatitude = -29.8587m,
-                    EndLongitude = 31.0218m,
+                    StartLocation = "Maitland, Cape Town",
+                    EndLocation = "Northern Suburbs, Cape Town",
+                    StartLatitude = -33.9442m,
+                    StartLongitude = 18.5156m,
+                    EndLatitude = -33.8656m,
+                    EndLongitude = 18.6456m,
                     AvailableFrom = DateTimeOffset.UtcNow,
-                    AvailableTo = DateTimeOffset.UtcNow.AddDays(7),
+                    AvailableTo = DateTimeOffset.UtcNow.AddDays(14),
                     EquipmentType = "Refrigerated",
                     MaxWeightLbs = 15000,
                     IsActive = true,
-                    Notes = "Refrigerated truck, ideal for wine and perishables"
+                    Notes = "Refrigerated transport for perishables, restaurants, and medical supplies"
                 },
                 new DriverRoute
                 {
                     DriverId = drivers[2].Id,
-                    StartLocation = "Cape Town Harbour",
-                    EndLocation = "Port Elizabeth",
-                    StartLatitude = -33.9062m,
-                    StartLongitude = 18.4232m,
-                    EndLatitude = -33.9608m,
-                    EndLongitude = 25.6022m,
-                    AvailableFrom = DateTimeOffset.UtcNow.AddDays(1),
+                    StartLocation = "Ndabeni, Cape Town",
+                    EndLocation = "Claremont, Cape Town",
+                    StartLatitude = -33.9356m,
+                    StartLongitude = 18.5112m,
+                    EndLatitude = -33.9789m,
+                    EndLongitude = 18.4644m,
+                    AvailableFrom = DateTimeOffset.UtcNow,
                     AvailableTo = DateTimeOffset.UtcNow.AddDays(10),
                     EquipmentType = "Box Truck",
-                    MaxWeightLbs = 12000,
+                    MaxWeightLbs = 18000,
                     IsActive = true,
-                    Notes = "Coastal route via Garden Route, scenic stops available"
+                    Notes = "Enclosed truck for electronics, furniture, and general cargo"
                 },
                 new DriverRoute
                 {
                     DriverId = drivers[3].Id,
-                    StartLocation = "Century City, Cape Town",
-                    EndLocation = "Pretoria",
-                    StartLatitude = -33.8891m,
-                    StartLongitude = 18.5126m,
-                    EndLatitude = -25.7479m,
-                    EndLongitude = 28.2293m,
+                    StartLocation = "Goodwood, Cape Town",
+                    EndLocation = "Brackenfell, Cape Town",
+                    StartLatitude = -33.9167m,
+                    StartLongitude = 18.5500m,
+                    EndLatitude = -33.8667m,
+                    EndLongitude = 18.7000m,
+                    AvailableFrom = DateTimeOffset.UtcNow.AddDays(1),
+                    AvailableTo = DateTimeOffset.UtcNow.AddDays(8),
+                    EquipmentType = "General",
+                    MaxWeightLbs = 22000,
+                    IsActive = true,
+                    Notes = "Flexible route serving industrial areas, can accommodate various cargo types"
+                },
+                new DriverRoute
+                {
+                    DriverId = drivers[0].Id,
+                    StartLocation = "Salt River, Cape Town",
+                    EndLocation = "Tyger Valley, Cape Town",
+                    StartLatitude = -33.9344m,
+                    StartLongitude = 18.4511m,
+                    EndLatitude = -33.8656m,
+                    EndLongitude = 18.6456m,
+                    AvailableFrom = DateTimeOffset.UtcNow.AddDays(2),
+                    AvailableTo = DateTimeOffset.UtcNow.AddDays(9),
+                    EquipmentType = "Flatbed",
+                    MaxWeightLbs = 25000,
+                    IsActive = true,
+                    Notes = "Heavy-duty flatbed for building materials and oversized cargo"
+                },
+                new DriverRoute
+                {
+                    DriverId = drivers[1].Id,
+                    StartLocation = "Table Bay Harbour, Cape Town",
+                    EndLocation = "Durbanville, Cape Town",
+                    StartLatitude = -33.9062m,
+                    StartLongitude = 18.4232m,
+                    EndLatitude = -33.8328m,
+                    EndLongitude = 18.6489m,
                     AvailableFrom = DateTimeOffset.UtcNow,
                     AvailableTo = DateTimeOffset.UtcNow.AddDays(5),
+                    EquipmentType = "Refrigerated",
+                    MaxWeightLbs = 15000,
+                    IsActive = true,
+                    Notes = "Seafood and frozen goods specialist route from harbour"
+                },
+                new DriverRoute
+                {
+                    DriverId = drivers[0].Id,
+                    StartLocation = "Durban",
+                    EndLocation = "Pretoria",
+                    StartLatitude = -29.8587m,
+                    StartLongitude = 31.0218m,
+                    EndLatitude = -25.7479m,
+                    EndLongitude = 28.2293m,
+                    AvailableFrom = DateTimeOffset.UtcNow.AddDays(1),
+                    AvailableTo = DateTimeOffset.UtcNow.AddDays(6),
                     EquipmentType = "General",
                     MaxWeightLbs = 18000,
                     IsActive = true,

@@ -314,9 +314,19 @@ window._autocompleteInstances = {};
 // Initialize Places Autocomplete on an input element
 function initAddressAutocomplete(elementId, dotNetHelper, minLength) {
     // Wait for Google Maps to load
-    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-        console.warn('Google Maps Places API not loaded yet, retrying...');
+    if (typeof google === 'undefined' || !google.maps) {
+        console.warn('Google Maps API not loaded yet, retrying...');
         setTimeout(() => initAddressAutocomplete(elementId, dotNetHelper, minLength), 500);
+        return;
+    }
+    
+    if (!google.maps.places) {
+        console.error('Google Maps Places library not loaded. Make sure &libraries=places is in the script URL.');
+        console.error('Check your Google Cloud Console to ensure:');
+        console.error('1. Places API is enabled');
+        console.error('2. Maps JavaScript API is enabled');
+        console.error('3. Billing is enabled');
+        console.error('4. API key restrictions allow your domain');
         return;
     }
 
@@ -338,89 +348,94 @@ function initAddressAutocomplete(elementId, dotNetHelper, minLength) {
         fields: ['formatted_address', 'geometry', 'name', 'address_components']
     };
 
-    // Create autocomplete instance
-    const autocomplete = new google.maps.places.Autocomplete(inputElement, options);
-    window._autocompleteInstances[elementId] = autocomplete;
+    try {
+        // Create autocomplete instance
+        const autocomplete = new google.maps.places.Autocomplete(inputElement, options);
+        window._autocompleteInstances[elementId] = autocomplete;
 
-    // Track input length to only show suggestions after significant input
-    const minChars = minLength || 10;
-    let lastValue = '';
+        // Track input length to only show suggestions after significant input
+        const minChars = minLength || 10;
+        let lastValue = '';
 
-    // Listen for input changes to control when autocomplete shows
-    inputElement.addEventListener('input', function(e) {
-        const value = e.target.value;
-        
-        // Only allow autocomplete to show after minimum characters
-        if (value.length < minChars) {
-            // Hide the autocomplete dropdown by temporarily disabling it
-            autocomplete.setOptions({ types: [] });
-        } else if (lastValue.length < minChars && value.length >= minChars) {
-            // Re-enable autocomplete when threshold is reached
-            autocomplete.setOptions({ types: ['geocode', 'establishment'] });
-        }
-        lastValue = value;
-    });
-
-    // Handle place selection
-    autocomplete.addListener('place_changed', function() {
-        const place = autocomplete.getPlace();
-        
-        if (!place.geometry || !place.geometry.location) {
-            console.warn('No geometry data for selected place');
-            return;
-        }
-
-        const result = {
-            address: place.formatted_address || place.name || inputElement.value,
-            latitude: place.geometry.location.lat(),
-            longitude: place.geometry.location.lng(),
-            name: place.name || '',
-            components: {}
-        };
-
-        // Extract address components
-        if (place.address_components) {
-            place.address_components.forEach(component => {
-                const types = component.types;
-                if (types.includes('street_number')) {
-                    result.components.streetNumber = component.long_name;
-                }
-                if (types.includes('route')) {
-                    result.components.street = component.long_name;
-                }
-                if (types.includes('locality')) {
-                    result.components.city = component.long_name;
-                }
-                if (types.includes('administrative_area_level_1')) {
-                    result.components.state = component.long_name;
-                }
-                if (types.includes('country')) {
-                    result.components.country = component.long_name;
-                }
-                if (types.includes('postal_code')) {
-                    result.components.postalCode = component.long_name;
-                }
-            });
-        }
-
-        // Update the input value with the formatted address
-        inputElement.value = result.address;
-
-        // Notify Blazor of the selection
-        dotNetHelper.invokeMethodAsync('OnPlaceSelected', result);
-    });
-
-    // Prevent form submission on Enter when autocomplete is open
-    inputElement.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            const pacContainer = document.querySelector('.pac-container');
-            if (pacContainer && pacContainer.style.display !== 'none') {
-                e.preventDefault();
+        // Listen for input changes to control when autocomplete shows
+        inputElement.addEventListener('input', function(e) {
+            const value = e.target.value;
+            
+            // Only allow autocomplete to show after minimum characters
+            if (value.length < minChars) {
+                // Hide the autocomplete dropdown by temporarily disabling it
+                autocomplete.setOptions({ types: [] });
+            } else if (lastValue.length < minChars && value.length >= minChars) {
+                // Re-enable autocomplete when threshold is reached
+                autocomplete.setOptions({ types: ['geocode', 'establishment'] });
             }
-        }
-    });
+            lastValue = value;
+        });
 
-    console.log(`Address autocomplete initialized for '${elementId}' with min ${minChars} chars`);
+        // Handle place selection
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            
+            if (!place.geometry || !place.geometry.location) {
+                console.warn('No geometry data for selected place');
+                return;
+            }
+
+            const result = {
+                address: place.formatted_address || place.name || inputElement.value,
+                latitude: place.geometry.location.lat(),
+                longitude: place.geometry.location.lng(),
+                name: place.name || '',
+                components: {}
+            };
+
+            // Extract address components
+            if (place.address_components) {
+                place.address_components.forEach(component => {
+                    const types = component.types;
+                    if (types.includes('street_number')) {
+                        result.components.streetNumber = component.long_name;
+                    }
+                    if (types.includes('route')) {
+                        result.components.street = component.long_name;
+                    }
+                    if (types.includes('locality')) {
+                        result.components.city = component.long_name;
+                    }
+                    if (types.includes('administrative_area_level_1')) {
+                        result.components.state = component.long_name;
+                    }
+                    if (types.includes('country')) {
+                        result.components.country = component.long_name;
+                    }
+                    if (types.includes('postal_code')) {
+                        result.components.postalCode = component.long_name;
+                    }
+                });
+            }
+
+            // Update the input value with the formatted address
+            inputElement.value = result.address;
+
+            // Notify Blazor of the selection
+            dotNetHelper.invokeMethodAsync('OnPlaceSelected', result);
+        });
+
+        // Prevent form submission on Enter when autocomplete is open
+        inputElement.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const pacContainer = document.querySelector('.pac-container');
+                if (pacContainer && pacContainer.style.display !== 'none') {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        console.log(`✓ Address autocomplete initialized for '${elementId}' with min ${minChars} chars`);
+    } catch (error) {
+        console.error('Failed to initialize autocomplete:', error);
+        console.error('This usually means Google Maps API is not properly configured.');
+    }
 }
 
 // Clean up autocomplete instance

@@ -4,10 +4,13 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
 @using System.ComponentModel.DataAnnotations
 @using System.Linq
 @using System.Security.Claims
+@using t12Project.Data
 @inject AdminUserService AdminUserService
+@inject ApplicationDbContext DbContext
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<AdminDashboard> Logger
 @inject IJSRuntime JS
@@ -99,7 +102,7 @@
                 </EditForm>
             </div>
 
-            <!-- Stats -->
+            <!-- Stats & Load Management -->
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <p class="text-sm font-medium uppercase tracking-wider text-teal-500">Statistics</p>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -123,6 +126,23 @@
                         <p class="mt-2 text-3xl font-bold text-slate-900">@(_users?.Count(u => u.Role == "Customer") ?? 0)</p>
                         <p class="text-xs text-slate-500">Shippers</p>
                     </div>
+                </div>
+                
+                <!-- Load Management Actions -->
+                <div class="mt-6 pt-6 border-t border-slate-200">
+                    <p class="text-sm font-medium uppercase tracking-wider text-teal-500 mb-4">Load Management</p>
+                    @if (!string.IsNullOrWhiteSpace(_loadResetMessage))
+                    {
+                        <div class="mb-4 rounded-xl @(_loadResetSuccess ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700") border px-4 py-3 text-sm">
+                            @_loadResetMessage
+                        </div>
+                    }
+                    <button class="w-full rounded-full bg-amber-500 px-6 py-3 text-sm font-medium text-white hover:bg-amber-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors" 
+                            @onclick="ResetAllLoadStatuses" 
+                            disabled="@_isResettingLoads">
+                        @(_isResettingLoads ? "Resetting..." : "Reset All Load Statuses to Available")
+                    </button>
+                    <p class="mt-2 text-xs text-slate-500">This will reset all booked, confirmed, and other load statuses back to "Available"</p>
                 </div>
             </div>
         </div>
@@ -354,10 +374,15 @@
     private string? _editError;
     private ElementReference _editModalRef;
     private ElementReference _deleteModalRef;
-    private DotNetObjectReference<AdminDashboard>? _dotNetRef;
     private Func<Task>? _modalCleanup;
     private readonly Queue<(string Kind, string Message)> _toasts = new();
     private const int ToastDurationMs = 3500;
+    
+    // Load reset state
+    private bool _isResettingLoads;
+    private string? _loadResetMessage;
+    private bool _loadResetSuccess;
+    
     private string? SearchText
     {
         get => _search;
@@ -456,6 +481,61 @@
         finally
         {
             _isCreating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResetAllLoadStatuses()
+    {
+        _isResettingLoads = true;
+        _loadResetMessage = null;
+        _loadResetSuccess = false;
+        StateHasChanged();
+
+        try
+        {
+            // Get all loads that are not already "Available"
+            var loads = await DbContext.Loads
+                .Where(l => l.Status != "Available")
+                .ToListAsync();
+            
+            if (!loads.Any())
+            {
+                _loadResetMessage = "All loads are already set to 'Available' status.";
+                _loadResetSuccess = true;
+                return;
+            }
+
+            // Reset all load statuses to "Available"
+            foreach (var load in loads)
+            {
+                load.Status = "Available";
+                // Also clear assignment fields
+                load.AssignedDriverId = null;
+                load.AcceptedAt = null;
+                load.PickedUpAt = null;
+                load.DeliveredAt = null;
+                load.CompletedAt = null;
+            }
+
+            await DbContext.SaveChangesAsync();
+            
+            _loadResetMessage = $"✓ Successfully reset {loads.Count} load(s) to 'Available' status.";
+            _loadResetSuccess = true;
+            ShowToast("success", $"Reset {loads.Count} loads");
+            
+            Logger.LogInformation("Admin reset {Count} loads to Available status", loads.Count);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error resetting load statuses");
+            _loadResetMessage = $"❌ Failed to reset load statuses: {ex.Message}";
+            _loadResetSuccess = false;
+            ShowToast("error", "Failed to reset loads");
+        }
+        finally
+        {
+            _isResettingLoads = false;
             StateHasChanged();
         }
     }

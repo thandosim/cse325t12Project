@@ -276,6 +276,22 @@
                 Available Loads
             </button>
             <button type="button" 
+                    class="@GetTabClass("active")" 
+                    @onclick="@(() => SetActiveTab("active"))">
+                Active Loads
+                @if (_activeLoads.Any())
+                {
+                    <span class="ml-2 inline-flex items-center justify-center rounded-full bg-blue-500 px-2 py-0.5 text-xs font-bold text-white">
+                        @_activeLoads.Count
+                    </span>
+                }
+            </button>
+            <button type="button" 
+                    class="@GetTabClass("history")" 
+                    @onclick="@(() => SetActiveTab("history"))">
+                History
+            </button>
+            <button type="button" 
                     class="@GetTabClass("routes")" 
                     @onclick="@(() => SetActiveTab("routes"))">
                 My Routes
@@ -297,7 +313,44 @@
             BaseUrl="/booking/load"
             TableTitle="Available Loads"
             TableSubtitle="Browse loads that need transport"
-            EmptyMessage="No loads are currently available. Check back later." />
+            EmptyMessage="No available loads at the moment. Check back later." />
+    }
+
+    <!-- Active Loads Tab -->
+    @if (_activeTab == "active")
+    {
+        <div class="space-y-4">
+            @if (!_activeLoads.Any())
+            {
+                <div class="text-center py-12 bg-white rounded-lg border border-slate-200">
+                    <svg class="w-16 h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p class="text-slate-600">No active loads</p>
+                    <p class="text-sm text-slate-500 mt-1">Accept a load from Available Loads to get started</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var load in _activeLoads)
+                {
+                    <LoadStatusCard 
+                        Load="load" 
+                        IsDriver="true"
+                        ShowCustomerInfo="true"
+                        CurrentUserId="@_currentUserId"
+                        OnStatusChanged="HandleStatusChanged" />
+                }
+            }
+        </div>
+    }
+
+    <!-- History Tab -->
+    @if (_activeTab == "history")
+    {
+        <LoadHistory 
+            Loads="_loadHistory" 
+            ShowCustomer="true" />
     }
 
     <!-- My Routes Tab -->
@@ -317,7 +370,7 @@
         <DashboardTable 
             Headers="bookingHeaders" 
             Items="bookingItems" 
-            BaseUrl="/booking/load"
+            BaseUrl="/booking"
             TableTitle="My Bookings"
             TableSubtitle="Loads you've accepted or are transporting"
             EmptyMessage="You don't have any bookings yet. Browse available loads to get started." />
@@ -338,6 +391,7 @@
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
     [Inject] private NavigationManager NavManager { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
+    [Inject] private LoadLifecycleService LoadLifecycleService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
     private string _activeTab = "loads";
@@ -355,6 +409,8 @@
 
     private DriverRoute _newRoute = new();
     private List<Load> _availableLoads = new();
+    private List<Load> _activeLoads = new();
+    private List<Load> _loadHistory = new();
     private List<DriverRoute> _myRoutes = new();
     private List<Booking> _myBookings = new();
     private List<Notification> _notifications = new();
@@ -376,17 +432,71 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
+        Console.WriteLine($"🚀 DriverDashboard: Initializing for user {_currentUserId}");
+
+        try
+        {
+            Console.WriteLine("📊 Loading available loads...");
+            await LoadDataAsync();
+            Console.WriteLine("🔔 Loading notifications...");
+            await LoadNotificationsAsync();
+            Console.WriteLine("🚛 Loading active loads...");
+            await LoadActiveLoadsAsync();
+            Console.WriteLine("📜 Loading history...");
+            await LoadHistoryAsync();
+            Console.WriteLine("✅ Dashboard initialization complete");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error loading dashboard data: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            // Initialize with empty collections to prevent null reference errors
+            _availableLoads = new List<Load>();
+            loadItems = new List<List<string>>();
+            loadPins = new List<(double, double, string)>();
+            _myRoutes = new List<DriverRoute>();
+            routeItems = new List<List<string>>();
+        }
+    }
+
+    private async Task LoadActiveLoadsAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId)) return;
+        _activeLoads = await LoadLifecycleService.GetDriverActiveLoadsAsync(_currentUserId);
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId)) return;
+        _loadHistory = await LoadLifecycleService.GetDriverLoadHistoryAsync(_currentUserId);
+    }
+
+    private async Task HandleStatusChanged(Load load)
+    {
+        _successMessage = $"Load status updated to: {load.Status}";
+        await LoadActiveLoadsAsync();
+        await LoadHistoryAsync();
         await LoadDataAsync();
-        await LoadNotificationsAsync();
+        StateHasChanged();
     }
 
     private async Task LoadDataAsync()
     {
         // Load available loads (not yet booked)
-        _availableLoads = await Context.Loads
-            .Where(l => l.Status == "Available")
-            .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
+        try
+        {
+            _availableLoads = await Context.Loads
+                .Where(l => l.Status == "Available")
+                .OrderByDescending(l => l.CreatedAt)
+                .ToListAsync();
+            
+            Console.WriteLine($"✓ Loaded {_availableLoads.Count} available loads from database");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading available loads: {ex.Message}");
+            _availableLoads = new List<Load>();
+        }
 
         loadItems = _availableLoads
             .Select(l => new List<string>
@@ -407,15 +517,26 @@
                 // Use actual coordinates if available, otherwise generate demo coordinates
                 var lat = l.PickupLatitude != 0 ? (double)l.PickupLatitude : -26.305 + (i * 0.02);
                 var lng = l.PickupLongitude != 0 ? (double)l.PickupLongitude : 31.136 + (i * 0.02);
+                Console.WriteLine($"  📍 Load '{l.Title}': ({lat}, {lng})");
                 return (lat, lng, $"{l.Title} - {l.PickupLocation}");
             })
             .ToList();
+        
+        Console.WriteLine($"✓ Created {loadPins.Count} load pins for map");
 
         // Load driver's routes
-        _myRoutes = await Context.DriverRoutes
-            .Where(r => r.DriverId == _currentUserId)
-            .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
+        try
+        {
+            _myRoutes = await Context.DriverRoutes
+                .Where(r => r.DriverId == _currentUserId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading routes: {ex.Message}");
+            _myRoutes = new List<DriverRoute>();
+        }
 
         routeItems = _myRoutes
             .Select(r => new List<string>

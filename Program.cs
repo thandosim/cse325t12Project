@@ -43,7 +43,17 @@ if (string.IsNullOrWhiteSpace(connectionString))
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        // Enable connection resiliency with retry on transient failures
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorCodesToAdd: null);
+        
+        // Set command timeout to handle slow queries
+        npgsqlOptions.CommandTimeout(60);
+    }), ServiceLifetime.Scoped);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -76,6 +86,14 @@ if (jwtOptions is null || string.IsNullOrWhiteSpace(jwtOptions.SigningKey))
 {
     throw new InvalidOperationException("JWT configuration missing. Ensure Jwt:SigningKey, Issuer, Audience are set.");
 }
+
+// Configure Google Maps API (legacy - keeping for potential rollback)
+builder.Services.Configure<GoogleMapsOptions>(
+    builder.Configuration.GetSection(GoogleMapsOptions.SectionName));
+
+// Configure Mapbox API for mapping and geocoding
+builder.Services.Configure<MapboxOptions>(
+    builder.Configuration.GetSection(MapboxOptions.SectionName));
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
 
@@ -133,6 +151,12 @@ builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
 builder.Services.AddScoped<AuthClient>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<RealtimeNotificationService>();
+builder.Services.AddScoped<LocationTrackingService>();
+builder.Services.AddScoped<LoadLifecycleService>();
+
+// Add SignalR for real-time tracking
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -156,6 +180,9 @@ app.UseAntiforgery();
 app.UseAuthentication();
 app.UseBlockedUserCheck(); // Check if authenticated user is blocked
 app.UseAuthorization();
+
+// Map SignalR hub
+app.MapHub<t12Project.Hubs.LoadTrackingHub>("/hubs/loadtracking");
 
 app.MapControllers();
 app.MapRazorComponents<App>()

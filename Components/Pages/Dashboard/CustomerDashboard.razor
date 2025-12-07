@@ -262,6 +262,22 @@
                 My Loads
             </button>
             <button type="button" 
+                    class="@GetTabClass("active")" 
+                    @onclick="@(() => SetActiveTab("active"))">
+                Active Loads
+                @if (_activeLoads.Any())
+                {
+                    <span class="ml-2 inline-flex items-center justify-center rounded-full bg-blue-500 px-2 py-0.5 text-xs font-bold text-white">
+                        @_activeLoads.Count
+                    </span>
+                }
+            </button>
+            <button type="button" 
+                    class="@GetTabClass("history")" 
+                    @onclick="@(() => SetActiveTab("history"))">
+                History
+            </button>
+            <button type="button" 
                     class="@GetTabClass("drivers")" 
                     @onclick="@(() => SetActiveTab("drivers"))">
                 Available Drivers
@@ -290,6 +306,43 @@
             TableTitle="My Posted Loads"
             TableSubtitle="Track the status of your shipments"
             EmptyMessage="You haven't posted any loads yet. Click 'Post New Load' to get started." />
+    }
+
+    <!-- Active Loads Tab -->
+    @if (_activeTab == "active")
+    {
+        <div class="space-y-4">
+            @if (!_activeLoads.Any())
+            {
+                <div class="text-center py-12 bg-white rounded-lg border border-slate-200">
+                    <svg class="w-16 h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p class="text-slate-600">No active loads</p>
+                    <p class="text-sm text-slate-500 mt-1">Loads will appear here once accepted by a driver</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var load in _activeLoads)
+                {
+                    <LoadStatusCard 
+                        Load="load" 
+                        IsCustomer="true"
+                        ShowDriverInfo="true"
+                        CurrentUserId="@_currentUserId"
+                        OnStatusChanged="HandleStatusChanged" />
+                }
+            }
+        </div>
+    }
+
+    <!-- History Tab -->
+    @if (_activeTab == "history")
+    {
+        <LoadHistory 
+            Loads="_loadHistory" 
+            ShowDriver="true" />
     }
 
     <!-- Available Drivers Tab -->
@@ -389,6 +442,7 @@
     [Inject] private ApplicationDbContext Context { get; set; } = default!;
     [Inject] private NavigationManager NavManager { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
+    [Inject] private LoadLifecycleService LoadLifecycleService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
     private string _activeTab = "loads";
@@ -401,6 +455,8 @@
 
     private Load _newLoad = new();
     private List<Load> _myLoads = new();
+    private List<Load> _activeLoads = new();
+    private List<Load> _loadHistory = new();
     private List<dynamic> _availableDrivers = new();
     private List<Notification> _notifications = new();
     private List<Notification> _allNotifications = new();
@@ -423,6 +479,20 @@
 
         await LoadDataAsync();
         await LoadNotificationsAsync();
+        await LoadActiveLoadsAsync();
+        await LoadHistoryAsync();
+    }
+
+    private async Task LoadActiveLoadsAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId)) return;
+        _activeLoads = await LoadLifecycleService.GetCustomerActiveLoadsAsync(_currentUserId);
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        if (string.IsNullOrEmpty(_currentUserId)) return;
+        _loadHistory = await LoadLifecycleService.GetCustomerLoadHistoryAsync(_currentUserId);
     }
 
     private async Task LoadNotificationsAsync()
@@ -703,6 +773,15 @@
         _newLoad.DropoffLocation = result.Address;
         _newLoad.DropoffLatitude = (decimal)result.Latitude;
         _newLoad.DropoffLongitude = (decimal)result.Longitude;
+        StateHasChanged();
+    }
+
+    private async Task HandleStatusChanged(Load load)
+    {
+        _successMessage = $"Load status updated to: {load.Status}";
+        await LoadActiveLoadsAsync();
+        await LoadHistoryAsync();
+        await LoadDataAsync();
         StateHasChanged();
     }
 }

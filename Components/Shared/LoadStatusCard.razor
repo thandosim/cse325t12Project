@@ -1,0 +1,364 @@
+@using t12Project.Models
+@using t12Project.Services
+@inject LoadLifecycleService LoadLifecycleService
+@inject NotificationService NotificationService
+
+<div class="bg-white rounded-lg border @GetStatusBorderColor() p-4 shadow-sm">
+    <div class="flex items-start justify-between mb-3">
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+                <h3 class="font-semibold text-lg">@Load.Title</h3>
+                <span class="@GetStatusBadgeClass() px-2 py-1 rounded-full text-xs font-medium">
+                    @Load.Status
+                </span>
+            </div>
+            <p class="text-sm text-slate-600">@Load.Description</p>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="space-y-2 mb-4">
+        <div class="flex items-center gap-3 text-sm">
+            <div class="@(Load.AcceptedAt.HasValue ? "bg-teal-500" : "bg-slate-300") w-6 h-6 rounded-full flex items-center justify-center text-white">
+                @if (Load.AcceptedAt.HasValue)
+                {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                }
+                else
+                {
+                    <span class="text-xs">1</span>
+                }
+            </div>
+            <div class="flex-1">
+                <span class="font-medium">Accepted</span>
+                @if (Load.AcceptedAt.HasValue)
+                {
+                    <span class="text-slate-500 text-xs ml-2">@Load.AcceptedAt.Value.LocalDateTime.ToString("MMM d, h:mm tt")</span>
+                }
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-sm">
+            <div class="@(Load.PickedUpAt.HasValue ? "bg-teal-500" : "bg-slate-300") w-6 h-6 rounded-full flex items-center justify-center text-white">
+                @if (Load.PickedUpAt.HasValue)
+                {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                }
+                else
+                {
+                    <span class="text-xs">2</span>
+                }
+            </div>
+            <div class="flex-1">
+                <span class="font-medium">Picked Up</span>
+                @if (Load.PickedUpAt.HasValue)
+                {
+                    <span class="text-slate-500 text-xs ml-2">@Load.PickedUpAt.Value.LocalDateTime.ToString("MMM d, h:mm tt")</span>
+                }
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-sm">
+            <div class="@(Load.Status == "InTransit" ? "bg-blue-500" : Load.DeliveredAt.HasValue ? "bg-teal-500" : "bg-slate-300") w-6 h-6 rounded-full flex items-center justify-center text-white">
+                @if (Load.DeliveredAt.HasValue)
+                {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                }
+                else if (Load.Status == "InTransit")
+                {
+                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                }
+                else
+                {
+                    <span class="text-xs">3</span>
+                }
+            </div>
+            <div class="flex-1">
+                <span class="font-medium">In Transit</span>
+                @if (Load.Status == "InTransit" && Load.EstimatedTimeOfArrivalMinutes.HasValue)
+                {
+                    <span class="text-blue-600 text-xs ml-2 font-medium">ETA: @Load.EstimatedTimeOfArrivalMinutes min</span>
+                }
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-sm">
+            <div class="@(Load.DeliveredAt.HasValue ? "bg-teal-500" : "bg-slate-300") w-6 h-6 rounded-full flex items-center justify-center text-white">
+                @if (Load.DeliveredAt.HasValue)
+                {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                }
+                else
+                {
+                    <span class="text-xs">4</span>
+                }
+            </div>
+            <div class="flex-1">
+                <span class="font-medium">Delivered</span>
+                @if (Load.DeliveredAt.HasValue)
+                {
+                    <span class="text-slate-500 text-xs ml-2">@Load.DeliveredAt.Value.LocalDateTime.ToString("MMM d, h:mm tt")</span>
+                }
+            </div>
+        </div>
+
+        @if (Load.CompletedAt.HasValue)
+        {
+            <div class="flex items-center gap-3 text-sm">
+                <div class="bg-green-500 w-6 h-6 rounded-full flex items-center justify-center text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <span class="font-medium text-green-700">Completed</span>
+                    <span class="text-slate-500 text-xs ml-2">@Load.CompletedAt.Value.LocalDateTime.ToString("MMM d, h:mm tt")</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Location Info -->
+    <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+        <div>
+            <span class="text-slate-500">Pickup:</span>
+            <p class="font-medium">@Load.PickupLocation</p>
+        </div>
+        <div>
+            <span class="text-slate-500">Dropoff:</span>
+            <p class="font-medium">@Load.DropoffLocation</p>
+        </div>
+    </div>
+
+    <!-- Driver/Customer Info -->
+    @if (ShowDriverInfo && Load.AssignedDriver != null)
+    {
+        <div class="mb-4 p-3 bg-slate-50 rounded-lg">
+            <span class="text-xs text-slate-500">Driver</span>
+            <p class="font-medium">@Load.AssignedDriver.FullName</p>
+            <p class="text-sm text-slate-600">@Load.AssignedDriver.PhoneNumber</p>
+        </div>
+    }
+
+    @if (ShowCustomerInfo && Load.Customer != null)
+    {
+        <div class="mb-4 p-3 bg-slate-50 rounded-lg">
+            <span class="text-xs text-slate-500">Customer</span>
+            <p class="font-medium">@Load.Customer.FullName</p>
+            <p class="text-sm text-slate-600">@Load.Customer.PhoneNumber</p>
+        </div>
+    }
+
+    <!-- Live Driver Tracking (for customers when load is in transit) -->
+    @if (IsCustomer && Load.Status == "InTransit" && !string.IsNullOrEmpty(MapboxAccessToken))
+    {
+        <div class="mb-4">
+            <LiveDriverMap 
+                LoadId="@Load.Id"
+                Title="Driver Location"
+                Height="300px"
+                MapboxAccessToken="@MapboxAccessToken"
+                DestinationLat="@((double)Load.DropoffLatitude)"
+                DestinationLng="@((double)Load.DropoffLongitude)"
+                EstimatedMinutes="@Load.EstimatedTimeOfArrivalMinutes" />
+        </div>
+    }
+
+    <!-- Location Tracker (for drivers when load is in transit) -->
+    @if (IsDriver && (Load.Status == "InTransit" || Load.Status == "PickedUp"))
+    {
+        <div class="mb-4">
+            <DriverLocationTracker 
+                LoadId="@Load.Id"
+                UpdateIntervalSeconds="30"
+                OnLocationUpdate="HandleDriverLocationUpdate" />
+        </div>
+    }
+
+    <!-- Action Buttons -->
+    <div class="flex gap-2 flex-wrap">
+        @if (IsDriver)
+        {
+            @if (Load.Status == "Accepted")
+            {
+                <button @onclick="() => PickupLoad()" 
+                        class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition text-sm font-medium"
+                        disabled="@_processing">
+                    @if (_processing) { <span>Processing...</span> } else { <span>Mark as Picked Up</span> }
+                </button>
+            }
+            else if (Load.Status == "PickedUp")
+            {
+                <button @onclick="() => StartTransit()" 
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition text-sm font-medium"
+                        disabled="@_processing">
+                    @if (_processing) { <span>Processing...</span> } else { <span>Start Transit</span> }
+                </button>
+            }
+            else if (Load.Status == "InTransit")
+            {
+                <button @onclick="() => DeliverLoad()" 
+                        class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition text-sm font-medium"
+                        disabled="@_processing">
+                    @if (_processing) { <span>Processing...</span> } else { <span>Mark as Delivered</span> }
+                </button>
+            }
+        }
+
+        @if (IsCustomer && Load.Status == "Delivered")
+        {
+            <button @onclick="() => CompleteLoad()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium"
+                    disabled="@_processing">
+                @if (_processing) { <span>Processing...</span> } else { <span>Confirm Completion</span> }
+            </button>
+        }
+
+        @if (OnViewMap.HasDelegate)
+        {
+            <button @onclick="() => OnViewMap.InvokeAsync(Load)" 
+                    class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition text-sm font-medium">
+                View on Map
+            </button>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <div class="mt-3 p-3 @(_isError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700") rounded-lg text-sm">
+            @_message
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Load Load { get; set; } = default!;
+    [Parameter] public bool IsDriver { get; set; }
+    [Parameter] public bool IsCustomer { get; set; }
+    [Parameter] public bool ShowDriverInfo { get; set; }
+    [Parameter] public bool ShowCustomerInfo { get; set; }
+    [Parameter] public string CurrentUserId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<Load> OnStatusChanged { get; set; }
+    [Parameter] public EventCallback<Load> OnViewMap { get; set; }
+    [Parameter] public string MapboxAccessToken { get; set; } = string.Empty;
+
+    private bool _processing;
+    private string _message = string.Empty;
+    private bool _isError;
+
+    private async Task HandleDriverLocationUpdate((double lat, double lng) location)
+    {
+        // Location update is handled by the DriverLocationTracker component
+        // which automatically broadcasts via SignalR
+        await Task.CompletedTask;
+    }
+
+    private async Task PickupLoad()
+    {
+        _processing = true;
+        _message = string.Empty;
+        var (success, message) = await LoadLifecycleService.PickupLoadAsync(Load.Id, CurrentUserId);
+        
+        if (success)
+        {
+            Load.Status = "PickedUp";
+            Load.PickedUpAt = DateTimeOffset.UtcNow;
+            await OnStatusChanged.InvokeAsync(Load);
+        }
+
+        _message = message;
+        _isError = !success;
+        _processing = false;
+    }
+
+    private async Task StartTransit()
+    {
+        _processing = true;
+        _message = string.Empty;
+        var (success, message) = await LoadLifecycleService.StartTransitAsync(Load.Id, CurrentUserId);
+        
+        if (success)
+        {
+            Load.Status = "InTransit";
+            await OnStatusChanged.InvokeAsync(Load);
+        }
+
+        _message = message;
+        _isError = !success;
+        _processing = false;
+    }
+
+    private async Task DeliverLoad()
+    {
+        _processing = true;
+        _message = string.Empty;
+        var (success, message) = await LoadLifecycleService.DeliverLoadAsync(Load.Id, CurrentUserId);
+        
+        if (success)
+        {
+            Load.Status = "Delivered";
+            Load.DeliveredAt = DateTimeOffset.UtcNow;
+            await OnStatusChanged.InvokeAsync(Load);
+        }
+
+        _message = message;
+        _isError = !success;
+        _processing = false;
+    }
+
+    private async Task CompleteLoad()
+    {
+        _processing = true;
+        _message = string.Empty;
+        var (success, message) = await LoadLifecycleService.CompleteLoadAsync(Load.Id, CurrentUserId);
+        
+        if (success)
+        {
+            Load.Status = "Completed";
+            Load.CompletedAt = DateTimeOffset.UtcNow;
+            await OnStatusChanged.InvokeAsync(Load);
+        }
+
+        _message = message;
+        _isError = !success;
+        _processing = false;
+    }
+
+    private string GetStatusBorderColor()
+    {
+        return Load.Status switch
+        {
+            "Accepted" => "border-l-4 border-l-yellow-500",
+            "PickedUp" => "border-l-4 border-l-orange-500",
+            "InTransit" => "border-l-4 border-l-blue-500",
+            "Delivered" => "border-l-4 border-l-purple-500",
+            "Completed" => "border-l-4 border-l-green-500",
+            "Cancelled" => "border-l-4 border-l-red-500",
+            _ => "border-l-4 border-l-slate-300"
+        };
+    }
+
+    private string GetStatusBadgeClass()
+    {
+        return Load.Status switch
+        {
+            "Accepted" => "bg-yellow-100 text-yellow-800",
+            "PickedUp" => "bg-orange-100 text-orange-800",
+            "InTransit" => "bg-blue-100 text-blue-800",
+            "Delivered" => "bg-purple-100 text-purple-800",
+            "Completed" => "bg-green-100 text-green-800",
+            "Cancelled" => "bg-red-100 text-red-800",
+            _ => "bg-slate-100 text-slate-800"
+        };
+    }
+}

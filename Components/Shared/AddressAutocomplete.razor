@@ -1,5 +1,8 @@
 @using Microsoft.JSInterop
+@using Microsoft.Extensions.Options
+@using t12Project.Options
 @inject IJSRuntime JS
+@inject IOptions<MapboxOptions> MapboxConfig
 @implements IAsyncDisposable
 
 <div class="relative">
@@ -52,8 +55,17 @@
             
             try
             {
-                await JS.InvokeVoidAsync("initAddressAutocomplete", _elementId, _dotNetRef, MinCharacters);
+                var accessToken = MapboxConfig.Value.AccessToken;
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    Console.WriteLine("⚠ Error: Mapbox access token not configured for autocomplete");
+                    return;
+                }
+                
+                // Mapbox autocomplete: elementId, accessToken, dotNetHelper, minLength
+                await JS.InvokeVoidAsync("initAddressAutocomplete", _elementId, accessToken, _dotNetRef, MinCharacters);
                 _initialized = true;
+                Console.WriteLine($"✓ Mapbox autocomplete initialized for {_elementId}");
             }
             catch (Exception ex)
             {

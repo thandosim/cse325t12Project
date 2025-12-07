@@ -1,0 +1,124 @@
+@using t12Project.Models
+
+<div class="space-y-3">
+    <h2 class="text-xl font-bold text-slate-900 mb-4">Load History</h2>
+
+    @if (!Loads.Any())
+    {
+        <div class="text-center py-12 bg-slate-50 rounded-lg">
+            <svg class="w-16 h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p class="text-slate-600">No completed loads yet</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var load in Loads)
+        {
+            <div class="bg-white rounded-lg border @GetStatusBorderClass(load) p-4 shadow-sm">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-semibold">@load.Title</h3>
+                            <span class="@GetStatusBadgeClass(load) px-2 py-1 rounded-full text-xs font-medium">
+                                @load.Status
+                            </span>
+                        </div>
+                        <p class="text-sm text-slate-600 line-clamp-2">@load.Description</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-3 text-sm">
+                    <div>
+                        <span class="text-slate-500">From:</span>
+                        <p class="font-medium text-sm">@load.PickupLocation</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-500">To:</span>
+                        <p class="font-medium text-sm">@load.DropoffLocation</p>
+                    </div>
+                </div>
+
+                @if (ShowDriver && load.AssignedDriver != null)
+                {
+                    <div class="mb-3 p-2 bg-slate-50 rounded text-sm">
+                        <span class="text-slate-500">Driver:</span>
+                        <span class="font-medium ml-2">@load.AssignedDriver.FullName</span>
+                    </div>
+                }
+
+                @if (ShowCustomer && load.Customer != null)
+                {
+                    <div class="mb-3 p-2 bg-slate-50 rounded text-sm">
+                        <span class="text-slate-500">Customer:</span>
+                        <span class="font-medium ml-2">@load.Customer.FullName</span>
+                    </div>
+                }
+
+                <div class="flex items-center justify-between text-xs text-slate-500">
+                    <div class="flex items-center gap-4">
+                        @if (load.CompletedAt.HasValue)
+                        {
+                            <span>Completed: @load.CompletedAt.Value.LocalDateTime.ToString("MMM d, yyyy")</span>
+                        }
+                        else if (load.Status == "Cancelled")
+                        {
+                            <span>Cancelled: @load.CreatedAt.LocalDateTime.ToString("MMM d, yyyy")</span>
+                        }
+
+                        @if (load.AcceptedAt.HasValue && load.CompletedAt.HasValue)
+                        {
+                            var duration = load.CompletedAt.Value - load.AcceptedAt.Value;
+                            <span>Duration: @((int)duration.TotalHours)h @duration.Minutes m</span>
+                        }
+                    </div>
+
+                    @if (OnViewDetails.HasDelegate)
+                    {
+                        <button @onclick="() => OnViewDetails.InvokeAsync(load)" 
+                                class="text-teal-600 hover:text-teal-700 font-medium">
+                            View Details
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Loads.Count >= 10)
+        {
+            <div class="text-center pt-4">
+                <button class="text-teal-600 hover:text-teal-700 font-medium text-sm">
+                    Load More
+                </button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public List<Load> Loads { get; set; } = new();
+    [Parameter] public bool ShowDriver { get; set; }
+    [Parameter] public bool ShowCustomer { get; set; }
+    [Parameter] public EventCallback<Load> OnViewDetails { get; set; }
+
+    private string GetStatusBorderClass(Load load)
+    {
+        return load.Status switch
+        {
+            "Completed" => "border-l-4 border-l-green-500",
+            "Cancelled" => "border-l-4 border-l-red-500",
+            _ => "border-l-4 border-l-slate-300"
+        };
+    }
+
+    private string GetStatusBadgeClass(Load load)
+    {
+        return load.Status switch
+        {
+            "Completed" => "bg-green-100 text-green-800",
+            "Cancelled" => "bg-red-100 text-red-800",
+            _ => "bg-slate-100 text-slate-800"
+        };
+    }
+}
