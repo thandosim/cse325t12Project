@@ -15,6 +15,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CustomerLocationUpdate> CustomerLocationUpdates { get; set; }
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<DriverRoute> DriverRoutes => Set<DriverRoute>();
+    public DbSet<Rating> Ratings => Set<Rating>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -75,5 +78,35 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<RefreshToken>()
             .HasIndex(t => new { t.UserId, t.TokenHash })
             .IsUnique();
+
+        builder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DriverRoute>()
+            .HasOne(r => r.Driver)
+            .WithMany()
+            .HasForeignKey(r => r.DriverId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Rating>()
+            .HasOne(r => r.Load)
+            .WithMany()
+            .HasForeignKey(r => r.LoadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Rating>()
+            .HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Rating>()
+            .HasOne(r => r.Driver)
+            .WithMany()
+            .HasForeignKey(r => r.DriverId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using t12Project.Data;
@@ -11,9 +12,11 @@ using t12Project.Data;
 namespace t12Project.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251205101349_AddNotificationsAndDriverRoutes")]
+    partial class AddNotificationsAndDriverRoutes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -300,13 +303,6 @@ namespace t12Project.Migrations
                     b.Property<Guid>("LoadId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTimeOffset?>("RespondedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -419,19 +415,10 @@ namespace t12Project.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset?>("AcceptedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("AssignedDriverId")
-                        .HasColumnType("text");
-
                     b.Property<string>("CargoType")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -439,12 +426,6 @@ namespace t12Project.Migrations
                     b.Property<string>("CustomerId")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<DateTimeOffset?>("DeliveredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DeliverySequence")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -461,12 +442,6 @@ namespace t12Project.Migrations
 
                     b.Property<decimal>("DropoffLongitude")
                         .HasColumnType("numeric");
-
-                    b.Property<int?>("EstimatedTimeOfArrivalMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset?>("PickedUpAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("PickupDate")
                         .HasColumnType("timestamp with time zone");
@@ -497,8 +472,6 @@ namespace t12Project.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedDriverId");
-
                     b.HasIndex("CustomerId");
 
                     b.ToTable("Loads");
@@ -517,9 +490,6 @@ namespace t12Project.Migrations
                     b.Property<decimal>("Latitude")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid?>("LoadId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("Longitude")
                         .HasColumnType("numeric");
 
@@ -533,8 +503,6 @@ namespace t12Project.Migrations
 
                     b.HasIndex("DriverId");
 
-                    b.HasIndex("LoadId");
-
                     b.ToTable("LocationUpdates");
                 });
 
@@ -543,10 +511,6 @@ namespace t12Project.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ActionUrl")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -585,44 +549,6 @@ namespace t12Project.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("t12Project.Models.Rating", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CustomerId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("DriverId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("LoadId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Stars")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("DriverId");
-
-                    b.HasIndex("LoadId");
-
-                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("t12Project.Models.RefreshToken", b =>
@@ -828,17 +754,11 @@ namespace t12Project.Migrations
 
             modelBuilder.Entity("t12Project.Models.Load", b =>
                 {
-                    b.HasOne("t12Project.Models.ApplicationUser", "AssignedDriver")
-                        .WithMany()
-                        .HasForeignKey("AssignedDriverId");
-
                     b.HasOne("t12Project.Models.ApplicationUser", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("AssignedDriver");
 
                     b.Navigation("Customer");
                 });
@@ -851,13 +771,7 @@ namespace t12Project.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("t12Project.Models.Load", "Load")
-                        .WithMany()
-                        .HasForeignKey("LoadId");
-
                     b.Navigation("Driver");
-
-                    b.Navigation("Load");
                 });
 
             modelBuilder.Entity("t12Project.Models.Notification", b =>
@@ -869,33 +783,6 @@ namespace t12Project.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("t12Project.Models.Rating", b =>
-                {
-                    b.HasOne("t12Project.Models.ApplicationUser", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("t12Project.Models.ApplicationUser", "Driver")
-                        .WithMany()
-                        .HasForeignKey("DriverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("t12Project.Models.Load", "Load")
-                        .WithMany()
-                        .HasForeignKey("LoadId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Driver");
-
-                    b.Navigation("Load");
                 });
 
             modelBuilder.Entity("t12Project.Models.RefreshToken", b =>

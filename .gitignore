@@ -58,3 +58,34 @@ obj/
 
 node_modules/
 
+## Azure deployment files
+azure-deploy.md
+.github/
+deploy.zip
+publish.zip
+log.zip
+latestlogs/
+*.zip
+DEPLOYMENT.md
+t12Project.csproj
+t12Project.csproj
+scripts/Deploy-ToAzure.ps1
+t12Project.csproj
+t12Project.csproj
+GOOGLE_MAPS_SETUP.md
+AUDIT_REPORT.md
+IMPLEMENTATION_GUIDE.md
+QUALITY_AUDIT_SUMMARY.md
+QUICK_REFERENCE.md
+QUICK_SECRETS_SETUP.md
+SECRETS_MANAGEMENT.md
+scripts/Setup-Secrets.ps1
+ADD_API_KEY.md
+LEAFLET_MIGRATION.md
+LIFECYCLE_IMPLEMENTATION.md
+REALTIME_TRACKING_IMPLEMENTATION.md
+IMPLEMENTATION_SUMMARY.md
+.gitignore
+LOAD_MANAGEMENT_FEATURES.md
+.gitignore
+QUICK_START.md

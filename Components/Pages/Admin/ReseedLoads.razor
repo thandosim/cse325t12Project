@@ -1,0 +1,356 @@
+@page "/admin/reseed-loads"
+@using Microsoft.EntityFrameworkCore
+@using t12Project.Data
+@using t12Project.Models
+@inject ApplicationDbContext DbContext
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Re-seed Cape Town Loads</PageTitle>
+
+<div class="container mt-4">
+    <h2>Re-seed Cape Town Loads</h2>
+    
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <div class="alert @(_isSuccess ? "alert-success" : "alert-danger")" role="alert">
+            @((MarkupString)_message)
+        </div>
+    }
+    
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Current Database Status</h5>
+            <p><strong>Total Loads:</strong> @_currentLoadCount</p>
+            @if (_loads != null && _loads.Any())
+            {
+                <ul>
+                    @foreach (var load in _loads.Take(5))
+                    {
+                        <li>@load.Title - @load.PickupLocation (@load.Status)</li>
+                    }
+                    @if (_loads.Count > 5)
+                    {
+                        <li><em>...and @(_loads.Count - 5) more</em></li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+    
+    <div class="alert alert-warning">
+        <strong>⚠️ Warning:</strong> This will delete ALL existing loads and create 12 new loads from Cape Town/Pinelands area.
+    </div>
+    
+    <button class="btn btn-danger me-2" @onclick="DeleteAllLoads" disabled="@_isProcessing">
+        @if (_isProcessing)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        }
+        Delete All Loads
+    </button>
+    
+    <button class="btn btn-primary" @onclick="ReseedCapeTownLoads" disabled="@_isProcessing">
+        @if (_isProcessing)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        }
+        Delete All & Re-seed Cape Town Loads
+    </button>
+</div>
+
+@code {
+    private List<Load>? _loads;
+    private int _currentLoadCount = 0;
+    private bool _isProcessing = false;
+    private string? _message;
+    private bool _isSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentLoads();
+    }
+
+    private async Task LoadCurrentLoads()
+    {
+        _loads = await DbContext.Loads.OrderBy(l => l.CreatedAt).ToListAsync();
+        _currentLoadCount = _loads.Count;
+    }
+
+    private async Task DeleteAllLoads()
+    {
+        try
+        {
+            _isProcessing = true;
+            _message = null;
+
+            // Delete all bookings first (foreign key constraint)
+            var bookings = await DbContext.Bookings.ToListAsync();
+            DbContext.Bookings.RemoveRange(bookings);
+            
+            // Delete all loads
+            var loads = await DbContext.Loads.ToListAsync();
+            DbContext.Loads.RemoveRange(loads);
+            
+            await DbContext.SaveChangesAsync();
+            
+            _message = $"✓ Successfully deleted {loads.Count} loads and {bookings.Count} bookings.";
+            _isSuccess = true;
+            
+            await LoadCurrentLoads();
+        }
+        catch (Exception ex)
+        {
+            _message = $"❌ Error deleting loads: {ex.Message}";
+            _isSuccess = false;
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task ReseedCapeTownLoads()
+    {
+        try
+        {
+            _isProcessing = true;
+            _message = null;
+
+            // First delete all existing loads
+            var bookings = await DbContext.Bookings.ToListAsync();
+            DbContext.Bookings.RemoveRange(bookings);
+            
+            var loads = await DbContext.Loads.ToListAsync();
+            DbContext.Loads.RemoveRange(loads);
+            await DbContext.SaveChangesAsync();
+
+            // Get customers for assignment
+            var customers = await UserManager.GetUsersInRoleAsync("Customer");
+            var customerList = customers.ToList();
+            
+            if (!customerList.Any())
+            {
+                _message = "❌ No customers found in database. Cannot create loads.";
+                _isSuccess = false;
+                return;
+            }
+
+            // Create Cape Town loads
+            var capeTownLoads = new List<Load>
+            {
+                new Load
+                {
+                    Title = "Office Furniture Relocation",
+                    Status = "Available",
+                    PickupLocation = "Pinelands, Cape Town",
+                    DropoffLocation = "Bellville Industrial, Cape Town",
+                    PickupLatitude = -33.9349m,
+                    PickupLongitude = 18.4956m,
+                    DropoffLatitude = -33.9139m,
+                    DropoffLongitude = 18.6289m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 2500,
+                    Description = "Complete office furniture set - desks, chairs, filing cabinets. Handle with care.",
+                    CargoType = "General",
+                    CustomerId = customerList[0].Id
+                },
+                new Load
+                {
+                    Title = "Medical Equipment",
+                    Status = "Available",
+                    PickupLocation = "Ndabeni, Cape Town",
+                    DropoffLocation = "Panorama Mediclinic, Cape Town",
+                    PickupLatitude = -33.9356m,
+                    PickupLongitude = 18.5112m,
+                    DropoffLatitude = -33.8694m,
+                    DropoffLongitude = 18.5686m,
+                    PickupDate = DateTimeOffset.UtcNow.AddHours(6),
+                    WeightLbs = 1200,
+                    Description = "Fragile medical diagnostic equipment. Temperature controlled transport preferred.",
+                    CargoType = "Fragile",
+                    CustomerId = customerList[customerList.Count > 1 ? 1 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Restaurant Supplies",
+                    Status = "Available",
+                    PickupLocation = "Maitland, Cape Town",
+                    DropoffLocation = "Claremont, Cape Town",
+                    PickupLatitude = -33.9442m,
+                    PickupLongitude = 18.5156m,
+                    DropoffLatitude = -33.9789m,
+                    DropoffLongitude = 18.4644m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
+                    WeightLbs = 3500,
+                    Description = "Industrial kitchen equipment and frozen food supplies. Refrigerated transport required.",
+                    CargoType = "Refrigerated",
+                    CustomerId = customerList[customerList.Count > 2 ? 2 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Building Materials",
+                    Status = "Available",
+                    PickupLocation = "Goodwood, Cape Town",
+                    DropoffLocation = "Thornton, Cape Town",
+                    PickupLatitude = -33.9167m,
+                    PickupLongitude = 18.5500m,
+                    DropoffLatitude = -33.8956m,
+                    DropoffLongitude = 18.5167m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 8000,
+                    Description = "Cement bags, bricks, and steel reinforcement bars. Flatbed truck required.",
+                    CargoType = "Flatbed",
+                    CustomerId = customerList[0].Id
+                },
+                new Load
+                {
+                    Title = "Electronics Shipment",
+                    Status = "Available",
+                    PickupLocation = "Salt River, Cape Town",
+                    DropoffLocation = "Tyger Valley, Cape Town",
+                    PickupLatitude = -33.9344m,
+                    PickupLongitude = 18.4511m,
+                    DropoffLatitude = -33.8656m,
+                    DropoffLongitude = 18.6456m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
+                    WeightLbs = 1800,
+                    Description = "Consumer electronics - TVs, computers, tablets. Extremely fragile, insurance required.",
+                    CargoType = "Fragile",
+                    CustomerId = customerList[customerList.Count > 1 ? 1 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Fresh Produce Delivery",
+                    Status = "Available",
+                    PickupLocation = "Epping Market, Cape Town",
+                    DropoffLocation = "Gardens Centre, Cape Town",
+                    PickupLatitude = -33.9167m,
+                    PickupLongitude = 18.5333m,
+                    DropoffLatitude = -33.9356m,
+                    DropoffLongitude = 18.4108m,
+                    PickupDate = DateTimeOffset.UtcNow.AddHours(12),
+                    WeightLbs = 2200,
+                    Description = "Fresh fruits and vegetables for restaurant. Early morning delivery preferred.",
+                    CargoType = "Refrigerated",
+                    CustomerId = customerList[customerList.Count > 2 ? 2 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Gym Equipment",
+                    Status = "Available",
+                    PickupLocation = "Rondebosch, Cape Town",
+                    DropoffLocation = "Pinelands, Cape Town",
+                    PickupLatitude = -33.9633m,
+                    PickupLongitude = 18.4789m,
+                    DropoffLatitude = -33.9349m,
+                    DropoffLongitude = 18.4956m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
+                    WeightLbs = 5500,
+                    Description = "Complete home gym setup - weights, machines, exercise bikes.",
+                    CargoType = "General",
+                    CustomerId = customerList[0].Id
+                },
+                new Load
+                {
+                    Title = "Pharmaceuticals",
+                    Status = "Available",
+                    PickupLocation = "Brooklyn, Cape Town",
+                    DropoffLocation = "N1 City, Cape Town",
+                    PickupLatitude = -33.9289m,
+                    PickupLongitude = 18.4878m,
+                    DropoffLatitude = -33.9120m,
+                    DropoffLongitude = 18.5350m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(1),
+                    WeightLbs = 900,
+                    Description = "Temperature-sensitive pharmaceutical products. Refrigerated transport mandatory.",
+                    CargoType = "Refrigerated",
+                    CustomerId = customerList[customerList.Count > 1 ? 1 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Auto Parts",
+                    Status = "Available",
+                    PickupLocation = "Parow, Cape Town",
+                    DropoffLocation = "Milnerton, Cape Town",
+                    PickupLatitude = -33.9047m,
+                    PickupLongitude = 18.5814m,
+                    DropoffLatitude = -33.8706m,
+                    DropoffLongitude = 18.4978m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(3),
+                    WeightLbs = 3200,
+                    Description = "Automotive parts and accessories for workshop. Contains heavy engine components.",
+                    CargoType = "General",
+                    CustomerId = customerList[customerList.Count > 2 ? 2 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Wine & Spirits",
+                    Status = "Available",
+                    PickupLocation = "Observatory, Cape Town",
+                    DropoffLocation = "Sea Point, Cape Town",
+                    PickupLatitude = -33.9364m,
+                    PickupLongitude = 18.4726m,
+                    DropoffLatitude = -33.9253m,
+                    DropoffLongitude = 18.3892m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(2),
+                    WeightLbs = 1600,
+                    Description = "Premium wine collection and spirits. Fragile glass bottles, handle with extreme care.",
+                    CargoType = "Fragile",
+                    CustomerId = customerList[0].Id
+                },
+                new Load
+                {
+                    Title = "Textiles",
+                    Status = "Available",
+                    PickupLocation = "Woodstock, Cape Town",
+                    DropoffLocation = "Durbanville, Cape Town",
+                    PickupLatitude = -33.9258m,
+                    PickupLongitude = 18.4473m,
+                    DropoffLatitude = -33.8300m,
+                    DropoffLongitude = 18.6489m,
+                    PickupDate = DateTimeOffset.UtcNow.AddDays(4),
+                    WeightLbs = 2800,
+                    Description = "Fabric rolls and textile products for manufacturing. Keep dry.",
+                    CargoType = "General",
+                    CustomerId = customerList[customerList.Count > 1 ? 1 : 0].Id
+                },
+                new Load
+                {
+                    Title = "Frozen Seafood",
+                    Status = "Available",
+                    PickupLocation = "Table Bay Harbour, Cape Town",
+                    DropoffLocation = "Brackenfell, Cape Town",
+                    PickupLatitude = -33.9089m,
+                    PickupLongitude = 18.4289m,
+                    DropoffLatitude = -33.8645m,
+                    DropoffLongitude = 18.6823m,
+                    PickupDate = DateTimeOffset.UtcNow.AddHours(8),
+                    WeightLbs = 4500,
+                    Description = "Fresh frozen seafood from harbor. Requires refrigerated transport at -18°C.",
+                    CargoType = "Refrigerated",
+                    CustomerId = customerList[customerList.Count > 2 ? 2 : 0].Id
+                }
+            };
+
+            DbContext.Loads.AddRange(capeTownLoads);
+            await DbContext.SaveChangesAsync();
+
+            _message = $"✓ Successfully deleted {loads.Count} old loads and created {capeTownLoads.Count} new Cape Town loads!<br/>" +
+                      "All loads are set to 'Available' status and located in Cape Town/Pinelands area.";
+            _isSuccess = true;
+
+            await LoadCurrentLoads();
+        }
+        catch (Exception ex)
+        {
+            _message = $"❌ Error re-seeding loads: {ex.Message}<br/>Stack: {ex.StackTrace}";
+            _isSuccess = false;
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

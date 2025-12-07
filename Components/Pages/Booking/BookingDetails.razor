@@ -1,0 +1,375 @@
+@page "/booking/{bookingId:guid}"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using t12Project.Models
+@using t12Project.Services
+@attribute [Authorize]
+
+@inject ApplicationDbContext Context
+@inject LoadLifecycleService LoadLifecycleService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Booking Details - LoadHitch</PageTitle>
+
+<section class="min-h-screen bg-slate-50 py-8">
+    <div class="mx-auto max-w-6xl px-4">
+        @if (_isLoading)
+        {
+            <div class="flex items-center justify-center py-24">
+                <svg class="animate-spin h-12 w-12 text-teal-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        }
+        else if (_booking == null)
+        {
+            <div class="rounded-xl bg-white p-12 shadow-sm text-center">
+                <svg class="mx-auto h-16 w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="mt-4 text-lg font-semibold text-slate-900">Booking Not Found</h3>
+                <p class="mt-2 text-sm text-slate-500">The booking you're looking for doesn't exist or has been removed.</p>
+                <button type="button" 
+                        class="mt-6 rounded-full bg-teal-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
+                        @onclick="GoBack">
+                    Go Back
+                </button>
+            </div>
+        }
+        else
+        {
+            <!-- Header -->
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <button type="button" 
+                            class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+                            @onclick="GoBack">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Back to Dashboard
+                    </button>
+                    <h1 class="mt-2 text-3xl font-bold text-slate-900">Booking Details</h1>
+                    <p class="mt-1 text-sm text-slate-500">ID: @_booking.Id</p>
+                </div>
+                <div>
+                    <span class="@GetBookingStatusBadgeClass(_booking.Status)">
+                        @_booking.Status
+                    </span>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_successMessage))
+            {
+                <div class="mb-6 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        @_successMessage
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        @_errorMessage
+                    </div>
+                </div>
+            }
+
+            <div class="grid gap-6 lg:grid-cols-3">
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Load Information -->
+                    @if (_booking.Load != null)
+                    {
+                        <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                            <h2 class="text-lg font-semibold text-slate-900 mb-4">Load Information</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-base font-medium text-slate-900">@_booking.Load.Title</h3>
+                                    <p class="text-sm text-slate-500 mt-1">@_booking.Load.Description</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                                    <div>
+                                        <p class="text-xs font-medium text-slate-500 uppercase">Weight</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-900">@_booking.Load.WeightLbs.ToString("N0") lbs</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-slate-500 uppercase">Cargo Type</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-900">@_booking.Load.CargoType</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-slate-500 uppercase">Pickup Date</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-900">@_booking.Load.PickupDate.ToString("MMM dd, yyyy")</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-slate-500 uppercase">Load Status</p>
+                                        <p class="mt-1">
+                                            <span class="@GetLoadStatusBadgeClass(_booking.Load.Status)">
+                                                @_booking.Load.Status
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Locations -->
+                                <div class="pt-4 border-t border-slate-200 space-y-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-xs font-medium text-slate-500 uppercase">Pickup Location</p>
+                                            <p class="mt-1 text-sm font-medium text-slate-900">@_booking.Load.PickupLocation</p>
+                                            <button type="button" 
+                                                    class="mt-2 inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 font-medium"
+                                                    @onclick="() => NavigateToLocation(_booking.Load.PickupLatitude, _booking.Load.PickupLongitude, _booking.Load.PickupLocation)">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                                </svg>
+                                                Navigate to Pickup
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-xs font-medium text-slate-500 uppercase">Dropoff Location</p>
+                                            <p class="mt-1 text-sm font-medium text-slate-900">@_booking.Load.DropoffLocation</p>
+                                            <button type="button" 
+                                                    class="mt-2 inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 font-medium"
+                                                    @onclick="() => NavigateToLocation(_booking.Load.DropoffLatitude, _booking.Load.DropoffLongitude, _booking.Load.DropoffLocation)">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                                </svg>
+                                                Navigate to Dropoff
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Booking Notes -->
+                    @if (!string.IsNullOrEmpty(_booking.Notes))
+                    {
+                        <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                            <h2 class="text-lg font-semibold text-slate-900 mb-3">Booking Notes</h2>
+                            <p class="text-sm text-slate-600">@_booking.Notes</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Booking Info -->
+                    <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                        <h2 class="text-lg font-semibold text-slate-900 mb-4">Booking Info</h2>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs font-medium text-slate-500 uppercase">Created</p>
+                                <p class="mt-1 text-sm text-slate-900">@_booking.CreatedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                            </div>
+                            @if (_booking.RespondedAt.HasValue)
+                            {
+                                <div>
+                                    <p class="text-xs font-medium text-slate-500 uppercase">Responded</p>
+                                    <p class="mt-1 text-sm text-slate-900">@_booking.RespondedAt.Value.ToString("MMM dd, yyyy HH:mm")</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    @if (_isDriver && _booking.Status == "Pending")
+                    {
+                        <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                            <h2 class="text-lg font-semibold text-slate-900 mb-4">Actions</h2>
+                            <div class="space-y-3">
+                                <button type="button"
+                                        class="w-full rounded-full bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:opacity-50"
+                                        disabled="@_isProcessing"
+                                        @onclick="AcceptBookingAsync">
+                                    @if (_isProcessing)
+                                    {
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>Accept Booking</span>
+                                    }
+                                </button>
+                                <button type="button"
+                                        class="w-full rounded-full bg-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-300 transition-colors disabled:opacity-50"
+                                        disabled="@_isProcessing"
+                                        @onclick="RejectBookingAsync">
+                                    Reject Booking
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public Guid BookingId { get; set; }
+
+    private Booking? _booking;
+    private bool _isLoading = true;
+    private bool _isProcessing = false;
+    private bool _isDriver = false;
+    private string _currentUserId = string.Empty;
+    private string? _successMessage;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        _isDriver = authState.User.IsInRole("Driver");
+
+        await LoadBookingAsync();
+    }
+
+    private async Task LoadBookingAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _booking = await Context.Bookings
+                .Include(b => b.Load)
+                .Include(b => b.Driver)
+                .FirstOrDefaultAsync(b => b.Id == BookingId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task AcceptBookingAsync()
+    {
+        if (_booking == null || _booking.Load == null) return;
+
+        _isProcessing = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            // Use LoadLifecycleService to accept the load
+            await LoadLifecycleService.AcceptLoadAsync(_booking.Load.Id, _currentUserId);
+
+            // Update booking status
+            _booking.Status = "Accepted";
+            _booking.RespondedAt = DateTimeOffset.UtcNow;
+            await Context.SaveChangesAsync();
+
+            _successMessage = "Booking accepted successfully! The load has been assigned to you.";
+            await LoadBookingAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to accept booking: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task RejectBookingAsync()
+    {
+        if (_booking == null) return;
+
+        _isProcessing = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            _booking.Status = "Rejected";
+            _booking.RespondedAt = DateTimeOffset.UtcNow;
+            await Context.SaveChangesAsync();
+
+            _successMessage = "Booking rejected.";
+            await LoadBookingAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to reject booking: {ex.Message}";
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task NavigateToLocation(decimal latitude, decimal longitude, string locationName)
+    {
+        // Open Google Maps with directions
+        var url = $"https://www.google.com/maps/dir/?api=1&destination={latitude},{longitude}";
+        await JS.InvokeVoidAsync("open", url, "_blank");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo(_isDriver ? "/dashboard/driver" : "/dashboard/customer");
+    }
+
+    private string GetBookingStatusBadgeClass(string status) => status?.ToLower() switch
+    {
+        "pending" => "inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800",
+        "accepted" => "inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800",
+        "rejected" => "inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800",
+        "completed" => "inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800",
+        _ => "inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800"
+    };
+
+    private string GetLoadStatusBadgeClass(string status) => status?.ToLower() switch
+    {
+        "available" => "inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800",
+        "accepted" => "inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800",
+        "pickedup" => "inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800",
+        "intransit" => "inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800",
+        "delivered" => "inline-flex items-center rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-800",
+        "completed" => "inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800",
+        "cancelled" => "inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800",
+        _ => "inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800"
+    };
+}

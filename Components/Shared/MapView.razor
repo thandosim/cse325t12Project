@@ -1,49 +1,400 @@
 @namespace t12Project.Components.Shared
+@using Microsoft.Extensions.Options
+@using t12Project.Options
 @inject IJSRuntime JS
+@inject IOptions<MapboxOptions> MapboxConfig
+@implements IAsyncDisposable
 
-<div id="map" class="w-full h-96 rounded-lg shadow">
+<div class="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+    <div id="map" class="w-full h-96" style="min-height: 384px;">
+    </div>
+    
+    <!-- Location Controls -->
+    <div class="absolute top-4 left-4 flex flex-col gap-2">
+        <button type="button" 
+                class="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                @onclick="GetCurrentLocationAsync"
+                disabled="@_isGettingLocation">
+            @if (_isGettingLocation)
+            {
+                <svg class="animate-spin h-4 w-4 text-teal-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Locating...</span>
+            }
+            else
+            {
+                <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>My Location</span>
+            }
+        </button>
 
+        @if (EnableLocationSelection)
+        {
+            <button type="button" 
+                    class="@(_isSelectingLocation ? "bg-teal-600 text-white" : "bg-white/95 text-slate-700 hover:bg-slate-50") backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 text-sm font-medium transition flex items-center gap-2 border border-slate-200"
+                    @onclick="ToggleLocationSelectionAsync">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>@(_isSelectingLocation ? "Click Map to Select" : "Select on Map")</span>
+            </button>
+        }
+    </div>
+    
+    <!-- Map Legend -->
+    <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 text-sm border border-slate-200 max-w-xs">
+        <p class="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            Map Legend
+        </p>
+        <div class="space-y-2">
+            @if (Loads != null && Loads.Any())
+            {
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 rounded-full bg-amber-500 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-slate-700 font-medium">Available Loads <span class="text-slate-500">(@Loads.Count())</span></span>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center gap-2 opacity-50">
+                    <div class="w-5 h-5 rounded-full bg-amber-500 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-slate-500">Available Loads (0)</span>
+                </div>
+            }
+            
+            @if (Trucks != null && Trucks.Any())
+            {
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 rounded-full bg-teal-600 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-slate-700 font-medium">Active Drivers <span class="text-slate-500">(@Trucks.Count())</span></span>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center gap-2 opacity-50">
+                    <div class="w-5 h-5 rounded-full bg-teal-600 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-slate-500">Active Drivers (0)</span>
+                </div>
+            }
+            
+            @if (_currentLocation.HasValue || UserLocation.HasValue)
+            {
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-slate-700 font-medium">Your Location</span>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center gap-2 opacity-50">
+                    <div class="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-slate-500">Your Location (not set)</span>
+                </div>
+            }
+            
+            @if (_isSelectingLocation)
+            {
+                <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white shadow flex-shrink-0"></div>
+                    <span class="text-emerald-600 font-medium">Selected Location</span>
+                </div>
+            }
+        </div>
+        
+        @if (Loads?.Any() != true && Trucks?.Any() != true)
+        {
+            <p class="text-xs text-slate-500 mt-3 pt-3 border-t border-slate-200">
+                No markers to display. Try getting your location or browse available loads.
+            </p>
+        }
+    </div>
+
+    <!-- Map Controls Info -->
+    <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 text-xs text-slate-600 border border-slate-200">
+        @if (_isSelectingLocation)
+        {
+            <span class="text-teal-600 font-medium">Click anywhere on the map to select location</span>
+        }
+        else
+        {
+            <span>Click markers for details</span>
+        }
+    </div>
+
+    <!-- Location Error Message -->
+    @if (!string.IsNullOrEmpty(_locationError))
+    {
+        <div class="absolute bottom-4 right-4 bg-red-50 border border-red-200 rounded-lg shadow-lg px-4 py-3 text-sm text-red-700 max-w-xs">
+            <div class="flex items-start gap-2">
+                <svg class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <p class="font-medium">Location Error</p>
+                    <p class="text-xs mt-0.5">@_locationError</p>
+                </div>
+                <button type="button" class="text-red-500 hover:text-red-700" @onclick="() => _locationError = null">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- Current Location Display -->
+    @if (_currentLocation.HasValue && ShowLocationInfo)
+    {
+        <div class="absolute bottom-20 left-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-4 py-3 text-sm border border-slate-200 max-w-xs">
+            <p class="font-medium text-slate-900 mb-1">Current Location</p>
+            <p class="text-xs text-slate-600">
+                Lat: @_currentLocation.Value.lat.ToString("F6"), Lng: @_currentLocation.Value.lng.ToString("F6")
+            </p>
+            @if (!string.IsNullOrEmpty(_currentAddress))
+            {
+                <p class="text-xs text-slate-500 mt-1">@_currentAddress</p>
+            }
+        </div>
+    }
 </div>
 
 @code {
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Trucks { get; set; }
     [Parameter] public IEnumerable<(double lat, double lng, string label)>? Loads { get; set; }
     [Parameter] public (double lat, double lng)? UserLocation { get; set; }
+    [Parameter] public bool EnableLocationSelection { get; set; } = false;
+    [Parameter] public bool ShowLocationInfo { get; set; } = true;
+    [Parameter] public bool AutoGetLocation { get; set; } = false;
+    [Parameter] public EventCallback<(double lat, double lng)> OnLocationChanged { get; set; }
+    [Parameter] public EventCallback<(double lat, double lng)> OnLocationSelected { get; set; }
 
-    private void TestOutput()
-    {
-        Console.WriteLine(">>> MapView test function executed!");
-    }
+    private DotNetObjectReference<MapView>? _dotNetRef;
+    private bool _isGettingLocation = false;
+    private bool _isSelectingLocation = false;
+    private (double lat, double lng)? _currentLocation;
+    private string? _locationError;
+    private string? _currentAddress;
+    private bool _mapInitialized = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Call the test function on every render
-            TestOutput();
         if (firstRender)
         {
-            // Call the test function on every render
-            TestOutput();
-            // Prepare pins from parameters
-            var pins = new List<object>();
-
-            if (Trucks != null)
+            _dotNetRef = DotNetObjectReference.Create(this);
+            
+            try
             {
-                pins.AddRange(Trucks.Select(t => new { lat = t.lat, lng = t.lng, label = t.label }));
+                // Initialize Leaflet map with Mapbox tiles
+                var accessToken = MapboxConfig.Value.AccessToken;
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    Console.WriteLine("⚠ Error: Mapbox access token not configured");
+                    _locationError = "Map configuration error. Contact administrator.";
+                    StateHasChanged();
+                    return;
+                }
+                
+                Console.WriteLine($"🗺️ MapView: Initializing map with token: {accessToken.Substring(0, 10)}...");
+                
+                // Get current location first if AutoGetLocation is enabled
+                if (AutoGetLocation)
+                {
+                    await GetCurrentLocationAsync();
+                }
+                
+                // Initialize map with current location if available
+                if (_currentLocation.HasValue)
+                {
+                    await JS.InvokeVoidAsync("initializeMap", "map", accessToken, _currentLocation.Value.lat, _currentLocation.Value.lng, 12);
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("initializeMap", "map", accessToken);
+                }
+                
+                Console.WriteLine("✓ MapView: Map initialized, setting markers...");
+                await InitializeMapAsync();
+                _mapInitialized = true;
             }
-
-            if (Loads != null)
+            catch (Exception ex)
             {
-                pins.AddRange(Loads.Select(l => new { lat = l.lat, lng = l.lng, label = l.label }));
+                Console.WriteLine($"❌ Error initializing map: {ex.Message}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
+                _locationError = $"Map initialization failed: {ex.Message}";
+                StateHasChanged();
             }
-
-            if (UserLocation.HasValue)
-            {
-                pins.Add(new { lat = UserLocation.Value.lat, lng = UserLocation.Value.lng, label = "You" });
-            }
-
-            // Call JS function defined in site.js
-            Console.WriteLine($"Calling initMapWithPins with {pins.Count} pins");
-            await JS.InvokeVoidAsync("initMapWithPins", pins);
         }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Reinitialize map when parameters change (after first render)
+        if (_mapInitialized)
+        {
+            await InitializeMapAsync();
+        }
+    }
+
+    private async Task InitializeMapAsync()
+    {
+        var accessToken = MapboxConfig.Value.AccessToken;
+        
+        // Prepare pins from parameters with types for different colors
+        var pins = new List<object>();
+
+        if (Trucks != null)
+        {
+            Console.WriteLine($"MapView: Adding {Trucks.Count()} truck markers");
+            pins.AddRange(Trucks.Select(t => new { lat = t.lat, lng = t.lng, label = t.label, details = "", type = "driver" }));
+        }
+
+        if (Loads != null)
+        {
+            Console.WriteLine($"MapView: Adding {Loads.Count()} load markers");
+            pins.AddRange(Loads.Select(l => new { lat = l.lat, lng = l.lng, label = l.label, details = "", type = "load" }));
+        }
+
+        var locationToShow = _currentLocation ?? UserLocation;
+        if (locationToShow.HasValue)
+        {
+            Console.WriteLine($"MapView: Adding user location marker at {locationToShow.Value.lat}, {locationToShow.Value.lng}");
+            pins.Add(new { lat = locationToShow.Value.lat, lng = locationToShow.Value.lng, label = "Your Location", details = "", type = "user" });
+        }
+
+        // Call Leaflet function with Mapbox access token
+        Console.WriteLine($"MapView: Setting {pins.Count} total markers on Leaflet map");
+        await JS.InvokeVoidAsync("setMarkers", pins, accessToken);
+    }
+
+    private async Task GetCurrentLocationAsync()
+    {
+        _isGettingLocation = true;
+        _locationError = null;
+        StateHasChanged();
+
+        try
+        {
+            var location = await JS.InvokeAsync<LocationResult>("getCurrentLocation");
+            
+            if (location != null)
+            {
+                _currentLocation = (location.Latitude, location.Longitude);
+                
+                // Update marker on map and pan to location
+                await JS.InvokeVoidAsync("updateUserMarker", location.Latitude, location.Longitude, "Your Location");
+                
+                // Zoom to the current location
+                await JS.InvokeVoidAsync("panToLocation", location.Latitude, location.Longitude, 12);
+                
+                // Try to get address using Mapbox Geocoding API
+                try
+                {
+                    var accessToken = MapboxConfig.Value.AccessToken;
+                    _currentAddress = await JS.InvokeAsync<string>("getAddressFromCoordinates", location.Latitude, location.Longitude, accessToken);
+                }
+                catch
+                {
+                    _currentAddress = null;
+                }
+
+                // Notify parent component
+                if (OnLocationChanged.HasDelegate)
+                {
+                    await OnLocationChanged.InvokeAsync(_currentLocation.Value);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _locationError = ex.Message;
+        }
+        finally
+        {
+            _isGettingLocation = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleLocationSelectionAsync()
+    {
+        _isSelectingLocation = !_isSelectingLocation;
+
+        if (_isSelectingLocation)
+        {
+            await JS.InvokeVoidAsync("enableLocationSelection", _dotNetRef);
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("disableLocationSelection");
+        }
+
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnLocationUpdate(LocationResult location)
+    {
+        _currentLocation = (location.Latitude, location.Longitude);
+        
+        if (OnLocationChanged.HasDelegate)
+        {
+            await OnLocationChanged.InvokeAsync(_currentLocation.Value);
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnLocationError(string error)
+    {
+        _locationError = error;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable("OnLocationSelected")]
+    public async Task HandleLocationSelected(double lat, double lng)
+    {
+        if (OnLocationSelected.HasDelegate)
+        {
+            await OnLocationSelected.InvokeAsync((lat, lng));
+        }
+    }
+
+    public async Task PanToLocationAsync(double lat, double lng, int zoom = 12)
+    {
+        await JS.InvokeVoidAsync("panToLocation", lat, lng, zoom);
+    }
+
+    public async Task RefreshMapAsync()
+    {
+        await InitializeMapAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("stopWatchingLocation");
+            await JS.InvokeVoidAsync("disableLocationSelection");
+        }
+        catch { }
+        
+        _dotNetRef?.Dispose();
+    }
+
+    public class LocationResult
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double Accuracy { get; set; }
     }
 }

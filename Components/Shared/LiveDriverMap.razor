@@ -1,0 +1,197 @@
+@inject IJSRuntime JS
+@inject LocationTrackingService LocationService
+@inject ILogger<LiveDriverMap> Logger
+@implements IAsyncDisposable
+
+<div class="live-driver-map-container">
+    <div class="map-header mb-2">
+        <h5>@Title</h5>
+        @if (EstimatedMinutes.HasValue && EstimatedMinutes > 0)
+        {
+            <div class="eta-badge">
+                <span class="badge bg-primary">
+                    ETA: @EstimatedMinutes minutes
+                </span>
+            </div>
+        }
+    </div>
+
+    <div id="@MapContainerId" style="height: @Height; width: 100%; position: relative;">
+        @if (IsLoading)
+        {
+            <div class="map-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading map...</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (LastUpdateTime.HasValue)
+    {
+        <div class="map-footer mt-2">
+            <small class="text-muted">
+                Last updated: @LastUpdateTime.Value.ToString("HH:mm:ss")
+            </small>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid LoadId { get; set; }
+    [Parameter] public string Title { get; set; } = "Driver Location";
+    [Parameter] public string Height { get; set; } = "400px";
+    [Parameter] public string MapboxAccessToken { get; set; } = string.Empty;
+    [Parameter] public double DestinationLat { get; set; }
+    [Parameter] public double DestinationLng { get; set; }
+    [Parameter] public int? EstimatedMinutes { get; set; }
+
+    private string MapContainerId => $"live-driver-map-{LoadId}";
+    private bool IsLoading { get; set; } = true;
+    private DateTimeOffset? LastUpdateTime { get; set; }
+    private System.Threading.Timer? _refreshTimer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Initialize map
+                await JS.InvokeVoidAsync("initializeMap", 
+                    MapContainerId, 
+                    MapboxAccessToken,
+                    DestinationLat, 
+                    DestinationLng, 
+                    12);
+
+                // Set destination marker
+                await JS.InvokeVoidAsync("setDestinationMarker", 
+                    DestinationLat, 
+                    DestinationLng, 
+                    "Delivery Location");
+
+                // Load initial driver location
+                await UpdateDriverLocation();
+
+                IsLoading = false;
+                StateHasChanged();
+
+                // Start periodic refresh
+                _refreshTimer = new System.Threading.Timer(async _ =>
+                {
+                    await UpdateDriverLocation();
+                }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+
+                Logger.LogInformation("Live driver map initialized for LoadId: {LoadId}", LoadId);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error initializing live driver map");
+                IsLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task UpdateDriverLocation()
+    {
+        try
+        {
+            // Get latest location updates for this load
+            var locations = await LocationService.GetLoadLocationHistoryAsync(LoadId);
+            var latestLocation = locations.OrderByDescending(l => l.ReportedAt).FirstOrDefault();
+
+            if (latestLocation != null)
+            {
+                // Update driver marker on map
+                await JS.InvokeVoidAsync("updateDriverMarker",
+                    (double)latestLocation.Latitude,
+                    (double)latestLocation.Longitude,
+                    "Driver",
+                    null); // bearing - could be calculated from movement
+
+                // Fit map to show both driver and destination
+                await JS.InvokeVoidAsync("fitMapToDriverAndDestination");
+
+                LastUpdateTime = latestLocation.ReportedAt;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating driver location");
+        }
+    }
+
+    public async Task OnLocationUpdateReceived(double latitude, double longitude)
+    {
+        try
+        {
+            // Update map with new location from SignalR
+            await JS.InvokeVoidAsync("updateDriverMarker",
+                latitude,
+                longitude,
+                "Driver",
+                null);
+
+            LastUpdateTime = DateTimeOffset.UtcNow;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing location update");
+        }
+    }
+
+    public async Task OnETAUpdateReceived(int estimatedMinutes)
+    {
+        EstimatedMinutes = estimatedMinutes;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _refreshTimer?.Dispose();
+        
+        try
+        {
+            await JS.InvokeVoidAsync("clearDriverTracking");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error disposing live driver map");
+        }
+    }
+}
+
+<style>
+    .live-driver-map-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        background: white;
+    }
+
+    .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .map-header h5 {
+        margin: 0;
+    }
+
+    .map-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+    }
+
+    .map-footer {
+        text-align: center;
+    }
+</style>

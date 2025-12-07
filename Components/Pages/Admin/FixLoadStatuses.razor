@@ -1,0 +1,153 @@
+@page "/admin/fix-load-statuses"
+@using Microsoft.EntityFrameworkCore
+@using t12Project.Data
+@using t12Project.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Fix Load Statuses</PageTitle>
+
+<div class="container mt-4">
+    <h2>Fix Load Statuses</h2>
+    
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <div class="alert @(_isSuccess ? "alert-success" : "alert-danger")" role="alert">
+            @_message
+        </div>
+    }
+    
+    @if (_loads != null && _loads.Any())
+    {
+        <div class="mb-3">
+            <h4>Current Loads in Database:</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Current Status</th>
+                        <th>Pickup Location</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var load in _loads)
+                    {
+                        <tr>
+                            <td>@load.Id.ToString().Substring(0, 8)</td>
+                            <td>@load.Title</td>
+                            <td><strong>@load.Status</strong></td>
+                            <td>@load.PickupLocation</td>
+                            <td>@load.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <button class="btn btn-primary" @onclick="UpdateAllToAvailable" disabled="@_isProcessing">
+            @if (_isProcessing)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            Update All Loads to "Available" Status
+        </button>
+    }
+    else if (_isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>No loads found in database.</p>
+    }
+</div>
+
+@code {
+    private List<Load>? _loads;
+    private bool _isLoading = true;
+    private bool _isProcessing = false;
+    private string? _message;
+    private bool _isSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLoads();
+    }
+
+    private async Task LoadLoads()
+    {
+        try
+        {
+            _isLoading = true;
+            _loads = await DbContext.Loads
+                .OrderBy(l => l.CreatedAt)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error loading loads: {ex.Message}";
+            _isSuccess = false;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task UpdateAllToAvailable()
+    {
+        try
+        {
+            _isProcessing = true;
+            _message = null;
+
+            if (_loads == null || !_loads.Any())
+            {
+                _message = "No loads to update.";
+                _isSuccess = false;
+                return;
+            }
+
+            var updatedCount = 0;
+            foreach (var load in _loads)
+            {
+                if (load.Status != "Available")
+                {
+                    load.Status = "Available";
+                    updatedCount++;
+                }
+            }
+
+            if (updatedCount > 0)
+            {
+                await DbContext.SaveChangesAsync();
+                _message = $"✓ Successfully updated {updatedCount} load(s) to 'Available' status.";
+                _isSuccess = true;
+                
+                // Reload to show updated data
+                await LoadLoads();
+            }
+            else
+            {
+                _message = "All loads already have 'Available' status.";
+                _isSuccess = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = $"❌ Error updating loads: {ex.Message}";
+            _isSuccess = false;
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

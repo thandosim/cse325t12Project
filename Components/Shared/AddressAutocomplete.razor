@@ -1,0 +1,145 @@
+@using Microsoft.JSInterop
+@using Microsoft.Extensions.Options
+@using t12Project.Options
+@inject IJSRuntime JS
+@inject IOptions<MapboxOptions> MapboxConfig
+@implements IAsyncDisposable
+
+<div class="relative">
+    <input id="@_elementId"
+           type="text"
+           class="@CssClass"
+           placeholder="@Placeholder"
+           value="@Value"
+           @oninput="HandleInput"
+           @onblur="HandleBlur"
+           autocomplete="off" />
+    @if (!string.IsNullOrEmpty(_hint))
+    {
+        <p class="mt-1 text-xs text-slate-500">@_hint</p>
+    }
+</div>
+
+@code {
+    private string _elementId = $"address-autocomplete-{Guid.NewGuid():N}";
+    private DotNetObjectReference<AddressAutocomplete>? _dotNetRef;
+    private bool _initialized = false;
+    private string _hint = "Type at least 10 characters for suggestions";
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Enter address...";
+
+    [Parameter]
+    public string CssClass { get; set; } = "w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none";
+
+    [Parameter]
+    public EventCallback<AddressResult> OnAddressSelected { get; set; }
+
+    [Parameter]
+    public int MinCharacters { get; set; } = 10;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            
+            // Small delay to ensure element is in DOM
+            await Task.Delay(100);
+            
+            try
+            {
+                var accessToken = MapboxConfig.Value.AccessToken;
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    Console.WriteLine("⚠ Error: Mapbox access token not configured for autocomplete");
+                    return;
+                }
+                
+                // Mapbox autocomplete: elementId, accessToken, dotNetHelper, minLength
+                await JS.InvokeVoidAsync("initAddressAutocomplete", _elementId, accessToken, _dotNetRef, MinCharacters);
+                _initialized = true;
+                Console.WriteLine($"✓ Mapbox autocomplete initialized for {_elementId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to initialize autocomplete: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? string.Empty;
+        Value = newValue;
+        await ValueChanged.InvokeAsync(newValue);
+        
+        // Update hint based on character count
+        if (newValue.Length < MinCharacters)
+        {
+            _hint = $"Type {MinCharacters - newValue.Length} more character(s) for suggestions";
+        }
+        else
+        {
+            _hint = string.Empty;
+        }
+    }
+
+    private async Task HandleBlur(FocusEventArgs e)
+    {
+        // Allow time for autocomplete selection
+        await Task.Delay(200);
+    }
+
+    [JSInvokable]
+    public async Task OnPlaceSelected(AddressResult result)
+    {
+        Value = result.Address;
+        _hint = string.Empty;
+        await ValueChanged.InvokeAsync(result.Address);
+        await OnAddressSelected.InvokeAsync(result);
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_initialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("destroyAddressAutocomplete", _elementId);
+            }
+            catch
+            {
+                // Ignore errors during disposal
+            }
+        }
+        
+        _dotNetRef?.Dispose();
+    }
+
+    public class AddressResult
+    {
+        public string Address { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public AddressComponents? Components { get; set; }
+    }
+
+    public class AddressComponents
+    {
+        public string? StreetNumber { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? Country { get; set; }
+        public string? PostalCode { get; set; }
+    }
+}

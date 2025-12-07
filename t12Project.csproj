@@ -27,14 +27,22 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.10" />
   </ItemGroup>
 
-  <!-- Exclude test project sources from app build -->
+  <!-- Exclude test project sources from app build and publish -->
   <ItemGroup>
-    <Compile Remove="t12Project.Tests/**/*.cs" />
-    <EmbeddedResource Remove="t12Project.Tests/**/*.cs" />
-    <None Remove="t12Project.Tests/**/*.cs" />
-    <Compile Remove="t12Project.Playwright/**/*.cs" />
+    <Compile Remove="t12Project.Tests/**/*" />
+    <Content Remove="t12Project.Tests/**/*" />
+    <EmbeddedResource Remove="t12Project.Tests/**/*" />
+    <None Remove="t12Project.Tests/**/*" />
+    <Compile Remove="t12Project.Playwright/**/*" />
+    <Content Remove="t12Project.Playwright/**/*" />
     <EmbeddedResource Remove="t12Project.Playwright/**/*" />
     <None Remove="t12Project.Playwright/**/*" />
+    <Compile Remove="latestlogs/**/*" />
+    <Content Remove="latestlogs/**/*" />
+    <None Remove="latestlogs/**/*" />
+    <Compile Remove="publish/**/*" />
+    <Content Remove="publish/**/*" />
+    <None Remove="publish/**/*" />
   </ItemGroup>
 
 </Project>

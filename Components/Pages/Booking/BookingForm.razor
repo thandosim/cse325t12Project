@@ -1,11 +1,21 @@
 @page "/booking/truck/{truckId:guid}"
 @page "/booking/load/{loadId:guid}"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Mvc
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
 @attribute [IgnoreAntiforgeryToken]
+@attribute [Authorize]
 
 @using Microsoft.AspNetCore.Components
 @using t12Project.Models
+@using t12Project.Services
 @inject ApplicationDbContext Context
+@inject NotificationService NotificationService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
 
 <PageTitle>Booking Form - LoadHitch</PageTitle>
 
@@ -18,65 +28,223 @@
         <!-- Success / Error banners -->
         @if (!string.IsNullOrWhiteSpace(successMessage))
         {
-            <div class="mb-6 flex justify-between items-center rounded-xl bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-700">
-                <span>@successMessage</span>
-                <button type="button" class="text-xs text-teal-700 hover:underline" @onclick="ClearMessages">Dismiss</button>
+            <div class="my-6 flex justify-between items-center rounded-xl bg-green-50 border border-green-200 px-4 py-4 text-sm text-green-800">
+                <div class="flex items-center gap-3">
+                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="font-medium">@successMessage</span>
+                </div>
+                <button type="button" class="text-green-600 hover:text-green-800" @onclick="ClearMessages">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         }
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            <div class="mb-6 flex justify-between items-center rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                <span>@errorMessage</span>
-                <button type="button" class="text-xs text-red-700 hover:underline" @onclick="ClearMessages">Dismiss</button>
+            <div class="my-6 flex justify-between items-center rounded-xl bg-red-50 border border-red-200 px-4 py-4 text-sm text-red-800">
+                <div class="flex items-center gap-3">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="font-medium">@errorMessage</span>
+                </div>
+                <button type="button" class="text-red-600 hover:text-red-800" @onclick="ClearMessages">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         }
 
-        @if (truck != null)
+        @if (_isLoading)
         {
-            <div class="mt-6 text-left">
-                <h3 class="text-lg font-semibold mb-2">Truck Booking</h3>
-                <p class="mb-1">Booking Truck: <strong>@truck.Name</strong></p>
-                <p class="text-slate-600">
-                    Equipment: @truck.EquipmentType | Capacity: @truck.CapacityLbs lbs | Active: @(truck.IsActive ? "Yes" : "No")
-                </p>
+            <div class="flex items-center justify-center py-12">
+                <svg class="animate-spin h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        }
+        else if (truck != null)
+        {
+            <div class="mt-6 text-left bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <h3 class="text-lg font-semibold mb-3 text-slate-900">Truck Details</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-slate-500">Truck Name</p>
+                        <p class="font-medium text-slate-900">@truck.Name</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Equipment Type</p>
+                        <p class="font-medium text-slate-900">@truck.EquipmentType</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Capacity</p>
+                        <p class="font-medium text-slate-900">@truck.CapacityLbs.ToString("N0") lbs</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Status</p>
+                        <p class="font-medium @(truck.IsActive ? "text-green-600" : "text-red-600")">
+                            @(truck.IsActive ? "Available" : "Unavailable")
+                        </p>
+                    </div>
+                </div>
             </div>
         }
         else if (load != null)
         {
-            <div class="mt-6 text-left">
-                <h3 class="text-lg font-semibold mb-2">Load Booking</h3>
-                <p class="mb-1">Booking Load: <strong>@load.Title</strong></p>
-                <p class="text-slate-600">
-                    Pickup: @load.PickupLocation → Dropoff: @load.DropoffLocation | Status: @load.Status
-                </p>
+            <div class="mt-6 text-left bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <h3 class="text-lg font-semibold mb-3 text-slate-900">Load Details</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="col-span-2">
+                        <p class="text-slate-500">Load Title</p>
+                        <p class="font-medium text-slate-900">@load.Title</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Pickup Location</p>
+                        <p class="font-medium text-slate-900">@load.PickupLocation</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Dropoff Location</p>
+                        <p class="font-medium text-slate-900">@load.DropoffLocation</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Cargo Type</p>
+                        <p class="font-medium text-slate-900">@load.CargoType</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Weight</p>
+                        <p class="font-medium text-slate-900">@load.WeightLbs.ToString("N0") lbs</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Current Status</p>
+                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium @GetStatusBadgeClass(load.Status)">
+                            @load.Status
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Pickup Date</p>
+                        <p class="font-medium text-slate-900">@load.PickupDate.ToString("MMM dd, yyyy")</p>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(load.Description))
+                {
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <p class="text-slate-500 text-sm">Description</p>
+                        <p class="text-slate-700 text-sm mt-1">@load.Description</p>
+                    </div>
+                }
+            </div>
+
+            @if (_existingBooking != null)
+            {
+                <div class="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-6">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <p class="font-medium text-amber-800">Booking Already Exists</p>
+                            <p class="text-sm text-amber-700">This load already has a booking with status: <strong>@_existingBooking.Status</strong></p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="mt-6 text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="mt-4 text-slate-500">Load or truck not found.</p>
+                <a href="/dashboard" class="mt-4 inline-block text-teal-600 hover:text-teal-800 font-medium">
+                    ← Return to Dashboard
+                </a>
             </div>
         }
 
-        <!-- Placeholder form fields -->
-        <div class="mt-8 text-left space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-700">Pickup Date</label>
-                <input type="date" class="border rounded px-2 py-1 w-full" />
-            </div>
+        <!-- Booking Form Fields -->
+        @if ((load != null || truck != null) && !_bookingConfirmed && _existingBooking == null)
+        {
+            <div class="mt-8 text-left space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Pickup Date</label>
+                        <input type="date" 
+                               class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                               @bind="_pickupDate" />
+                    </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700">Dropoff Date</label>
-                <input type="date" class="border rounded px-2 py-1 w-full" />
-            </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Dropoff Date</label>
+                        <input type="date" 
+                               class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                               @bind="_dropoffDate" />
+                    </div>
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700">Notes</label>
-                <textarea class="border rounded px-2 py-1 w-full"></textarea>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Additional Notes</label>
+                    <textarea class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none" 
+                              rows="3"
+                              placeholder="Any special instructions or notes for the booking..."
+                              @bind="_notes"></textarea>
+                </div>
 
-            <!-- Button just triggers banner -->
-            <button type="button"
-                    class="bg-hitchBlue text-white px-6 py-2 rounded hover:bg-hitchOrange transition disabled:bg-slate-300 disabled:cursor-not-allowed"
-                    @onclick="ShowSuccessBanner"
-                    disabled="@isProcessing">
-                @(isProcessing ? "Saving..." : "Confirm Booking")
-            </button>
-        </div>
+                <div class="flex items-center gap-4 pt-4">
+                    <button type="button"
+                            class="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-teal-700 transition disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            @onclick="ConfirmBookingAsync"
+                            disabled="@isProcessing">
+                        @if (isProcessing)
+                        {
+                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Processing...</span>
+                        }
+                        else
+                        {
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Confirm Booking</span>
+                        }
+                    </button>
+                    <a href="/dashboard" 
+                       class="px-6 py-3 rounded-lg font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        }
+
+        <!-- Booking Confirmed State -->
+        @if (_bookingConfirmed)
+        {
+            <div class="mt-8 text-center py-8">
+                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-slate-900 mb-2">Booking Confirmed!</h3>
+                <p class="text-slate-600 mb-6">The driver has been notified and will contact you shortly.</p>
+                <div class="flex items-center justify-center gap-4">
+                    <a href="/dashboard" class="inline-flex items-center gap-2 bg-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-teal-700 transition">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+        }
     </div>
 </section>
 
@@ -86,34 +254,232 @@
 
     private Truck? truck;
     private Load? load;
+    private Booking? _existingBooking;
 
     private string? successMessage;
     private string? errorMessage;
     private bool isProcessing;
+    private bool _isLoading = true;
+    private bool _bookingConfirmed;
 
-    protected override void OnInitialized()
+    private DateTime _pickupDate = DateTime.Today.AddDays(1);
+    private DateTime _dropoffDate = DateTime.Today.AddDays(2);
+    private string _notes = "";
+
+    private string _currentUserId = "";
+    private string _currentUserName = "";
+    private string _userRole = "";
+
+    protected override async Task OnInitializedAsync()
     {
-        if (truckId != null)
+        try
         {
-            truck = Context.Trucks.FirstOrDefault(t => t.Id == truckId);
+            // Get current user info
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                _currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+                _currentUserName = user.FindFirst(ClaimTypes.Name)?.Value ?? user.Identity?.Name ?? "User";
+                _userRole = user.FindFirst(ClaimTypes.Role)?.Value ?? "";
+            }
+
+            if (truckId != null)
+            {
+                truck = await Context.Trucks.FirstOrDefaultAsync(t => t.Id == truckId);
+            }
+            else if (loadId != null)
+            {
+                load = await Context.Loads
+                    .Include(l => l.Customer)
+                    .FirstOrDefaultAsync(l => l.Id == loadId);
+
+                // Check for existing booking
+                if (load != null)
+                {
+                    _existingBooking = await Context.Bookings
+                        .FirstOrDefaultAsync(b => b.LoadId == load.Id);
+                    
+                    // Pre-fill pickup date from load
+                    _pickupDate = load.PickupDate.Date;
+                    _dropoffDate = load.PickupDate.Date.AddDays(1);
+                }
+            }
         }
-        else if (loadId != null)
+        catch (Exception ex)
         {
-            load = Context.Loads.FirstOrDefault(l => l.Id == loadId);
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 
-    private async Task ShowSuccessBanner()
+    private async Task ConfirmBookingAsync()
     {
         ClearMessages();
         isProcessing = true;
 
-        // Simulate a short delay to mimic saving
-        await Task.Delay(1000);
+        try
+        {
+            if (string.IsNullOrEmpty(_currentUserId))
+            {
+                errorMessage = "You must be logged in to confirm a booking.";
+                return;
+            }
 
-        successMessage = "Booking confirmed successfully! (placeholder)";
-        errorMessage = null;
-        isProcessing = false;
+            // Handle truck booking (Customer booking a truck)
+            if (truck != null)
+            {
+                await ConfirmTruckBookingAsync();
+                return;
+            }
+
+            // Handle load booking (Driver booking a load)
+            if (load != null)
+            {
+                await ConfirmLoadBookingAsync();
+                return;
+            }
+
+            errorMessage = "No truck or load found to book. Please try again.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to confirm booking: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task ConfirmTruckBookingAsync()
+    {
+        // Customer is booking a truck - create a load for this booking
+        if (_userRole != "Customer")
+        {
+            errorMessage = "Only customers can book trucks.";
+            return;
+        }
+
+        // Create a load for this truck booking
+        var newLoad = new Load
+        {
+            Id = Guid.NewGuid(),
+            Title = $"Truck Booking - {truck!.Name}",
+            Description = string.IsNullOrWhiteSpace(_notes) ? $"Booking for {truck.Name}" : _notes,
+            CustomerId = _currentUserId,
+            Status = "Booked",
+            PickupDate = new DateTimeOffset(_pickupDate.Year, _pickupDate.Month, _pickupDate.Day, 0, 0, 0, TimeSpan.Zero),
+            PickupLocation = "To be specified",
+            DropoffLocation = "To be specified",
+            WeightLbs = 0,
+            CargoType = truck.EquipmentType
+        };
+
+        Context.Loads.Add(newLoad);
+
+        // Create the booking linking the load to the truck's driver
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            LoadId = newLoad.Id,
+            DriverId = truck.DriverId,
+            Status = "Confirmed",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        Context.Bookings.Add(booking);
+        await Context.SaveChangesAsync();
+
+        // Notify the driver
+        await NotificationService.NotifyDriverOfBookingConfirmationAsync(booking, _currentUserName);
+
+        successMessage = $"Truck '{truck.Name}' booked successfully! The driver has been notified.";
+        _bookingConfirmed = true;
+    }
+
+    private async Task ConfirmLoadBookingAsync()
+    {
+        // Determine who is the driver - for now, if the current user is a Driver, they're booking the load
+        // If current user is Customer, we need a different flow (this handles Customer confirming a driver's request)
+        string driverId;
+        string driverName;
+
+        if (_userRole == "Driver")
+        {
+            // Driver is booking the load
+            driverId = _currentUserId;
+            driverName = _currentUserName;
+        }
+        else if (_userRole == "Customer")
+        {
+            // Customer is confirming - we need to find a driver for this load
+            // For now, find the first available driver
+            var availableDriver = await Context.Users
+                .Where(u => u.AccountType == AccountRole.Driver)
+                .FirstOrDefaultAsync();
+
+            if (availableDriver == null)
+            {
+                errorMessage = "No available drivers found.";
+                return;
+            }
+
+            driverId = availableDriver.Id;
+            driverName = availableDriver.FullName;
+        }
+        else
+        {
+            errorMessage = "Invalid user role for booking.";
+            return;
+        }
+
+        // Create the booking
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            LoadId = load!.Id,
+            DriverId = driverId,
+            Status = "Confirmed",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        Context.Bookings.Add(booking);
+
+        // Update load status
+        load.Status = "Booked";
+        Context.Loads.Update(load);
+
+        await Context.SaveChangesAsync();
+
+        // Send notification to the driver
+        await NotificationService.NotifyDriverOfBookingConfirmationAsync(booking, _currentUserName);
+
+        // If a driver booked the load, also notify the customer
+        if (_userRole == "Driver" && load.Customer != null)
+        {
+            await NotificationService.NotifyCustomerOfLoadBookedAsync(load, _currentUserName);
+        }
+
+        successMessage = "Booking confirmed successfully! The driver has been notified.";
+        _bookingConfirmed = true;
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Available" => "bg-green-100 text-green-800",
+            "Booked" => "bg-blue-100 text-blue-800",
+            "In Transit" => "bg-amber-100 text-amber-800",
+            "Delivered" => "bg-slate-100 text-slate-800",
+            "Cancelled" => "bg-red-100 text-red-800",
+            _ => "bg-slate-100 text-slate-800"
+        };
     }
 
     private void ClearMessages()
